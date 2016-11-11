@@ -77,7 +77,7 @@
     (grid_origin 125.3 123.1)
     (visible_elements FFFF7FBF)
     (pcbplotparams
-      (layerselection 0x00030_80000001)
+      (layerselection 0x010f8_80000001)
       (usegerberextensions true)
       (excludeedgelayer true)
       (linewidth 0.150000)
@@ -7351,10 +7351,10 @@
   (gr_text 4 (at 129.6 108.7 270) (layer B.SilkS) (tstamp 58269180)
     (effects (font (size 0.8 0.8) (thickness 0.15)) (justify mirror))
   )
-  (gr_text "Full Duplex\nTerminated" (at 137.5 112.1 270) (layer B.SilkS) (tstamp 5826917F)
+  (gr_text "Full-Duplex\nTerminated" (at 137.5 112.1 270) (layer B.SilkS) (tstamp 5826917F)
     (effects (font (size 0.8 0.8) (thickness 0.15)) (justify mirror))
   )
-  (gr_text "Full Duplex\nNon Terminated" (at 149.55 112.1 270) (layer B.SilkS) (tstamp 5826917E)
+  (gr_text "Full-Duplex\nNon-Terminated" (at 149.55 112.1 270) (layer B.SilkS) (tstamp 5826917E)
     (effects (font (size 0.8 0.8) (thickness 0.15)) (justify mirror))
   )
   (gr_text 4 (at 141.65 108.7 270) (layer B.SilkS) (tstamp 5826917D)
@@ -7427,10 +7427,10 @@
   (gr_text 4 (at 141.65 97.3 270) (layer B.SilkS) (tstamp 58269141)
     (effects (font (size 0.8 0.8) (thickness 0.15)) (justify mirror))
   )
-  (gr_text "Half Duplex\nNon Terminated" (at 149.55 100.7 270) (layer B.SilkS) (tstamp 58269140)
+  (gr_text "Half-Duplex\nNon-Terminated" (at 149.55 100.7 270) (layer B.SilkS) (tstamp 58269140)
     (effects (font (size 0.8 0.8) (thickness 0.15)) (justify mirror))
   )
-  (gr_text "Half Duplex\nTerminated" (at 137.5 100.7 270) (layer B.SilkS)
+  (gr_text "Half-Duplex\nTerminated" (at 137.5 100.7 270) (layer B.SilkS)
     (effects (font (size 0.8 0.8) (thickness 0.15)) (justify mirror))
   )
   (gr_text 4 (at 129.6 97.3 270) (layer B.SilkS) (tstamp 5826910B)
@@ -8068,7 +8068,7 @@
     )
     (filled_polygon
       (pts
-        (xy 133.45 115.15) (xy 132.65 115.15) (xy 132.65 115.65) (xy 133.45 115.65)
+        (xy 133.45 115.65) (xy 132.65 115.65) (xy 132.65 115.15) (xy 133.45 115.15)
       )
     )
   )
@@ -8083,7 +8083,7 @@
     )
     (filled_polygon
       (pts
-        (xy 143.95 115.15) (xy 143.15 115.15) (xy 143.15 115.65) (xy 143.95 115.65)
+        (xy 143.95 115.65) (xy 143.15 115.65) (xy 143.15 115.15) (xy 143.95 115.15)
       )
     )
   )
@@ -8098,7 +8098,7 @@
     )
     (filled_polygon
       (pts
-        (xy 143.95 112.95) (xy 143.15 112.95) (xy 143.15 113.45) (xy 143.95 113.45)
+        (xy 143.95 113.45) (xy 143.15 113.45) (xy 143.15 112.95) (xy 143.95 112.95)
       )
     )
   )
@@ -8113,7 +8113,7 @@
     )
     (filled_polygon
       (pts
-        (xy 143.95 110.75) (xy 143.15 110.75) (xy 143.15 111.25) (xy 143.95 111.25)
+        (xy 143.95 111.25) (xy 143.15 111.25) (xy 143.15 110.75) (xy 143.95 110.75)
       )
     )
   )
@@ -8128,7 +8128,7 @@
     )
     (filled_polygon
       (pts
-        (xy 143.95 108.55) (xy 143.15 108.55) (xy 143.15 109.05) (xy 143.95 109.05)
+        (xy 143.95 109.05) (xy 143.15 109.05) (xy 143.15 108.55) (xy 143.95 108.55)
       )
     )
   )
@@ -8143,7 +8143,7 @@
     )
     (filled_polygon
       (pts
-        (xy 131.85 112.95) (xy 131.05 112.95) (xy 131.05 113.45) (xy 131.85 113.45)
+        (xy 131.85 113.45) (xy 131.05 113.45) (xy 131.05 112.95) (xy 131.85 112.95)
       )
     )
   )
@@ -8158,7 +8158,7 @@
     )
     (filled_polygon
       (pts
-        (xy 131.85 110.75) (xy 131.05 110.75) (xy 131.05 111.25) (xy 131.85 111.25)
+        (xy 131.85 111.25) (xy 131.05 111.25) (xy 131.05 110.75) (xy 131.85 110.75)
       )
     )
   )
@@ -8173,7 +8173,7 @@
     )
     (filled_polygon
       (pts
-        (xy 133.45 108.55) (xy 132.65 108.55) (xy 132.65 109.05) (xy 133.45 109.05)
+        (xy 133.45 109.05) (xy 132.65 109.05) (xy 132.65 108.55) (xy 133.45 108.55)
       )
     )
   )
@@ -8188,7 +8188,7 @@
     )
     (filled_polygon
       (pts
-        (xy 133.45 103.75) (xy 132.65 103.75) (xy 132.65 104.25) (xy 133.45 104.25)
+        (xy 133.45 104.25) (xy 132.65 104.25) (xy 132.65 103.75) (xy 133.45 103.75)
       )
     )
   )
@@ -8203,7 +8203,7 @@
     )
     (filled_polygon
       (pts
-        (xy 133.45 101.55) (xy 132.65 101.55) (xy 132.65 102.05) (xy 133.45 102.05)
+        (xy 133.45 102.05) (xy 132.65 102.05) (xy 132.65 101.55) (xy 133.45 101.55)
       )
     )
   )
@@ -8218,7 +8218,7 @@
     )
     (filled_polygon
       (pts
-        (xy 133.45 99.35) (xy 132.65 99.35) (xy 132.65 99.85) (xy 133.45 99.85)
+        (xy 133.45 99.85) (xy 132.65 99.85) (xy 132.65 99.35) (xy 133.45 99.35)
       )
     )
   )
@@ -8233,7 +8233,7 @@
     )
     (filled_polygon
       (pts
-        (xy 131.85 97.15) (xy 131.05 97.15) (xy 131.05 97.65) (xy 131.85 97.65)
+        (xy 131.85 97.65) (xy 131.05 97.65) (xy 131.05 97.15) (xy 131.85 97.15)
       )
     )
   )
@@ -8248,7 +8248,7 @@
     )
     (filled_polygon
       (pts
-        (xy 143.95 103.75) (xy 143.15 103.75) (xy 143.15 104.25) (xy 143.95 104.25)
+        (xy 143.95 104.25) (xy 143.15 104.25) (xy 143.15 103.75) (xy 143.95 103.75)
       )
     )
   )
@@ -8263,7 +8263,7 @@
     )
     (filled_polygon
       (pts
-        (xy 145.45 101.55) (xy 144.65 101.55) (xy 144.65 102.05) (xy 145.45 102.05)
+        (xy 145.45 102.05) (xy 144.65 102.05) (xy 144.65 101.55) (xy 145.45 101.55)
       )
     )
   )
@@ -8278,7 +8278,7 @@
     )
     (filled_polygon
       (pts
-        (xy 145.45 99.35) (xy 144.65 99.35) (xy 144.65 99.85) (xy 145.45 99.85)
+        (xy 145.45 99.85) (xy 144.65 99.85) (xy 144.65 99.35) (xy 145.45 99.35)
       )
     )
   )
@@ -8293,7 +8293,7 @@
     )
     (filled_polygon
       (pts
-        (xy 143.95 97.15) (xy 143.15 97.15) (xy 143.15 97.65) (xy 143.95 97.65)
+        (xy 143.95 97.65) (xy 143.15 97.65) (xy 143.15 97.15) (xy 143.95 97.15)
       )
     )
   )
