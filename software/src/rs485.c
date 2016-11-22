@@ -34,6 +34,7 @@ extern RS485 rs485;
 #define rs485_rx_irq_handler  IRQ_Hdlr_11
 #define rs485_tx_irq_handler  IRQ_Hdlr_12
 #define rs485_tff_irq_handler IRQ_Hdlr_13
+#define rs485_rxa_irq_handler IRQ_Hdlr_14
 
 #define RS485_HALF_DUPLEX_RX_ENABLE() (RS485_NRXE_AND_TXE_PORT->OMR = ((0x10000 << RS485_TXE_PIN_NUM) | (0x10000 << RS485_NRXE_PIN_NUM)))
 #define RS485_HALF_DUPLEX_TX_ENABLE() (RS485_NRXE_AND_TXE_PORT->OMR = ((0x1     << RS485_TXE_PIN_NUM) | (0x1     << RS485_NRXE_PIN_NUM)))
@@ -51,6 +52,7 @@ void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
 
 	while(!XMC_USIC_CH_RXFIFO_IsEmpty(RS485_USIC)) {
 		if(!ringbuffer_add(&rs485.ringbuffer_rx, RS485_USIC->OUTR)) {
+			rs485.error |= ERROR_OVERRUN;
 			uartbb_puts("rb overflow!\n\r");
 			XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
 			return;
@@ -61,6 +63,16 @@ void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
 	}
 
 	XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
+}
+
+
+void __attribute__((optimize("-O3"))) rs485_rxa_irq_handler(void) {
+	XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
+
+	// We get alternate rx interrupt if there is a parity error.
+	// In this case we still read the byte and give it to the user
+	rs485.error |= ERROR_PARITY;
+	rs485_rx_irq_handler();
 }
 
 void __attribute__((optimize("-O3"))) rs485_tx_irq_handler(void) {
@@ -81,26 +93,8 @@ void __attribute__((optimize("-O3"))) rs485_tx_irq_handler(void) {
 	XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
 }
 
-void rs485_init(RS485 *rs485) {
-	// Initialize struct
-	memset(rs485->buffer, 0, RS485_BUFFER_SIZE);
-	// By default we use a 50/50 segmentation of rx/tx buffer
-	rs485->buffer_size_rx = RS485_BUFFER_SIZE/2;
-	// rx buffer is at buffer[0:buffer_size_rx]
-	ringbuffer_init(&rs485->ringbuffer_rx, rs485->buffer_size_rx, &rs485->buffer[0]);
-	// tx buffer is at buffer[buffer_size_rx:RS485_BUFFER_SIZE]
-	ringbuffer_init(&rs485->ringbuffer_tx, RS485_BUFFER_SIZE-rs485->buffer_size_rx, &rs485->buffer[rs485->buffer_size_rx]);
 
-	// USIC channel configuration
-	const XMC_UART_CH_CONFIG_t channel_config = {
-		.baudrate      = 1000000, //19200,
-		.data_bits     = 8,
-		.frame_length  = 8,
-		.stop_bits     = 1,
-		.oversampling  = 16,
-		.parity_mode   = XMC_USIC_CH_PARITY_MODE_NONE
-	};
-
+void rs485_init_hardware(RS485 *rs485) {
 	// TX pin configuration
 	const XMC_GPIO_CONFIG_t tx_pin_config = {
 		.mode             = RS485_TX_PIN_AF,
@@ -132,7 +126,19 @@ void rs485_init(RS485 *rs485) {
 	XMC_GPIO_Init(RS485_NRXE_PIN, &nrxe_pin_config);
 
 	// Initialize USIC channel in UART master mode
-	XMC_UART_CH_Init(RS485_USIC, &channel_config);
+	// USIC channel configuration
+	XMC_UART_CH_CONFIG_t config;
+	config.oversampling = RS485_OVERSAMPLING;
+	config.frame_length = 8; //rs485->wordlength + (rs485->parity == PARITY_NONE ? 0 : 1); // TODO: Should this be wordlength?
+	config.baudrate     = rs485->baudrate;
+	config.stop_bits    = rs485->stopbits;
+	config.data_bits    = rs485->wordlength;
+	switch(rs485->parity) {
+		case PARITY_NONE: config.parity_mode = XMC_USIC_CH_PARITY_MODE_NONE; break;
+		case PARITY_EVEN: config.parity_mode = XMC_USIC_CH_PARITY_MODE_EVEN; break;
+		case PARITY_ODD:  config.parity_mode = XMC_USIC_CH_PARITY_MODE_ODD;  break;
+	}
+	XMC_UART_CH_Init(RS485_USIC, &config);
 
 	// Set input source path
 	XMC_UART_CH_SetInputSource(RS485_USIC, RS485_RX_INPUT, RS485_RX_SOURCE);
@@ -144,15 +150,16 @@ void rs485_init(RS485 *rs485) {
 	XMC_USIC_CH_RXFIFO_Configure(RS485_USIC, 0, XMC_USIC_CH_FIFO_SIZE_32WORDS, 0);
 
 	// UART protocol events
-	XMC_USIC_CH_SetInterruptNodePointer(RS485_USIC, XMC_USIC_CH_INTERRUPT_NODE_POINTER_PROTOCOL, /*RS485_SERVICE_REQUEST_TX*/ 4);
+	XMC_USIC_CH_SetInterruptNodePointer(RS485_USIC, XMC_USIC_CH_INTERRUPT_NODE_POINTER_PROTOCOL, RS485_SERVICE_REQUEST_TFF);
+	XMC_USIC_CH_SetInterruptNodePointer(RS485_USIC, XMC_USIC_CH_INTERRUPT_NODE_POINTER_ALTERNATE_RECEIVE, RS485_SERVICE_REQUEST_RXA);
 	XMC_UART_CH_EnableEvent(RS485_USIC, XMC_UART_CH_EVENT_FRAME_FINISHED);
 
 	// Set service request for tx FIFO transmit interrupt
-	XMC_USIC_CH_TXFIFO_SetInterruptNodePointer(RS485_USIC, XMC_USIC_CH_TXFIFO_INTERRUPT_NODE_POINTER_STANDARD, RS485_SERVICE_REQUEST_TX);  // IRQ FIREFLY_X1_IRQ_TX
+	XMC_USIC_CH_TXFIFO_SetInterruptNodePointer(RS485_USIC, XMC_USIC_CH_TXFIFO_INTERRUPT_NODE_POINTER_STANDARD, RS485_SERVICE_REQUEST_TX);
 
 	// Set service request for rx FIFO receive interrupt
-	XMC_USIC_CH_RXFIFO_SetInterruptNodePointer(RS485_USIC, XMC_USIC_CH_RXFIFO_INTERRUPT_NODE_POINTER_STANDARD, RS485_SERVICE_REQUEST_RX);  // IRQ FIREFLY_X1_IRQ_RX
-	XMC_USIC_CH_RXFIFO_SetInterruptNodePointer(RS485_USIC, XMC_USIC_CH_RXFIFO_INTERRUPT_NODE_POINTER_ALTERNATE, RS485_SERVICE_REQUEST_RX); // IRQ FIREFLY_X1_IRQ_RX
+	XMC_USIC_CH_RXFIFO_SetInterruptNodePointer(RS485_USIC, XMC_USIC_CH_RXFIFO_INTERRUPT_NODE_POINTER_STANDARD, RS485_SERVICE_REQUEST_RX);
+	XMC_USIC_CH_RXFIFO_SetInterruptNodePointer(RS485_USIC, XMC_USIC_CH_RXFIFO_INTERRUPT_NODE_POINTER_ALTERNATE, RS485_SERVICE_REQUEST_RX);
 
 	// Set priority and enable NVIC node for transfer frame finished interrupt
 	NVIC_SetPriority((IRQn_Type)RS485_IRQ_TFF, RS485_IRQ_TFF_PRIORITY);
@@ -169,40 +176,68 @@ void rs485_init(RS485 *rs485) {
 	XMC_SCU_SetInterruptControl(RS485_IRQ_RX, RS485_IRQCTRL_RX);
 	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_RX);
 
+	// Set priority and enable NVIC node for receive interrupt
+	NVIC_SetPriority((IRQn_Type)RS485_IRQ_RXA, RS485_IRQ_RXA_PRIORITY);
+	XMC_SCU_SetInterruptControl(RS485_IRQ_RXA, RS485_IRQCTRL_RXA);
+	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_RXA);
+
 	// Start UART
 	XMC_UART_CH_Start(RS485_USIC);
 
-//	XMC_USIC_CH_EnableEvent(RS485_USIC, (uint32_t)((uint32_t)XMC_USIC_CH_EVENT_STANDARD_RECEIVE | (uint32_t)XMC_USIC_CH_EVENT_ALTERNATIVE_RECEIVE));
+	XMC_USIC_CH_EnableEvent(RS485_USIC, XMC_USIC_CH_EVENT_ALTERNATIVE_RECEIVE);
 	XMC_USIC_CH_RXFIFO_EnableEvent(RS485_USIC, XMC_USIC_CH_RXFIFO_EVENT_CONF_STANDARD | XMC_USIC_CH_RXFIFO_EVENT_CONF_ALTERNATE);
 }
 
+//#include "pwm.h"
+//#include "pwm_conf.h"
+//#include "pwm_extern.h"
+void rs485_init(RS485 *rs485) {
+//	PWM_Init(&PWM_0); return;
+
+	// Default config is 115200 baud, 8N1, half-duplex
+	rs485->baudrate   = 115200;
+	rs485->parity     = PARITY_NONE;
+	rs485->wordlength = WORDLENGTH_8;
+	rs485->stopbits   = STOPBITS_1;
+	rs485->duplex     = DUPLEX_HALF;
+	rs485->error      = 0;
+
+	rs485->read_callback_enabled = true;
+
+	// Initialize struct
+	memset(rs485->buffer, 0, RS485_BUFFER_SIZE);
+	// By default we use a 50/50 segmentation of rx/tx buffer
+	rs485->buffer_size_rx = RS485_BUFFER_SIZE/2;
+	// rx buffer is at buffer[0:buffer_size_rx]
+	ringbuffer_init(&rs485->ringbuffer_rx, rs485->buffer_size_rx, &rs485->buffer[0]);
+	// tx buffer is at buffer[buffer_size_rx:RS485_BUFFER_SIZE]
+	ringbuffer_init(&rs485->ringbuffer_tx, RS485_BUFFER_SIZE-rs485->buffer_size_rx, &rs485->buffer[rs485->buffer_size_rx]);
+
+	// LED configuration
+	const XMC_GPIO_CONFIG_t led_pin_config = {
+		.mode             = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
+		.output_level     = XMC_GPIO_OUTPUT_LEVEL_HIGH
+	};
+
+	XMC_GPIO_Init(RS485_LED_RED_PIN, &led_pin_config);
+	XMC_GPIO_Init(RS485_LED_YELLOW_PIN, &led_pin_config);
+
+	rs485_init_hardware(rs485);
+}
+
+void rs485_apply_configuration(RS485 *rs485) {
+	// We start by turning off all events
+	XMC_USIC_CH_RXFIFO_DisableEvent(RS485_USIC, XMC_USIC_CH_RXFIFO_EVENT_CONF_STANDARD | XMC_USIC_CH_RXFIFO_EVENT_CONF_ALTERNATE);
+	XMC_UART_CH_DisableEvent(RS485_USIC, XMC_UART_CH_EVENT_FRAME_FINISHED);
+	XMC_USIC_CH_DisableEvent(RS485_USIC, XMC_USIC_CH_EVENT_ALTERNATIVE_RECEIVE);
+
+	// Then turn off the USIC, but wait until the tx buffer is empty
+	while(XMC_UART_CH_Stop(RS485_USIC) != XMC_UART_CH_STATUS_OK);
+
+	// Then we can safely reconfigure the hardware
+	rs485_init_hardware(rs485);
+}
+
 void rs485_tick(RS485 *rs485) {
-	static char counter = '1';
-	static uint32_t t = 0;
-	if(system_timer_is_time_elapsed_ms(t, 1000)) {
-		if(counter == '9') {
-			counter = '1';
-		} else {
-			counter++;
-		}
 
-		char s[] = "  Hello World!";
-		s[0] = counter;
-
-		for(uint8_t i = 0; i < sizeof(s)/sizeof(s[0]) - 1; i++) {
-			ringbuffer_add(&rs485->ringbuffer_tx, (uint8_t)s[i]);
-		}
-
-		t = system_timer_get_ms();
-
-		XMC_USIC_CH_TXFIFO_EnableEvent(RS485_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
-		XMC_USIC_CH_TriggerServiceRequest(RS485_USIC, RS485_SERVICE_REQUEST_TX);
-	}
-
-	uint8_t data;
-	if(ringbuffer_get(&rs485->ringbuffer_rx, &data)) {
-//		uartbb_puts("recv: ");
-//		uartbb_puti(data);
-//		uartbb_putnl();
-	}
 }
