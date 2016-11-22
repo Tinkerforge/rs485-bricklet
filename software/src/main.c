@@ -1,4 +1,4 @@
-/* <<<DEVICE_NAME_DASH-bricklet>>>
+/* rs485-bricklet
  * Copyright (C) 2016 Olaf Lüke <olaf@tinkerforge.com>
  *
  * main.c: Initialization for RS485 Bricklet
