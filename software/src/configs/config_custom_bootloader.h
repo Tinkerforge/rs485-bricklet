@@ -62,7 +62,7 @@
 #define SPITFP_SERVICE_REQUEST_TX   1
 
 #define SPITFP_IRQ_RX               9
-#define SPITFP_IRQ_RX_PRIORITY      3
+#define SPITFP_IRQ_RX_PRIORITY      2
 #define SPITFP_IRQ_TX               10
 #define SPITFP_IRQ_TX_PRIORITY      3
 
