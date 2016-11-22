@@ -49,8 +49,8 @@ int main(void) {
 
 	rs485_init(&rs485);
 	while(true) {
-		XMC_GPIO_ToggleOutput(BOOTLOADER_STATUS_LED_PIN);
 		rs485_tick(&rs485);
+		communication_tick();
 		bootloader_tick();
 	}
 
