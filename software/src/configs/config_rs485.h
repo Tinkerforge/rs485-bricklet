@@ -32,7 +32,7 @@
 
 #define RS485_RX_PIN              P2_13
 #define RS485_RX_INPUT            XMC_USIC_CH_INPUT_DX0
-#define RS485_RX_SOURCE           0b011 // DX1D
+#define RS485_RX_SOURCE           0b011 // DX0D
 
 #define RS485_TX_PIN              P2_12
 #define RS485_TX_PIN_AF           (XMC_GPIO_MODE_OUTPUT_PUSH_PULL_ALT7 | P2_12_AF_U1C1_DOUT0)
