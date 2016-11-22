@@ -53,6 +53,7 @@ void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
 	while(!XMC_USIC_CH_RXFIFO_IsEmpty(RS485_USIC)) {
 		if(!ringbuffer_add(&rs485.ringbuffer_rx, RS485_USIC->OUTR)) {
 			rs485.error |= ERROR_OVERRUN;
+			XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
 			uartbb_puts("rb overflow!\n\r");
 			XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
 			return;
@@ -72,6 +73,7 @@ void __attribute__((optimize("-O3"))) rs485_rxa_irq_handler(void) {
 	// We get alternate rx interrupt if there is a parity error.
 	// In this case we still read the byte and give it to the user
 	rs485.error |= ERROR_PARITY;
+	XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
 	rs485_rx_irq_handler();
 }
 
@@ -213,13 +215,19 @@ void rs485_init(RS485 *rs485) {
 	// tx buffer is at buffer[buffer_size_rx:RS485_BUFFER_SIZE]
 	ringbuffer_init(&rs485->ringbuffer_tx, RS485_BUFFER_SIZE-rs485->buffer_size_rx, &rs485->buffer[rs485->buffer_size_rx]);
 
+	rs485->yellow_led_state.config  = LED_FLICKER_CONFIG_ACTIVE;
+	rs485->yellow_led_state.counter = 0;
+	rs485->yellow_led_state.start   = 0;
+
 	// LED configuration
-	const XMC_GPIO_CONFIG_t led_pin_config = {
+	XMC_GPIO_CONFIG_t led_pin_config = {
 		.mode             = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
 		.output_level     = XMC_GPIO_OUTPUT_LEVEL_HIGH
 	};
 
 	XMC_GPIO_Init(RS485_LED_RED_PIN, &led_pin_config);
+
+	led_pin_config.output_level = XMC_GPIO_OUTPUT_LEVEL_LOW; // Default on for yellow LED
 	XMC_GPIO_Init(RS485_LED_YELLOW_PIN, &led_pin_config);
 
 	rs485_init_hardware(rs485);
@@ -239,5 +247,23 @@ void rs485_apply_configuration(RS485 *rs485) {
 }
 
 void rs485_tick(RS485 *rs485) {
+	static uint32_t last_rx_count = 0;
+	static uint32_t last_tx_count = 0;
 
+	// To get a nice communication LED flickering we increase the
+	// flicker counter every time something in the rx or tx buffer changes
+	uint32_t rx_count = ringbuffer_get_used(&rs485->ringbuffer_rx);
+	uint32_t tx_count = ringbuffer_get_used(&rs485->ringbuffer_tx);
+
+	if(rx_count != last_rx_count) {
+		last_rx_count = rx_count;
+		rs485->yellow_led_state.counter++;
+	}
+
+	if(tx_count != last_tx_count) {
+		last_tx_count = tx_count;
+		rs485->yellow_led_state.counter++;
+	}
+
+	led_flicker_tick(&rs485->yellow_led_state, system_timer_get_ms(), RS485_LED_YELLOW_PIN);
 }

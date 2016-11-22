@@ -25,6 +25,7 @@
 #include "configs/config_rs485.h"
 
 #include "bricklib2/utility/ringbuffer.h"
+#include "bricklib2/utility/led_flicker.h"
 
 #include <stdint.h>
 
@@ -75,6 +76,7 @@ typedef struct {
 
 	bool read_callback_enabled;
 	uint8_t error;
+	LEDFlickerState yellow_led_state;
 
 	uint32_t baudrate;
 	RS485Parity parity;
