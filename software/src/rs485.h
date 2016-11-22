@@ -30,6 +30,39 @@
 
 #define RS485_BUFFER_SIZE 1024*10
 
+#define RS485_OVERSAMPLING 16
+#define RS485_BAUDRATE_MIN 100
+#define RS485_BAUDRATE_MAX (((48000000/1024)*1023)/RS485_OVERSAMPLING) // This is defined in xmclib
+
+typedef enum {
+	PARITY_NONE = 0,
+	PARITY_ODD = 1,
+	PARITY_EVEN = 2,
+} RS485Parity;
+
+typedef enum {
+	STOPBITS_1 = 1,
+	STOPBITS_2 = 2,
+} RS485Stopbits;
+
+typedef enum {
+	WORDLENGTH_5 = 5,
+	WORDLENGTH_6 = 6,
+	WORDLENGTH_7 = 7,
+	WORDLENGTH_8 = 8,
+} RS485Wordlength;
+
+typedef enum {
+	DUPLEX_HALF = 0,
+	DUPLEX_FULL = 1,
+} RS485Duplex;
+
+// TODO: Can we detect more errors? Framing error?
+typedef enum {
+	ERROR_OVERRUN = 1 << 0,
+	ERROR_PARITY  = 1 << 1,
+}RS485Error;
+
 typedef enum {
 	TODO
 } RS485State;
@@ -39,6 +72,15 @@ typedef struct {
 	Ringbuffer ringbuffer_rx;
 	uint8_t buffer[RS485_BUFFER_SIZE];
 	uint16_t buffer_size_rx;
+
+	bool read_callback_enabled;
+	uint8_t error;
+
+	uint32_t baudrate;
+	RS485Parity parity;
+	RS485Stopbits stopbits;
+	RS485Wordlength wordlength;
+	RS485Duplex duplex;
 
 	RS485State state;
 } RS485;
