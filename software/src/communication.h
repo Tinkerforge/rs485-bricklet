@@ -34,7 +34,6 @@ BootloaderHandleMessageResponse handle_message(const void *data, void *response)
 #define FID_IS_READ_CALLBACK_ENABLED 5
 #define FID_SET_CONFIGURATION 6
 #define FID_GET_CONFIGURATION 7
-#define FID_SET_BREAK_CONDITION 10
 
 #define FID_CALLBACK_READ_CALLBACK 8
 #define FID_CALLBACK_ERROR_CALLBACK 9
@@ -80,12 +79,11 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t baudrate;
+	uint32_t baudrate;
 	uint8_t parity;
 	uint8_t stopbits;
 	uint8_t wordlength;
-	uint8_t hardware_flowcontrol;
-	uint8_t software_flowcontrol;
+	uint8_t duplex;
 } __attribute__((__packed__)) SetConfiguration;
 
 typedef struct {
@@ -94,12 +92,11 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t baudrate;
+	uint32_t baudrate;
 	uint8_t parity;
 	uint8_t stopbits;
 	uint8_t wordlength;
-	uint8_t hardware_flowcontrol;
-	uint8_t software_flowcontrol;
+	uint8_t duplex;
 } __attribute__((__packed__)) GetConfigurationResponse;
 
 typedef struct {
@@ -113,11 +110,6 @@ typedef struct {
 	uint8_t error;
 } __attribute__((__packed__)) ErrorCallbackCallback;
 
-typedef struct {
-	TFPMessageHeader header;
-	uint16_t break_time;
-} __attribute__((__packed__)) SetBreakCondition;
-
 
 
 BootloaderHandleMessageResponse write(const Write *data, WriteResponse *response);
@@ -127,7 +119,7 @@ BootloaderHandleMessageResponse disable_read_callback(const DisableReadCallback 
 BootloaderHandleMessageResponse is_read_callback_enabled(const IsReadCallbackEnabled *data, IsReadCallbackEnabledResponse *response);
 BootloaderHandleMessageResponse set_configuration(const SetConfiguration *data);
 BootloaderHandleMessageResponse get_configuration(const GetConfiguration *data, GetConfigurationResponse *response);
-BootloaderHandleMessageResponse set_break_condition(const SetBreakCondition *data);
 
+void communication_tick(void);
 
 #endif
