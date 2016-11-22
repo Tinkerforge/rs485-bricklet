@@ -46,5 +46,6 @@ typedef struct {
 
 void rs485_init(RS485 *rs485);
 void rs485_tick(RS485 *rs485);
+void rs485_apply_configuration(RS485 *rs485);
 
 #endif
