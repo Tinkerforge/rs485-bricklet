@@ -47,22 +47,29 @@
 #define RS485_SERVICE_REQUEST_RX  2  // receive
 #define RS485_SERVICE_REQUEST_TX  3  // transfer
 #define RS485_SERVICE_REQUEST_TFF 4  // transfer frame finished
+#define RS485_SERVICE_REQUEST_RXA 5  // alternate receive (parity error)
 
 // Make sure that the priorities are as follows
-// TX > TFF > RX
+// RX > TX = TFF
 // TFF should never displace TX. TFF is unnecessary if we are in TX IRQ
-// RX should never displace TFF. If it does we can have a race condition between
-// receiving new data and enabling RXE again)
+// TX should never displace TFF. This would be a race condition
+// RX interrupt will never be issued if TXE is set. If we are receiving a message,
+// TX should never interrupt RX (we would lose data in this case)
+// For full-duplex there is no TFF and RX should be higher priority then TX
 #define RS485_IRQ_RX              11
-#define RS485_IRQ_RX_PRIORITY     2
+#define RS485_IRQ_RX_PRIORITY     0
 #define RS485_IRQCTRL_RX          XMC_SCU_IRQCTRL_USIC1_SR2_IRQ11
 
 #define RS485_IRQ_TX              12
-#define RS485_IRQ_TX_PRIORITY     0
+#define RS485_IRQ_TX_PRIORITY     1
 #define RS485_IRQCTRL_TX          XMC_SCU_IRQCTRL_USIC1_SR3_IRQ12
 
 #define RS485_IRQ_TFF             13
 #define RS485_IRQ_TFF_PRIORITY    1
 #define RS485_IRQCTRL_TFF         XMC_SCU_IRQCTRL_USIC1_SR4_IRQ13
+
+#define RS485_IRQ_RXA             14
+#define RS485_IRQ_RXA_PRIORITY    0
+#define RS485_IRQCTRL_RXA         XMC_SCU_IRQCTRL_USIC1_SR5_IRQ14
 
 #endif
