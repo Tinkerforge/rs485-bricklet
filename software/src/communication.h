@@ -22,11 +22,17 @@
 #ifndef COMMUNICATION_H
 #define COMMUNICATION_H
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "bricklib2/bootloader/bootloader.h"
 
+// Default functions
 BootloaderHandleMessageResponse handle_message(const void *data, void *response);
+void communication_tick(void);
+void communication_init(void);
 
-
+// Function and callback IDs and structs
 #define FID_WRITE 1
 #define FID_READ 2
 #define FID_ENABLE_READ_CALLBACK 3
@@ -110,8 +116,7 @@ typedef struct {
 	uint8_t error;
 } __attribute__((__packed__)) ErrorCallbackCallback;
 
-
-
+// Function prototypes
 BootloaderHandleMessageResponse write(const Write *data, WriteResponse *response);
 BootloaderHandleMessageResponse read(const Read *data, ReadResponse *response);
 BootloaderHandleMessageResponse enable_read_callback(const EnableReadCallback *data);
@@ -120,6 +125,15 @@ BootloaderHandleMessageResponse is_read_callback_enabled(const IsReadCallbackEna
 BootloaderHandleMessageResponse set_configuration(const SetConfiguration *data);
 BootloaderHandleMessageResponse get_configuration(const GetConfiguration *data, GetConfigurationResponse *response);
 
-void communication_tick(void);
+// Callbacks
+bool handle_read_callback_callback(void);
+bool handle_error_callback_callback(void);
+
+#define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
+#define COMMUNICATION_CALLBACK_HANDLER_NUM 2
+#define COMMUNICATION_CALLBACK_LIST_INIT \
+	{NULL, NULL, handle_read_callback_callback}, \
+	{NULL, NULL, handle_error_callback_callback},
+
 
 #endif

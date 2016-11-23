@@ -24,6 +24,7 @@
 
 #include "rs485.h"
 
+#include "bricklib2/hal/system_timer/system_timer.h"
 #include "bricklib2/protocols/tfp/tfp.h"
 #include "bricklib2/utility/ringbuffer.h"
 #include "bricklib2/utility/util_definitions.h"
@@ -140,11 +141,11 @@ BootloaderHandleMessageResponse get_configuration(const GetConfiguration *data, 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-void handle_read_callback_callback(void) {
+bool handle_read_callback_callback(void) {
 	static bool is_buffered = false;
 	static ReadCallbackCallback cb;
 	if(!rs485.read_callback_enabled) {
-		return;
+		return false;
 	}
 
 	if(!is_buffered) {
@@ -168,19 +169,22 @@ void handle_read_callback_callback(void) {
 			is_buffered = true;
 		} else {
 			is_buffered = false;
-			return;
+			return false;
 		}
 	}
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
 		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(ReadCallbackCallback));
 		is_buffered = false;
+		return true;
 	} else {
 		is_buffered = true;
 	}
+
+	return false;
 }
 
-void handle_error_callback_callback(void) {
+bool handle_error_callback_callback(void) {
 	static bool is_buffered = false;
 	static ErrorCallbackCallback cb;
 
@@ -193,16 +197,19 @@ void handle_error_callback_callback(void) {
 			is_buffered = true;
 		} else {
 			is_buffered = false;
-			return;
+			return false;
 		}
 	}
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
 		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(ErrorCallbackCallback));
 		is_buffered = false;
+		return true;
 	} else {
 		is_buffered = true;
 	}
+
+	return false;
 }
 
 #if 0
@@ -214,23 +221,26 @@ void handle_xxx_callback(void) {
 		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(XxxCallback), FID_CALLBACK_XXX);
 		// TODO: Implement Xxx callback handling
 
-		return;
+		return false;
 	}
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
 		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(XxxCallback));
 		is_buffered = false;
+		return true;
 	} else {
 		is_buffered = true;
 	}
+
+	return false;
 }
 #endif
 
-void communication_tick(void) {
-	handle_read_callback_callback();
-	handle_error_callback_callback();
 
-#if 0
-	handle_xxx_callback();
-#endif
+void communication_tick(void) {
+	communication_callback_tick();
+}
+
+void communication_init(void) {
+	communication_callback_init();
 }

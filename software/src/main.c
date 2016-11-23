@@ -36,6 +36,8 @@ RS485 rs485;
 int main(void) {
 	uartbb_init();
 	uartbb_puts("Start RS485 Bricklet\n\r");
+	uartbb_puti(SystemCoreClock);
+	uartbb_putnl();
 
 	uint32_t *unique_chip_id = (uint32_t*)0x10000FF0;
 
@@ -47,7 +49,9 @@ int main(void) {
 		uartbb_putnl();
 	}
 
+	communication_init();
 	rs485_init(&rs485);
+
 	while(true) {
 		rs485_tick(&rs485);
 		communication_tick();
