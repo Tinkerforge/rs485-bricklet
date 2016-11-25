@@ -51,16 +51,27 @@ void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
 	XMC_GPIO_SetOutputHigh(UARTBB_TX_PIN);
 
 	while(!XMC_USIC_CH_RXFIFO_IsEmpty(RS485_USIC)) {
-		if(!ringbuffer_add(&rs485.ringbuffer_rx, RS485_USIC->OUTR)) {
-			rs485.error |= ERROR_OVERRUN;
-			XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
-			uartbb_puts("rb overflow!\n\r");
+		// Instead of ringbuffer_add we add the byte to the buffer
+		// by hand. We need to save the low watermark calculation overhead
+		uint16_t new_end = rs485.ringbuffer_rx.end+1;
+		if(new_end >= rs485.ringbuffer_rx.size) {
+			new_end = 0;
+		}
+
+		if(new_end == rs485.ringbuffer_rx.start) {
+			rs485.error_count_overrun++;
+			if(rs485.red_led_config == ERROR_LED_CONFIG_SHOW_ERROR) {
+				XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
+			}
+
+			// In the case of an overrun we read the byte and throw it away
+			volatile uint8_t _ __attribute__((unused)) = RS485_USIC->OUTR;
+
 			XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
 			return;
 		}
-
-//		rs485.ringbuffer_rx.buffer[rs485.ringbuffer_rx.end] = RS485_USIC->OUTR;
-//		rs485.ringbuffer_rx.end = (rs485.ringbuffer_rx.end + 1) % rs485.buffer_size_rx;
+		rs485.ringbuffer_rx.buffer[new_end] = RS485_USIC->OUTR;
+		rs485.ringbuffer_rx.end = new_end;
 	}
 
 	XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
