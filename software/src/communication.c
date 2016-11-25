@@ -28,6 +28,7 @@
 #include "bricklib2/protocols/tfp/tfp.h"
 #include "bricklib2/utility/ringbuffer.h"
 #include "bricklib2/utility/util_definitions.h"
+#include "bricklib2/utility/communication_callback.h"
 #include "bricklib2/bootloader/bootloader.h"
 
 #include "xmc_usic.h"
@@ -46,6 +47,17 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_IS_READ_CALLBACK_ENABLED: return is_read_callback_enabled(message, response);
 		case FID_SET_CONFIGURATION: return set_configuration(message);
 		case FID_GET_CONFIGURATION: return get_configuration(message, response);
+		case FID_SET_COMMUNICATION_LED_CONFIG: return set_communication_led_config(message);
+		case FID_GET_COMMUNICATION_LED_CONFIG: return get_communication_led_config(message, response);
+		case FID_SET_ERROR_LED_CONFIG: return set_error_led_config(message);
+		case FID_GET_ERROR_LED_CONFIG: return get_error_led_config(message, response);
+		case FID_SET_BUFFER_CONFIG: return set_buffer_config(message);
+		case FID_GET_BUFFER_CONFIG: return get_buffer_config(message, response);
+		case FID_GET_BUFFER_STATUS: return get_buffer_status(message, response);
+		case FID_ENABLE_ERROR_COUNT_CALLBACK: return enable_error_count_callback(message);
+		case FID_DISABLE_ERROR_COUNT_CALLBACK: return disable_error_count_callback(message);
+		case FID_IS_ERROR_COUNT_CALLBACK_ENABLED: return is_error_count_callback_enabled(message, response);
+		case FID_GET_ERROR_COUNT: return get_error_count(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -141,15 +153,140 @@ BootloaderHandleMessageResponse get_configuration(const GetConfiguration *data, 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+BootloaderHandleMessageResponse set_communication_led_config(const SetCommunicationLEDConfig *data) {
+	if(data->config > COMMUNICATION_LED_CONFIG_SHOW_COMMUNICATION) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	rs485.yellow_led_state.config = data->config;
+
+	// Set LED according to value
+	if(rs485.yellow_led_state.config == COMMUNICATION_LED_CONFIG_OFF) {
+		XMC_GPIO_SetOutputHigh(RS485_LED_YELLOW_PIN);
+	} else {
+		XMC_GPIO_SetOutputLow(RS485_LED_YELLOW_PIN);
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_communication_led_config(const GetCommunicationLEDConfig *data, GetCommunicationLEDConfigResponse *response) {
+	response->header.length = sizeof(GetCommunicationLEDConfigResponse);
+	response->config        = rs485.yellow_led_state.config;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_error_led_config(const SetErrorLEDConfig *data) {
+	if(data->config > ERROR_LED_CONFIG_SHOW_ERROR) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	rs485.red_led_config = data->config;
+
+	// Set LED according to value
+	if(rs485.red_led_config == ERROR_LED_CONFIG_OFF) {
+		XMC_GPIO_SetOutputHigh(RS485_LED_RED_PIN);
+	} else {
+		XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_error_led_config(const GetErrorLEDConfig *data, GetErrorLEDConfigResponse *response) {
+	response->header.length = sizeof(GetErrorLEDConfigResponse);
+	response->config        = rs485.red_led_config;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse set_buffer_config(const SetBufferConfig *data) {
+	if((data->receive_buffer_size < 1024) ||
+	   (data->send_buffer_size < 1024) ||
+	   (data->receive_buffer_size + data->send_buffer_size != RS485_BUFFER_SIZE)) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	rs485.buffer_size_rx = data->receive_buffer_size;
+
+	rs485_init_buffer(&rs485);
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_buffer_config(const GetBufferConfig *data, GetBufferConfigResponse *response) {
+	response->header.length       = sizeof(GetBufferConfigResponse);
+	response->receive_buffer_size = rs485.buffer_size_rx;
+	response->send_buffer_size    = RS485_BUFFER_SIZE - rs485.buffer_size_rx;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse get_buffer_status(const GetBufferStatus *data, GetBufferStatusResponse *response) {
+	response->header.length       = sizeof(GetBufferStatusResponse);
+	response->send_buffer_used    = ringbuffer_get_used(&rs485.ringbuffer_tx);
+	response->receive_buffer_used = ringbuffer_get_used(&rs485.ringbuffer_rx);
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse enable_error_count_callback(const EnableErrorCountCallback *data) {
+	rs485.error_count_callback_enabled = true;
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse disable_error_count_callback(const DisableErrorCountCallback *data) {
+	rs485.error_count_callback_enabled = false;
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse is_error_count_callback_enabled(const IsErrorCountCallbackEnabled *data, IsErrorCountCallbackEnabledResponse *response) {
+	response->header.length = sizeof(IsErrorCountCallbackEnabledResponse);
+	response->enabled       = rs485.error_count_callback_enabled;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data, GetErrorCountResponse *response) {
+	response->header.length       = sizeof(GetErrorCountResponse);
+	response->overrun_error_count = rs485.error_count_overrun;
+	response->parity_error_count  = rs485.error_count_parity;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+
+
 bool handle_read_callback_callback(void) {
 	static bool is_buffered = false;
 	static ReadCallbackCallback cb;
+
+	static uint32_t last_used = 0;
+	static uint32_t last_time = 0;
+
 	if(!rs485.read_callback_enabled) {
 		return false;
 	}
 
 	if(!is_buffered) {
-		if(ringbuffer_get_used(&rs485.ringbuffer_rx) > 0) {
+		const uint32_t used         = ringbuffer_get_used(&rs485.ringbuffer_rx);
+		const uint32_t ms_per_2byte = (2*8000/rs485.baudrate) + 1;
+		const bool     time_elapsed = system_timer_is_time_elapsed_ms(last_time, ms_per_2byte);
+		const bool     no_change    = (last_used == used);
+
+		last_used = used;
+
+		// We update the time if the buffer is empty or the time has elapsed
+		// the buffer fill level changed
+		if(used == 0 || time_elapsed || !no_change) {
+			last_time = system_timer_get_ms();
+		}
+		// We send a read callback if there is data in the buffer and it hasn't changed
+		// for at least two bytes worth of time or if there are 60 or more bytes in the buffer
+		if((used > 0 && no_change && time_elapsed) || used >= 60) {
 			tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(ReadCallbackCallback), FID_CALLBACK_READ_CALLBACK);
 			// Read bytes available in ringbuffer
 			uint8_t read = 0;
@@ -184,15 +321,25 @@ bool handle_read_callback_callback(void) {
 	return false;
 }
 
-bool handle_error_callback_callback(void) {
+bool handle_error_count_callback_callback(void) {
 	static bool is_buffered = false;
-	static ErrorCallbackCallback cb;
+	static ErrorCountCallbackCallback cb;
+
+	static uint32_t last_error_count_parity = 0;
+	static uint32_t last_error_count_overrun = 0;
+	static uint32_t last_time = 0;
+
+	if(!rs485.error_count_callback_enabled) {
+		return false;
+	}
 
 	if(!is_buffered) {
-		if(rs485.error != 0) {
-			tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(ErrorCallbackCallback), FID_CALLBACK_ERROR_CALLBACK);
-			cb.error = rs485.error;
-			rs485.error = 0;
+		if(system_timer_is_time_elapsed_ms(last_time, CALLBACK_ERROR_COUNT_DEBOUNCE_MS) && (rs485.error_count_overrun != last_error_count_overrun || rs485.error_count_parity != last_error_count_parity)) {
+			last_time = system_timer_get_ms();
+
+			tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(ErrorCountCallbackCallback), FID_CALLBACK_ERROR_COUNT_CALLBACK);
+			cb.overrun_error_count = rs485.error_count_overrun;
+			cb.parity_error_count  = rs485.error_count_parity;
 
 			is_buffered = true;
 		} else {
@@ -202,7 +349,7 @@ bool handle_error_callback_callback(void) {
 	}
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
-		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(ErrorCallbackCallback));
+		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(ErrorCountCallbackCallback));
 		is_buffered = false;
 		return true;
 	} else {
