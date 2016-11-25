@@ -21,8 +21,9 @@
 
 #include "rs485.h"
 
+#include "communication.h"
+
 #include "configs/config.h"
-#include "bricklib2/hal/uartbb/uartbb.h"
 #include "bricklib2/hal/system_timer/system_timer.h"
 #include "bricklib2/utility/ringbuffer.h"
 
@@ -79,12 +80,12 @@ void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
 
 
 void __attribute__((optimize("-O3"))) rs485_rxa_irq_handler(void) {
-	XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
-
 	// We get alternate rx interrupt if there is a parity error.
 	// In this case we still read the byte and give it to the user
-	rs485.error |= ERROR_PARITY;
-	XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
+	rs485.error_count_parity++;
+	if(rs485.red_led_config == ERROR_LED_CONFIG_SHOW_ERROR) {
+		XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
+	}
 	rs485_rx_irq_handler();
 }
 
@@ -201,6 +202,20 @@ void rs485_init_hardware(RS485 *rs485) {
 	XMC_USIC_CH_RXFIFO_EnableEvent(RS485_USIC, XMC_USIC_CH_RXFIFO_EVENT_CONF_STANDARD | XMC_USIC_CH_RXFIFO_EVENT_CONF_ALTERNATE);
 }
 
+void rs485_init_buffer(RS485 *rs485) {
+	// TODO: Turn RS485 interrupts off here
+
+	// Initialize rs485 buffer
+	memset(rs485->buffer, 0, RS485_BUFFER_SIZE);
+
+	// rx buffer is at buffer[0:buffer_size_rx]
+	ringbuffer_init(&rs485->ringbuffer_rx, rs485->buffer_size_rx, &rs485->buffer[0]);
+	// tx buffer is at buffer[buffer_size_rx:RS485_BUFFER_SIZE]
+	ringbuffer_init(&rs485->ringbuffer_tx, RS485_BUFFER_SIZE-rs485->buffer_size_rx, &rs485->buffer[rs485->buffer_size_rx]);
+
+	// TODO: Turn RS485 interrupts on here
+}
+
 //#include "pwm.h"
 //#include "pwm_conf.h"
 //#include "pwm_extern.h"
@@ -208,27 +223,25 @@ void rs485_init(RS485 *rs485) {
 //	PWM_Init(&PWM_0); return;
 
 	// Default config is 115200 baud, 8N1, half-duplex
-	rs485->baudrate   = 115200;
-	rs485->parity     = PARITY_NONE;
-	rs485->wordlength = WORDLENGTH_8;
-	rs485->stopbits   = STOPBITS_1;
-	rs485->duplex     = DUPLEX_HALF;
-	rs485->error      = 0;
+	rs485->baudrate            = 115200;
+	rs485->parity              = PARITY_NONE;
+	rs485->wordlength          = WORDLENGTH_8;
+	rs485->stopbits            = STOPBITS_1;
+	rs485->duplex              = DUPLEX_HALF;
+	rs485->error_count_overrun = 0;
+	rs485->error_count_parity  = 0;
 
-	rs485->read_callback_enabled = true;
+	rs485->read_callback_enabled        = false;
+	rs485->error_count_callback_enabled = false;
 
-	// Initialize struct
-	memset(rs485->buffer, 0, RS485_BUFFER_SIZE);
 	// By default we use a 50/50 segmentation of rx/tx buffer
 	rs485->buffer_size_rx = RS485_BUFFER_SIZE/2;
-	// rx buffer is at buffer[0:buffer_size_rx]
-	ringbuffer_init(&rs485->ringbuffer_rx, rs485->buffer_size_rx, &rs485->buffer[0]);
-	// tx buffer is at buffer[buffer_size_rx:RS485_BUFFER_SIZE]
-	ringbuffer_init(&rs485->ringbuffer_tx, RS485_BUFFER_SIZE-rs485->buffer_size_rx, &rs485->buffer[rs485->buffer_size_rx]);
+	rs485_init_buffer(rs485);
 
-	rs485->yellow_led_state.config  = LED_FLICKER_CONFIG_ACTIVE;
+	rs485->yellow_led_state.config  = COMMUNICATION_LED_CONFIG_SHOW_COMMUNICATION;
 	rs485->yellow_led_state.counter = 0;
 	rs485->yellow_led_state.start   = 0;
+	rs485->red_led_config           = ERROR_LED_CONFIG_SHOW_ERROR;
 
 	// LED configuration
 	XMC_GPIO_CONFIG_t led_pin_config = {
