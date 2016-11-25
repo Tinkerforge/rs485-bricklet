@@ -75,7 +75,10 @@ typedef struct {
 	uint16_t buffer_size_rx;
 
 	bool read_callback_enabled;
-	uint8_t error;
+	bool error_count_callback_enabled;
+	uint32_t error_count_parity;
+	uint32_t error_count_overrun;
+	uint8_t red_led_config;
 	LEDFlickerState yellow_led_state;
 
 	uint32_t baudrate;
@@ -90,6 +93,7 @@ typedef struct {
 
 void rs485_init(RS485 *rs485);
 void rs485_tick(RS485 *rs485);
+void rs485_init_buffer(RS485 *rs485);
 void rs485_apply_configuration(RS485 *rs485);
 
 #endif
