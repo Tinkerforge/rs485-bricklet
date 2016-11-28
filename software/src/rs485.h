@@ -33,7 +33,7 @@
 
 #define RS485_OVERSAMPLING 16
 #define RS485_BAUDRATE_MIN 100
-#define RS485_BAUDRATE_MAX (((48000000/1024)*1023)/RS485_OVERSAMPLING) // This is defined in xmclib
+#define RS485_BAUDRATE_MAX 2000000
 
 typedef enum {
 	PARITY_NONE = 0,
