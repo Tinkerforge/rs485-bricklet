@@ -86,6 +86,7 @@ typedef struct {
 	RS485Stopbits stopbits;
 	RS485Wordlength wordlength;
 	RS485Duplex duplex;
+	uint32_t duplex_shift_setting;
 
 	RS485State state;
 } RS485;

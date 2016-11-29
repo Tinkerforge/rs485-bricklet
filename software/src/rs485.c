@@ -37,8 +37,8 @@ extern RS485 rs485;
 #define rs485_tff_irq_handler IRQ_Hdlr_13
 #define rs485_rxa_irq_handler IRQ_Hdlr_14
 
-#define RS485_HALF_DUPLEX_RX_ENABLE() (RS485_NRXE_AND_TXE_PORT->OMR = ((0x10000 << RS485_TXE_PIN_NUM) | (0x10000 << RS485_NRXE_PIN_NUM)))
-#define RS485_HALF_DUPLEX_TX_ENABLE() (RS485_NRXE_AND_TXE_PORT->OMR = ((0x1     << RS485_TXE_PIN_NUM) | (0x1     << RS485_NRXE_PIN_NUM)))
+#define RS485_HALF_DUPLEX_RX_ENABLE() (RS485_NRXE_AND_TXE_PORT->OMR = ((0x10000 << RS485_TXE_PIN_NUM) | (0x10000                    << RS485_NRXE_PIN_NUM)))
+#define RS485_HALF_DUPLEX_TX_ENABLE() (RS485_NRXE_AND_TXE_PORT->OMR = ((0x1     << RS485_TXE_PIN_NUM) | (rs485.duplex_shift_setting << RS485_NRXE_PIN_NUM))) // Use duplex_shift_setting to not turn rx off in full-duplex
 
 void __attribute__((optimize("-O3"))) rs485_tff_irq_handler(void) {
 	XMC_GPIO_SetOutputHigh(UARTBB_TX_PIN);
@@ -223,13 +223,14 @@ void rs485_init(RS485 *rs485) {
 //	PWM_Init(&PWM_0); return;
 
 	// Default config is 115200 baud, 8N1, half-duplex
-	rs485->baudrate            = 115200;
-	rs485->parity              = PARITY_NONE;
-	rs485->wordlength          = WORDLENGTH_8;
-	rs485->stopbits            = STOPBITS_1;
-	rs485->duplex              = DUPLEX_HALF;
-	rs485->error_count_overrun = 0;
-	rs485->error_count_parity  = 0;
+	rs485->baudrate             = 115200;
+	rs485->parity               = PARITY_NONE;
+	rs485->wordlength           = WORDLENGTH_8;
+	rs485->stopbits             = STOPBITS_1;
+	rs485->duplex               = DUPLEX_HALF;
+	rs485->duplex_shift_setting = 0x1;
+	rs485->error_count_overrun  = 0;
+	rs485->error_count_parity   = 0;
 
 	rs485->read_callback_enabled        = false;
 	rs485->error_count_callback_enabled = false;
@@ -265,6 +266,12 @@ void rs485_apply_configuration(RS485 *rs485) {
 
 	// Then turn off the USIC, but wait until the tx buffer is empty
 	while(XMC_UART_CH_Stop(RS485_USIC) != XMC_UART_CH_STATUS_OK);
+
+	if(rs485->duplex == DUPLEX_HALF) {
+		rs485->duplex_shift_setting = 0x1;
+	} else {
+		rs485->duplex_shift_setting = 0x10000;
+	}
 
 	// Then we can safely reconfigure the hardware
 	rs485_init_hardware(rs485);
