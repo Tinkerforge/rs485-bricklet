@@ -71,7 +71,7 @@ void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
 			XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
 			return;
 		}
-		rs485.ringbuffer_rx.buffer[new_end] = RS485_USIC->OUTR;
+		rs485.ringbuffer_rx.buffer[rs485.ringbuffer_rx.end] = RS485_USIC->OUTR;
 		rs485.ringbuffer_rx.end = new_end;
 	}
 
