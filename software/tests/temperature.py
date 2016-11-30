@@ -5,7 +5,7 @@ import time
 
 HOST = "localhost"
 PORT = 4223
-UID = "PrEFT"
+UID = "PBYPp"
 
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_rs485 import BrickletRS485
