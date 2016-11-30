@@ -11,13 +11,41 @@ from tinkerforge.bricklet_rs485 import BrickletRS485
 from tinkerforge.brick_master import BrickMaster
 import time
 
+def cb_enumerate(uid, connected_uid, position, hardware_version, firmware_version,
+                 device_identifier, enumeration_type):
+    
+    global UID
+    if device_identifier == 277:
+        UID = uid
+    else:
+        return
+
+    print("UID:               " + uid)
+    print("Enumeration Type:  " + str(enumeration_type))
+
+    if enumeration_type == IPConnection.ENUMERATION_TYPE_DISCONNECTED:
+        print("")
+        return
+
+    print("Connected UID:     " + connected_uid)
+    print("Position:          " + position)
+    print("Hardware Version:  " + str(hardware_version))
+    print("Firmware Version:  " + str(firmware_version))
+    print("Device Identifier: " + str(device_identifier))
+    print("")
+
+
 if __name__ == "__main__":
     ipcon = IPConnection() # Create IP connection
-    rs485 = BrickletRS485(UID, ipcon) # Create device object
     master = BrickMaster(UID_MASTER, ipcon) # Create device object
+    ipcon.register_callback(IPConnection.CALLBACK_ENUMERATE, cb_enumerate)
 
     ipcon.connect(HOST, PORT) # Connect to brickd
     # Don't use device before ipcon is connected
+
+    ipcon.enumerate()
+    time.sleep(0.5)
+    rs485 = BrickletRS485(UID, ipcon) # Create device object
 
     master.set_spitfp_baudrate('c', 2000000)
 
