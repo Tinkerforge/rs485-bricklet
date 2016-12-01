@@ -61,7 +61,7 @@ void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
 
 		if(new_end == rs485.ringbuffer_rx.start) {
 			rs485.error_count_overrun++;
-			if(rs485.red_led_config == ERROR_LED_CONFIG_SHOW_ERROR) {
+			if(rs485.red_led_state.config == LED_FLICKER_CONFIG_EXTERNAL) {
 				XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
 			}
 
@@ -83,7 +83,7 @@ void __attribute__((optimize("-O3"))) rs485_rxa_irq_handler(void) {
 	// We get alternate rx interrupt if there is a parity error.
 	// In this case we still read the byte and give it to the user
 	rs485.error_count_parity++;
-	if(rs485.red_led_config == ERROR_LED_CONFIG_SHOW_ERROR) {
+	if(rs485.red_led_state.config == LED_FLICKER_CONFIG_EXTERNAL) {
 		XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
 	}
 	rs485_rx_irq_handler();
@@ -242,7 +242,9 @@ void rs485_init(RS485 *rs485) {
 	rs485->yellow_led_state.config  = COMMUNICATION_LED_CONFIG_SHOW_COMMUNICATION;
 	rs485->yellow_led_state.counter = 0;
 	rs485->yellow_led_state.start   = 0;
-	rs485->red_led_config           = ERROR_LED_CONFIG_SHOW_ERROR;
+	rs485->red_led_state.config     = LED_FLICKER_CONFIG_EXTERNAL;
+	rs485->red_led_state.counter    = 0;
+	rs485->red_led_state.start      = 0;
 
 	// LED configuration
 	XMC_GPIO_CONFIG_t led_pin_config = {
@@ -288,13 +290,14 @@ void rs485_tick(RS485 *rs485) {
 
 	if(rx_count != last_rx_count) {
 		last_rx_count = rx_count;
-		rs485->yellow_led_state.counter++;
+		led_flicker_increase_counter(&rs485->yellow_led_state);
 	}
 
 	if(tx_count != last_tx_count) {
 		last_tx_count = tx_count;
-		rs485->yellow_led_state.counter++;
+		led_flicker_increase_counter(&rs485->yellow_led_state);
 	}
 
 	led_flicker_tick(&rs485->yellow_led_state, system_timer_get_ms(), RS485_LED_YELLOW_PIN);
+	led_flicker_tick(&rs485->red_led_state,    system_timer_get_ms(), RS485_LED_RED_PIN);
 }

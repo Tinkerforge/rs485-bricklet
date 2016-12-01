@@ -154,7 +154,7 @@ BootloaderHandleMessageResponse get_configuration(const GetConfiguration *data, 
 }
 
 BootloaderHandleMessageResponse set_communication_led_config(const SetCommunicationLEDConfig *data) {
-	if(data->config > COMMUNICATION_LED_CONFIG_SHOW_COMMUNICATION) {
+	if(data->config > COMMUNICATION_LED_CONFIG_SHOW_HEARTBEAT) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
@@ -178,14 +178,19 @@ BootloaderHandleMessageResponse get_communication_led_config(const GetCommunicat
 }
 
 BootloaderHandleMessageResponse set_error_led_config(const SetErrorLEDConfig *data) {
-	if(data->config > ERROR_LED_CONFIG_SHOW_ERROR) {
+	if(data->config > ERROR_LED_CONFIG_SHOW_HEARTBEAT) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
-	rs485.red_led_config = data->config;
+	// The error config and flicker config are not the same, we save the "show error" option as "external"
+	if(data->config == ERROR_LED_CONFIG_SHOW_ERROR) {
+		rs485.red_led_state.config = LED_FLICKER_CONFIG_EXTERNAL;
+	} else {
+		rs485.red_led_state.config = data->config;
+	}
 
 	// Set LED according to value
-	if(rs485.red_led_config == ERROR_LED_CONFIG_OFF) {
+	if(rs485.red_led_state.config == ERROR_LED_CONFIG_OFF || rs485.red_led_state.config == LED_FLICKER_CONFIG_EXTERNAL) {
 		XMC_GPIO_SetOutputHigh(RS485_LED_RED_PIN);
 	} else {
 		XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
@@ -196,7 +201,11 @@ BootloaderHandleMessageResponse set_error_led_config(const SetErrorLEDConfig *da
 
 BootloaderHandleMessageResponse get_error_led_config(const GetErrorLEDConfig *data, GetErrorLEDConfigResponse *response) {
 	response->header.length = sizeof(GetErrorLEDConfigResponse);
-	response->config        = rs485.red_led_config;
+	if(rs485.red_led_state.config == LED_FLICKER_CONFIG_EXTERNAL) {
+		response->config = ERROR_LED_CONFIG_SHOW_ERROR;
+	} else {
+		response->config = rs485.red_led_state.config;
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

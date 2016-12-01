@@ -78,8 +78,8 @@ typedef struct {
 	bool error_count_callback_enabled;
 	uint32_t error_count_parity;
 	uint32_t error_count_overrun;
-	uint8_t red_led_config;
 	LEDFlickerState yellow_led_state;
+	LEDFlickerState red_led_state;
 
 	uint32_t baudrate;
 	RS485Parity parity;
