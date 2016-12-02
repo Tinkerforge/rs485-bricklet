@@ -190,7 +190,14 @@ void rs485_init_hardware(RS485 *rs485) {
 }
 
 void rs485_init_buffer(RS485 *rs485) {
-	// TODO: Turn RS485 interrupts off here
+	// Disable interrupts so we can't accidentally
+	// receive ringbuffer_adds in between a re-init
+	NVIC_DisableIRQ((IRQn_Type)RS485_IRQ_TFF);
+	NVIC_DisableIRQ((IRQn_Type)RS485_IRQ_TX);
+	NVIC_DisableIRQ((IRQn_Type)RS485_IRQ_RX);
+	NVIC_DisableIRQ((IRQn_Type)RS485_IRQ_RXA);
+	__DSB();
+	__ISB();
 
 	// Initialize rs485 buffer
 	memset(rs485->buffer, 0, RS485_BUFFER_SIZE);
@@ -200,7 +207,10 @@ void rs485_init_buffer(RS485 *rs485) {
 	// tx buffer is at buffer[buffer_size_rx:RS485_BUFFER_SIZE]
 	ringbuffer_init(&rs485->ringbuffer_tx, RS485_BUFFER_SIZE-rs485->buffer_size_rx, &rs485->buffer[rs485->buffer_size_rx]);
 
-	// TODO: Turn RS485 interrupts on here
+	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_TFF);
+	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_TX);
+	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_RX);
+	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_RXA);
 }
 
 void rs485_init(RS485 *rs485) {
