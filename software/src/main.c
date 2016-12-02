@@ -27,28 +27,12 @@
 #include "xmc_gpio.h"
 
 #include "bricklib2/bootloader/bootloader.h"
-#include "bricklib2/hal/uartbb/uartbb.h"
 #include "communication.h"
 #include "rs485.h"
 
 RS485 rs485;
 
 int main(void) {
-	uartbb_init();
-	uartbb_puts("Start RS485 Bricklet\n\r");
-	uartbb_puti(SystemCoreClock);
-	uartbb_putnl();
-
-	uint32_t *unique_chip_id = (uint32_t*)0x10000FF0;
-
-	for(uint8_t i = 0; i < 4; i++) {
-		uartbb_puts("uid ");
-		uartbb_puti(i);
-		uartbb_puts(": ");
-		uartbb_puti(unique_chip_id[i]);
-		uartbb_putnl();
-	}
-
 	communication_init();
 	rs485_init(&rs485);
 

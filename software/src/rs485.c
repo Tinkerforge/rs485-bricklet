@@ -41,16 +41,12 @@ extern RS485 rs485;
 #define RS485_HALF_DUPLEX_TX_ENABLE() (RS485_NRXE_AND_TXE_PORT->OMR = ((0x1     << RS485_TXE_PIN_NUM) | (rs485.duplex_shift_setting << RS485_NRXE_PIN_NUM))) // Use duplex_shift_setting to not turn rx off in full-duplex
 
 void __attribute__((optimize("-O3"))) rs485_tff_irq_handler(void) {
-	XMC_GPIO_SetOutputHigh(UARTBB_TX_PIN);
 	if((RS485_USIC->PSR_ASCMode & (XMC_UART_CH_STATUS_FLAG_TRANSMITTER_FRAME_FINISHED | XMC_UART_CH_STATUS_FLAG_TRANSFER_STATUS_BUSY)) ==  XMC_UART_CH_STATUS_FLAG_TRANSMITTER_FRAME_FINISHED) {
 		RS485_HALF_DUPLEX_RX_ENABLE();
 	}
-	XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
 }
 
 void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
-	XMC_GPIO_SetOutputHigh(UARTBB_TX_PIN);
-
 	while(!XMC_USIC_CH_RXFIFO_IsEmpty(RS485_USIC)) {
 		// Instead of ringbuffer_add we add the byte to the buffer
 		// by hand. We need to save the low watermark calculation overhead
@@ -68,14 +64,11 @@ void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
 			// In the case of an overrun we read the byte and throw it away
 			volatile uint8_t _ __attribute__((unused)) = RS485_USIC->OUTR;
 
-			XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
 			return;
 		}
 		rs485.ringbuffer_rx.buffer[rs485.ringbuffer_rx.end] = RS485_USIC->OUTR;
 		rs485.ringbuffer_rx.end = new_end;
 	}
-
-	XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
 }
 
 
@@ -90,23 +83,17 @@ void __attribute__((optimize("-O3"))) rs485_rxa_irq_handler(void) {
 }
 
 void __attribute__((optimize("-O3"))) rs485_tx_irq_handler(void) {
-	XMC_GPIO_SetOutputHigh(UARTBB_TX_PIN);
-
 	RS485_HALF_DUPLEX_TX_ENABLE();
 	while(!XMC_USIC_CH_TXFIFO_IsFull(RS485_USIC)) {
 		uint8_t data;
 		if(!ringbuffer_get(&rs485.ringbuffer_tx, &data)) {
 			XMC_USIC_CH_TXFIFO_DisableEvent(RS485_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
-			XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
 			return;
 		}
 
 		RS485_USIC->IN[0] = data;
 	}
-
-	XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
 }
-
 
 void rs485_init_hardware(RS485 *rs485) {
 	// TX pin configuration
@@ -216,12 +203,7 @@ void rs485_init_buffer(RS485 *rs485) {
 	// TODO: Turn RS485 interrupts on here
 }
 
-//#include "pwm.h"
-//#include "pwm_conf.h"
-//#include "pwm_extern.h"
 void rs485_init(RS485 *rs485) {
-//	PWM_Init(&PWM_0); return;
-
 	// Default config is 115200 baud, 8N1, half-duplex
 	rs485->baudrate             = 115200;
 	rs485->parity               = PARITY_NONE;
