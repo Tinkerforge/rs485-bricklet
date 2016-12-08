@@ -40,6 +40,7 @@
 // --- Oscilater defines ---
 #define OSCHP_FREQUENCY 16000000
 #define DCLK_CLOCK_SRC  1
+#define DCO1_CAL_SRC    1
 
 
 // --- SPITFP ---
