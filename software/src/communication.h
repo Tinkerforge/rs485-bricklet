@@ -251,8 +251,8 @@ bool handle_error_count_callback_callback(void);
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
 #define COMMUNICATION_CALLBACK_HANDLER_NUM 2
 #define COMMUNICATION_CALLBACK_LIST_INIT \
-	{NULL, NULL, handle_read_callback_callback}, \
-	{NULL, NULL, handle_error_count_callback_callback},
+	handle_read_callback_callback, \
+	handle_error_count_callback_callback, \
 
 
 #endif
