@@ -34,7 +34,8 @@
 #define BOOTLOADER_STATUS_LED_PIN      P4_5
 #define BOOTLOADER_BOOT_PAD_PIN        P4_6
 
-#define BOOTLOADER_FLASH_SIZE          (64*1024)
+#define BOOTLOADER_FLASH_EEPROM_SIZE   (4*256)
+#define BOOTLOADER_FLASH_SIZE          (64*1024 - BOOTLOADER_FLASH_EEPROM_SIZE)
 
 
 // --- Oscilater defines ---
