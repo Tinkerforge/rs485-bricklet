@@ -100,7 +100,7 @@
       (mirror false)
       (drillshape 0)
       (scaleselection 1)
-      (outputdirectory prod/))
+      (outputdirectory /tmp/))
   )
 
   (net 0 "")
