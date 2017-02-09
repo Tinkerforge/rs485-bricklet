@@ -1,7 +1,7 @@
 /* rs485-bricklet
- * Copyright (C) 2016 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2017 Ishraq Ibne Ashraf <ishraq@tinkerforge.com>
  *
- * main.c: Initialization for RS485 Bricklet
+ * modbus.h: Modbus implementation
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,26 +19,25 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <stdio.h>
-#include <stdbool.h>
+#ifndef MODBUS_H
+#define MODBUS_H
 
-#include "configs/config.h"
-
-#include "xmc_gpio.h"
-
-#include "bricklib2/bootloader/bootloader.h"
-#include "communication.h"
 #include "rs485.h"
 
-RS485 rs485;
+typedef struct {
+  uint8_t address;
+  uint8_t function_code;
+  uint8_t exception_code;
+  uint8_t checksum[2];
+} __attribute__((__packed__)) ModbusExceptionResponse;
 
-int main(void) {
-	communication_init();
-	rs485_init(&rs485);
+void modbus_init(RS485 *rs485);
+void modbus_clear_request(RS485 *rs485);
+bool modbus_slave_check_address(RS485 *rs485);
+void modbus_start_tx_from_buffer(RS485 *rs485);
+bool modbus_check_frame_checksum(RS485 *rs485);
+void modbus_update_rtu_wire_state_machine(RS485 *rs485);
+void modbus_report_exception(RS485 *rs485, uint8_t function_code, uint8_t exception_code);
+void modbus_init_new_request(RS485 *rs485, RS485ModbusRequestState state, uint16_t length);
 
-	while(true) {
-		rs485_tick(&rs485);
-		communication_tick();
-		bootloader_tick();
-	}
-}
+#endif

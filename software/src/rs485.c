@@ -1,5 +1,6 @@
 /* rs485-bricklet
  * Copyright (C) 2016 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2017 Ishraq Ibne Ashraf <ishraq@tinkerforge.com>
  *
  * rs485.c: RS485 handling
  *
@@ -20,6 +21,7 @@
  */
 
 #include "rs485.h"
+#include "modbus.h"
 
 #include "communication.h"
 
@@ -37,35 +39,51 @@ extern RS485 rs485;
 #define rs485_tff_irq_handler IRQ_Hdlr_13
 #define rs485_rxa_irq_handler IRQ_Hdlr_14
 
-#define RS485_HALF_DUPLEX_RX_ENABLE() (RS485_NRXE_AND_TXE_PORT->OMR = ((0x10000 << RS485_TXE_PIN_NUM) | (0x10000                    << RS485_NRXE_PIN_NUM)))
-#define RS485_HALF_DUPLEX_TX_ENABLE() (RS485_NRXE_AND_TXE_PORT->OMR = ((0x1     << RS485_TXE_PIN_NUM) | (rs485.duplex_shift_setting << RS485_NRXE_PIN_NUM))) // Use duplex_shift_setting to not turn rx off in full-duplex
+#define RS485_HALF_DUPLEX_RX_ENABLE() \
+	(RS485_NRXE_AND_TXE_PORT->OMR = ((0x10000 << RS485_TXE_PIN_NUM) | (0x10000 << RS485_NRXE_PIN_NUM)))
+
+// Use duplex_shift_setting to not turn rx off in full-duplex
+#define RS485_HALF_DUPLEX_TX_ENABLE() \
+	(RS485_NRXE_AND_TXE_PORT->OMR = ((0x1 << RS485_TXE_PIN_NUM) | (rs485.duplex_shift_setting << RS485_NRXE_PIN_NUM)))
 
 void __attribute__((optimize("-O3"))) rs485_tff_irq_handler(void) {
-	if((RS485_USIC->PSR_ASCMode & (XMC_UART_CH_STATUS_FLAG_TRANSMITTER_FRAME_FINISHED | XMC_UART_CH_STATUS_FLAG_TRANSFER_STATUS_BUSY)) ==  XMC_UART_CH_STATUS_FLAG_TRANSMITTER_FRAME_FINISHED) {
-		RS485_HALF_DUPLEX_RX_ENABLE();
+	if((RS485_USIC->PSR_ASCMode & (XMC_UART_CH_STATUS_FLAG_TRANSMITTER_FRAME_FINISHED | XMC_UART_CH_STATUS_FLAG_TRANSFER_STATUS_BUSY)) ==
+		 XMC_UART_CH_STATUS_FLAG_TRANSMITTER_FRAME_FINISHED) {
+			 RS485_HALF_DUPLEX_RX_ENABLE();
 	}
 }
 
 void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
 	while(!XMC_USIC_CH_RXFIFO_IsEmpty(RS485_USIC)) {
-		// Instead of ringbuffer_add we add the byte to the buffer
-		// by hand. We need to save the low watermark calculation overhead
-		uint16_t new_end = rs485.ringbuffer_rx.end+1;
+		/*
+		 * Instead of ringbuffer_add() we add the byte to the buffer
+		 * by hand.
+		 *
+		 * We need to save the low watermark calculation overhead.
+		 */
+
+		uint16_t new_end;
+		volatile uint8_t __attribute__((unused))_;
+
+		new_end = rs485.ringbuffer_rx.end + 1;
+
 		if(new_end >= rs485.ringbuffer_rx.size) {
 			new_end = 0;
 		}
 
 		if(new_end == rs485.ringbuffer_rx.start) {
 			rs485.error_count_overrun++;
+
 			if(rs485.red_led_state.config == LED_FLICKER_CONFIG_EXTERNAL) {
 				XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
 			}
 
-			// In the case of an overrun we read the byte and throw it away
-			volatile uint8_t _ __attribute__((unused)) = RS485_USIC->OUTR;
+			// In the case of an overrun we read the byte and throw it away.
+			_  = RS485_USIC->OUTR;
 
 			return;
 		}
+
 		rs485.ringbuffer_rx.buffer[rs485.ringbuffer_rx.end] = RS485_USIC->OUTR;
 		rs485.ringbuffer_rx.end = new_end;
 	}
@@ -83,11 +101,19 @@ void __attribute__((optimize("-O3"))) rs485_rxa_irq_handler(void) {
 }
 
 void __attribute__((optimize("-O3"))) rs485_tx_irq_handler(void) {
+	uint8_t data;
+
 	RS485_HALF_DUPLEX_TX_ENABLE();
+
 	while(!XMC_USIC_CH_TXFIFO_IsFull(RS485_USIC)) {
-		uint8_t data;
+		// TX FIFO is not full, more data can be loaded on the FIFO from the ring buffer.
+
 		if(!ringbuffer_get(&rs485.ringbuffer_tx, &data)) {
+			// No more data to TX from ringbuffer, disable TX interrupt.
 			XMC_USIC_CH_TXFIFO_DisableEvent(RS485_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
+
+			rs485.modbus_rtu.tx_done = true;
+
 			return;
 		}
 
@@ -214,22 +240,31 @@ void rs485_init_buffer(RS485 *rs485) {
 }
 
 void rs485_init(RS485 *rs485) {
-	// Default config is 115200 baud, 8N1, half-duplex
-	rs485->baudrate             = 115200;
-	rs485->parity               = PARITY_NONE;
-	rs485->wordlength           = WORDLENGTH_8;
-	rs485->stopbits             = STOPBITS_1;
-	rs485->duplex               = DUPLEX_HALF;
-	rs485->duplex_shift_setting = 0x1;
-	rs485->error_count_overrun  = 0;
-	rs485->error_count_parity   = 0;
+	// Default config is RS485 mode, 115200 baud, 8N1, half-duplex.
 
+	/*
+	 * FIXME: For development default mode is set to be Modbus slave, change it
+	 * to be normal RS485 mode.
+	 */
+	rs485->mode                         = MODE_MODBUS_SLAVE;
+	rs485->baudrate                     = 115200;
+	rs485->parity                       = PARITY_EVEN;
+	rs485->wordlength                   = WORDLENGTH_8;
+	rs485->stopbits                     = STOPBITS_1;
+	rs485->duplex                       = DUPLEX_HALF;
+	rs485->duplex_shift_setting         = 0x1;
+	rs485->error_count_overrun          = 0;
+	rs485->error_count_parity           = 0;
+	rs485->error_count_parity           = 0;
 	rs485->read_callback_enabled        = false;
 	rs485->error_count_callback_enabled = false;
 
+	// Modbus specific.
+	rs485->modbus_slave_address          = MODBUS_DEFAULT_SLAVE_ADDRESS;
+	rs485->modbus_master_request_timeout = MODBUS_DEFAULT_MASTER_REQUEST_TIMEOUT;
+
 	// By default we use a 50/50 segmentation of rx/tx buffer
 	rs485->buffer_size_rx = RS485_BUFFER_SIZE/2;
-	rs485_init_buffer(rs485);
 
 	rs485->yellow_led_state.config  = COMMUNICATION_LED_CONFIG_SHOW_COMMUNICATION;
 	rs485->yellow_led_state.counter = 0;
@@ -249,7 +284,12 @@ void rs485_init(RS485 *rs485) {
 	led_pin_config.output_level = XMC_GPIO_OUTPUT_LEVEL_LOW; // Default on for yellow LED
 	XMC_GPIO_Init(RS485_LED_YELLOW_PIN, &led_pin_config);
 
+	rs485_init_buffer(rs485);
 	rs485_init_hardware(rs485);
+
+	if(rs485->mode == MODE_MODBUS_MASTER || rs485->mode == MODE_MODBUS_SLAVE) {
+		modbus_init(rs485);
+	}
 }
 
 void rs485_apply_configuration(RS485 *rs485) {
@@ -267,13 +307,22 @@ void rs485_apply_configuration(RS485 *rs485) {
 		rs485->duplex_shift_setting = 0x10000;
 	}
 
+	rs485_init_buffer(rs485);
 	// Then we can safely reconfigure the hardware
 	rs485_init_hardware(rs485);
+
+	if(rs485->mode == MODE_MODBUS_MASTER || rs485->mode == MODE_MODBUS_SLAVE) {
+		modbus_init(rs485);
+	}
 }
 
 void rs485_tick(RS485 *rs485) {
 	static uint32_t last_rx_count = 0;
 	static uint32_t last_tx_count = 0;
+
+	if(rs485->mode == MODE_MODBUS_MASTER || rs485->mode == MODE_MODBUS_SLAVE) {
+		modbus_update_rtu_wire_state_machine(rs485);
+	}
 
 	// To get a nice communication LED flickering we increase the
 	// flicker counter every time something in the rx or tx buffer changes

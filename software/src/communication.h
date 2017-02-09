@@ -52,8 +52,15 @@ void communication_init(void);
 #define FID_IS_ERROR_COUNT_CALLBACK_ENABLED 17
 #define FID_GET_ERROR_COUNT 18
 
-#define FID_CALLBACK_READ_CALLBACK 19
-#define FID_CALLBACK_ERROR_COUNT_CALLBACK 20
+// Modbus specific.
+#define FID_ANSWER_MODBUS_READ_COILS_REQUEST_LOW_LEVEL 19
+
+// Callbacks.
+#define FID_CALLBACK_READ_CALLBACK 20
+#define FID_CALLBACK_ERROR_COUNT 21
+
+// Modbus specific.
+#define FID_CALLBACK_MODBUS_READ_COILS_REQUEST 22
 
 // enums
 typedef enum {
@@ -110,11 +117,15 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+	uint8_t mode;
 	uint32_t baudrate;
 	uint8_t parity;
 	uint8_t stopbits;
 	uint8_t wordlength;
 	uint8_t duplex;
+	// Modbus specific.
+	uint8_t modbus_slave_address;
+	uint16_t modbus_master_request_timeout;
 } __attribute__((__packed__)) SetConfiguration;
 
 typedef struct {
@@ -123,11 +134,15 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+	uint8_t mode;
 	uint32_t baudrate;
 	uint8_t parity;
 	uint8_t stopbits;
 	uint8_t wordlength;
 	uint8_t duplex;
+	// Modbus specific.
+	uint8_t modbus_slave_address;
+	uint16_t modbus_master_request_timeout;
 } __attribute__((__packed__)) GetConfigurationResponse;
 
 typedef struct {
@@ -221,7 +236,29 @@ typedef struct {
 	TFPMessageHeader header;
 	uint32_t overrun_error_count;
 	uint32_t parity_error_count;
-} __attribute__((__packed__)) ErrorCountCallbackCallback;
+} __attribute__((__packed__)) ErrorCountCallback;
+
+// Modbus specific.
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+	uint16_t starting_address;
+	uint16_t count;
+} __attribute__((__packed__)) ModbusReadCoilsRequestCallback;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+	uint16_t stream_total_length;
+	uint16_t stream_chunk_offset;
+	uint8_t stream_chunk_data[59];
+} __attribute__((__packed__)) AnswerModbusReadCoilsRequestLowLevel;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+	uint8_t exception_code;
+} __attribute__((__packed__)) ReportModbusException;
 
 // Function prototypes
 BootloaderHandleMessageResponse write(const Write *data, WriteResponse *response);
@@ -243,16 +280,23 @@ BootloaderHandleMessageResponse disable_error_count_callback(const DisableErrorC
 BootloaderHandleMessageResponse is_error_count_callback_enabled(const IsErrorCountCallbackEnabled *data, IsErrorCountCallbackEnabledResponse *response);
 BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data, GetErrorCountResponse *response);
 
+// Modbus specific.
+BootloaderHandleMessageResponse answer_modbus_read_coils_request_low_level(const AnswerModbusReadCoilsRequestLowLevel *data);
+BootloaderHandleMessageResponse report_modbus_exception(const ReportModbusException *data);
+
 // Callbacks
 bool handle_read_callback_callback(void);
-bool handle_error_count_callback_callback(void);
+bool handle_error_count_callback(void);
+
+// Modbus specific.
+bool handle_modbus_read_coils_request_callback(void);
 
 #define CALLBACK_ERROR_COUNT_DEBOUNCE_MS 100
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
-#define COMMUNICATION_CALLBACK_HANDLER_NUM 2
+#define COMMUNICATION_CALLBACK_HANDLER_NUM 3
 #define COMMUNICATION_CALLBACK_LIST_INIT \
 	handle_read_callback_callback, \
-	handle_error_count_callback_callback, \
-
+	handle_error_count_callback, \
+	handle_modbus_read_coils_request_callback , \
 
 #endif
