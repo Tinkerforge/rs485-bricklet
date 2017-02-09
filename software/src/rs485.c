@@ -28,6 +28,7 @@
 #include "configs/config.h"
 #include "bricklib2/hal/system_timer/system_timer.h"
 #include "bricklib2/utility/ringbuffer.h"
+#include "timer.h"
 
 #include "xmc_uart.h"
 #include "xmc_scu.h"
@@ -62,10 +63,7 @@ void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
 		 * We need to save the low watermark calculation overhead.
 		 */
 
-		uint16_t new_end;
-		volatile uint8_t __attribute__((unused))_;
-
-		new_end = rs485.ringbuffer_rx.end + 1;
+		uint16_t new_end = rs485.ringbuffer_rx.end + 1;
 
 		if(new_end >= rs485.ringbuffer_rx.size) {
 			new_end = 0;
@@ -79,14 +77,17 @@ void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
 			}
 
 			// In the case of an overrun we read the byte and throw it away.
-			_  = RS485_USIC->OUTR;
+			volatile uint8_t __attribute__((unused)) _  = RS485_USIC->OUTR;
 
+			TIMER_RESET();
 			return;
 		}
 
 		rs485.ringbuffer_rx.buffer[rs485.ringbuffer_rx.end] = RS485_USIC->OUTR;
 		rs485.ringbuffer_rx.end = new_end;
 	}
+
+	TIMER_RESET();
 }
 
 

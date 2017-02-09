@@ -21,6 +21,8 @@
 
 #include "modbus.h"
 
+#include "timer.h"
+
 #include "bricklib2/utility/crc16.h"
 #include "bricklib2/hal/system_timer/system_timer.h"
 
@@ -132,8 +134,7 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
     }
 
     if((rx_rb_used == rs485->modbus_rtu.rx_rb_last_length) &&
-       system_timer_is_time_elapsed_ms(rs485->modbus_rtu.time_ref_go_to_state_idle,
-                                       rs485->modbus_rtu.time_4_chars_us/1000 + 1)) {
+       timer_us_elapsed_since_last_char(rs485->modbus_rtu.time_4_chars_us)) {
       if(rs485->mode == MODE_MODBUS_SLAVE) {
         if(!modbus_slave_check_address(rs485)) {
           // The frame is not for this slave.

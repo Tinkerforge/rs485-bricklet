@@ -1,7 +1,7 @@
 /* rs485-bricklet
- * Copyright (C) 2016 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2017 Olaf Lüke <olaf@tinkerforge.com>
  *
- * main.c: Initialization for RS485 Bricklet
+ * timer.h: Timer handling
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,28 +19,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <stdio.h>
+#ifndef TIMER_H
+#define TIMER_H
+
+#include <stdint.h>
 #include <stdbool.h>
 
-#include "configs/config.h"
+#define TIMER_RESET() do { CCU40_CC41->TCCLR = CCU4_CC4_TCCLR_TCC_Msk; CCU40_CC41->TCSET = CCU4_CC4_TCSET_TRBS_Msk; } while(false)
 
-#include "xmc_gpio.h"
+#if 0
+#define TIMER_RESET() do { CCU40_CC41->SWS = CCU4_CC4_SWS_SE0A_Msk; } while(false)
+#endif
 
-#include "bricklib2/bootloader/bootloader.h"
-#include "communication.h"
-#include "rs485.h"
-#include "timer.h"
+bool timer_us_elapsed_since_last_char(const uint32_t us);
+void timer_init(void);
+void timer_tick(void);
 
-RS485 rs485;
-
-int main(void) {
-	communication_init();
-	timer_init();
-	rs485_init(&rs485);
-
-	while(true) {
-		rs485_tick(&rs485);
-		communication_tick();
-		bootloader_tick();
-	}
-}
+#endif
