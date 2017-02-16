@@ -25,13 +25,20 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define TIMER_RESET() do { CCU40_CC41->TCCLR = CCU4_CC4_TCCLR_TCC_Msk; CCU40_CC41->TCSET = CCU4_CC4_TCSET_TRBS_Msk; } while(false)
+#define TIMER_RESET() \
+  do {\
+    CCU40_CC41->TCCLR = CCU4_CC4_TCCLR_TCC_Msk;\
+    CCU40_CC41->TCSET = CCU4_CC4_TCSET_TRBS_Msk;\
+  } while(false)
 
 #if 0
-#define TIMER_RESET() do { CCU40_CC41->SWS = CCU4_CC4_SWS_SE0A_Msk; } while(false)
+  #define TIMER_RESET() \
+    do {\
+      CCU40_CC41->SWS = CCU4_CC4_SWS_SE0A_Msk;\
+    } while(false)
 #endif
 
-bool timer_us_elapsed_since_last_char(const uint32_t us);
+bool timer_us_elapsed_since_last_timer_reset(const uint32_t us);
 void timer_init(void);
 void timer_tick(void);
 

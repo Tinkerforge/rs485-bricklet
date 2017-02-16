@@ -27,7 +27,7 @@
 
 #include "bricklib2/hal/uartbb/uartbb.h"
 
-bool timer_us_elapsed_since_last_char(const uint32_t us) {
+bool timer_us_elapsed_since_last_timer_reset(const uint32_t us) {
 	if((CCU40_CC41->TCST & CCU4_CC4_TCST_TRB_Msk) == 0) {
 		return true;
 	}

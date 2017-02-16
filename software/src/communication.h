@@ -38,29 +38,41 @@ void communication_init(void);
 #define FID_ENABLE_READ_CALLBACK 3
 #define FID_DISABLE_READ_CALLBACK 4
 #define FID_IS_READ_CALLBACK_ENABLED 5
-#define FID_SET_CONFIGURATION 6
-#define FID_GET_CONFIGURATION 7
-#define FID_SET_COMMUNICATION_LED_CONFIG 8
-#define FID_GET_COMMUNICATION_LED_CONFIG 9
-#define FID_SET_ERROR_LED_CONFIG 10
-#define FID_GET_ERROR_LED_CONFIG 11
-#define FID_SET_BUFFER_CONFIG 12
-#define FID_GET_BUFFER_CONFIG 13
-#define FID_GET_BUFFER_STATUS 14
-#define FID_ENABLE_ERROR_COUNT_CALLBACK 15
-#define FID_DISABLE_ERROR_COUNT_CALLBACK 16
-#define FID_IS_ERROR_COUNT_CALLBACK_ENABLED 17
-#define FID_GET_ERROR_COUNT 18
+#define FID_SET_RS485_CONFIGURATION 6
+#define FID_GET_RS485_CONFIGURATION 7
 
 // Modbus specific.
-#define FID_ANSWER_MODBUS_READ_COILS_REQUEST_LOW_LEVEL 19
+#define FID_SET_MODBUS_CONFIGURATION 8
+#define FID_GET_MODBUS_CONFIGURATION 9
+#define FID_SET_MODE 10
+#define FID_GET_MODE 11
+
+#define FID_APPLY_CONFIGURATION 12
+#define FID_SET_COMMUNICATION_LED_CONFIG 13
+#define FID_GET_COMMUNICATION_LED_CONFIG 14
+#define FID_SET_ERROR_LED_CONFIG 15
+#define FID_GET_ERROR_LED_CONFIG 16
+#define FID_SET_BUFFER_CONFIG 17
+#define FID_GET_BUFFER_CONFIG 18
+#define FID_GET_BUFFER_STATUS 19
+#define FID_ENABLE_ERROR_COUNT_CALLBACK 20
+#define FID_DISABLE_ERROR_COUNT_CALLBACK 21
+#define FID_IS_ERROR_COUNT_CALLBACK_ENABLED 22
+#define FID_GET_ERROR_COUNT 23
+
+// Modbus specific.
+#define FID_GET_MODBUS_COMMON_ERROR_COUNT 24
+#define FID_MODBUS_ANSWER_READ_COILS_REQUEST_LOW_LEVEL 25
+#define FID_MODBUS_REPORT_EXCEPTION 26
+#define FID_MODBUS_READ_COILS 27
 
 // Callbacks.
-#define FID_CALLBACK_READ_CALLBACK 20
-#define FID_CALLBACK_ERROR_COUNT 21
+#define FID_CALLBACK_READ_CALLBACK 28
+#define FID_CALLBACK_ERROR_COUNT 29
 
 // Modbus specific.
-#define FID_CALLBACK_MODBUS_READ_COILS_REQUEST 22
+#define FID_CALLBACK_MODBUS_READ_COILS_REQUEST 30
+#define FID_CALLBACK_MODBUS_READ_COILS_RESPONSE_LOW_LEVEL 31
 
 // enums
 typedef enum {
@@ -117,33 +129,60 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t mode;
 	uint32_t baudrate;
 	uint8_t parity;
 	uint8_t stopbits;
 	uint8_t wordlength;
 	uint8_t duplex;
-	// Modbus specific.
-	uint8_t modbus_slave_address;
-	uint16_t modbus_master_request_timeout;
-} __attribute__((__packed__)) SetConfiguration;
+} __attribute__((__packed__)) SetRS485Configuration;
 
 typedef struct {
 	TFPMessageHeader header;
-} __attribute__((__packed__)) GetConfiguration;
+} __attribute__((__packed__)) GetRS485Configuration;
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t mode;
 	uint32_t baudrate;
 	uint8_t parity;
 	uint8_t stopbits;
 	uint8_t wordlength;
 	uint8_t duplex;
-	// Modbus specific.
-	uint8_t modbus_slave_address;
-	uint16_t modbus_master_request_timeout;
-} __attribute__((__packed__)) GetConfigurationResponse;
+} __attribute__((__packed__)) GetRS485ConfigurationResponse;
+
+// Modbus specific.
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t slave_address;
+	uint32_t master_request_timeout;
+} __attribute__((__packed__)) SetModbusConfiguration;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetModbusConfiguration;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t slave_address;
+	uint32_t master_request_timeout;
+} __attribute__((__packed__)) GetModbusConfigurationResponse;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t mode;
+} __attribute__((__packed__)) SetMode;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) GetMode;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t mode;
+} __attribute__((__packed__)) GetModeResponse;
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) ApplyConfiguration;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -241,6 +280,47 @@ typedef struct {
 // Modbus specific.
 typedef struct {
 	TFPMessageHeader header;
+} __attribute__((__packed__)) GetModbusCommonErrorCount;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint32_t timeout_error_count;
+	uint32_t checksum_error_count;
+	uint32_t frame_too_big_error_count;
+	uint32_t illegal_function_error_count;
+	uint32_t illegal_data_address_error_count;
+	uint32_t illegal_data_value_error_count;
+	uint32_t slave_device_failure_error_count;
+} __attribute__((__packed__)) GetModbusCommonErrorCountResponse;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+	uint16_t stream_total_length;
+	uint16_t stream_chunk_offset;
+	uint8_t stream_chunk_data[59];
+} __attribute__((__packed__)) ModbusAnswerReadCoilsRequestLowLevel;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+	uint8_t exception_code;
+} __attribute__((__packed__)) ModbusReportException;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t slave_address;
+	uint16_t starting_address;
+	uint16_t count;
+} __attribute__((__packed__)) ModbusReadCoils;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+} __attribute__((__packed__)) ModbusReadCoilsResponse;
+
+typedef struct {
+	TFPMessageHeader header;
 	uint8_t request_id;
 	uint16_t starting_address;
 	uint16_t count;
@@ -249,27 +329,34 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
+	int8_t exception_code;
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
-	uint8_t stream_chunk_data[59];
-} __attribute__((__packed__)) AnswerModbusReadCoilsRequestLowLevel;
-
-typedef struct {
-	TFPMessageHeader header;
-	uint8_t request_id;
-	uint8_t exception_code;
-} __attribute__((__packed__)) ReportModbusException;
+	uint8_t stream_chunk_data[58];
+} __attribute__((__packed__)) ModbusReadCoilsResponseLowLevelCallback;
 
 // Function prototypes
 BootloaderHandleMessageResponse write(const Write *data, WriteResponse *response);
 BootloaderHandleMessageResponse read(const Read *data, ReadResponse *response);
 BootloaderHandleMessageResponse enable_read_callback(const EnableReadCallback *data);
 BootloaderHandleMessageResponse disable_read_callback(const DisableReadCallback *data);
-BootloaderHandleMessageResponse is_read_callback_enabled(const IsReadCallbackEnabled *data, IsReadCallbackEnabledResponse *response);
-BootloaderHandleMessageResponse set_configuration(const SetConfiguration *data);
-BootloaderHandleMessageResponse get_configuration(const GetConfiguration *data, GetConfigurationResponse *response);
+BootloaderHandleMessageResponse is_read_callback_enabled(const IsReadCallbackEnabled *data,
+																												 IsReadCallbackEnabledResponse *response);
+BootloaderHandleMessageResponse set_rs485_configuration(const SetRS485Configuration *data);
+BootloaderHandleMessageResponse get_rs485_configuration(const GetRS485Configuration *data,
+																												GetRS485ConfigurationResponse *response);
+
+// Modbus specific.
+BootloaderHandleMessageResponse set_modbus_configuration(const SetModbusConfiguration *data);
+BootloaderHandleMessageResponse get_modbus_configuration(const GetModbusConfiguration *data,
+																												 GetModbusConfigurationResponse *response);
+
+BootloaderHandleMessageResponse set_mode(const SetMode *data);
+BootloaderHandleMessageResponse get_mode(const GetMode *data, GetModeResponse *response);
+BootloaderHandleMessageResponse apply_configuration(const ApplyConfiguration *data);
 BootloaderHandleMessageResponse set_communication_led_config(const SetCommunicationLEDConfig *data);
-BootloaderHandleMessageResponse get_communication_led_config(const GetCommunicationLEDConfig *data, GetCommunicationLEDConfigResponse *response);
+BootloaderHandleMessageResponse get_communication_led_config(const GetCommunicationLEDConfig *data,
+																														 GetCommunicationLEDConfigResponse *response);
 BootloaderHandleMessageResponse set_error_led_config(const SetErrorLEDConfig *data);
 BootloaderHandleMessageResponse get_error_led_config(const GetErrorLEDConfig *data, GetErrorLEDConfigResponse *response);
 BootloaderHandleMessageResponse set_buffer_config(const SetBufferConfig *data);
@@ -277,12 +364,17 @@ BootloaderHandleMessageResponse get_buffer_config(const GetBufferConfig *data, G
 BootloaderHandleMessageResponse get_buffer_status(const GetBufferStatus *data, GetBufferStatusResponse *response);
 BootloaderHandleMessageResponse enable_error_count_callback(const EnableErrorCountCallback *data);
 BootloaderHandleMessageResponse disable_error_count_callback(const DisableErrorCountCallback *data);
-BootloaderHandleMessageResponse is_error_count_callback_enabled(const IsErrorCountCallbackEnabled *data, IsErrorCountCallbackEnabledResponse *response);
+BootloaderHandleMessageResponse is_error_count_callback_enabled(const IsErrorCountCallbackEnabled *data,
+																																IsErrorCountCallbackEnabledResponse *response);
 BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data, GetErrorCountResponse *response);
 
 // Modbus specific.
-BootloaderHandleMessageResponse answer_modbus_read_coils_request_low_level(const AnswerModbusReadCoilsRequestLowLevel *data);
-BootloaderHandleMessageResponse report_modbus_exception(const ReportModbusException *data);
+BootloaderHandleMessageResponse get_modbus_common_error_count(const GetModbusCommonErrorCount *data,
+																															GetModbusCommonErrorCountResponse *response);
+BootloaderHandleMessageResponse modbus_answer_read_coils_request_low_level(const ModbusAnswerReadCoilsRequestLowLevel *data);
+BootloaderHandleMessageResponse modbus_report_exception(const ModbusReportException *data);
+BootloaderHandleMessageResponse modbus_read_coils(const ModbusReadCoils *data,
+																									ModbusReadCoilsResponse *response);
 
 // Callbacks
 bool handle_read_callback_callback(void);
@@ -290,13 +382,15 @@ bool handle_error_count_callback(void);
 
 // Modbus specific.
 bool handle_modbus_read_coils_request_callback(void);
+bool handle_modbus_read_coils_response_low_level_callback(void);
 
 #define CALLBACK_ERROR_COUNT_DEBOUNCE_MS 100
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
-#define COMMUNICATION_CALLBACK_HANDLER_NUM 3
+#define COMMUNICATION_CALLBACK_HANDLER_NUM 4
 #define COMMUNICATION_CALLBACK_LIST_INIT \
 	handle_read_callback_callback, \
 	handle_error_count_callback, \
 	handle_modbus_read_coils_request_callback , \
+	handle_modbus_read_coils_response_low_level_callback, \
 
 #endif

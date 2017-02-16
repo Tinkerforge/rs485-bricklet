@@ -36,19 +36,24 @@
 #define RS485_BAUDRATE_MIN 100
 #define RS485_BAUDRATE_MAX 2000000
 
+// Modbus specific.
+#define MODBUS_DEFAULT_SLAVE_ADDRESS 1
 #define RS485_MODBUS_RTU_FRAME_SIZE_MAX 256
+#define MODBUS_DEFAULT_MASTER_REQUEST_TIMEOUT 1000 // Milliseconds.
 
 // Modbus specific.
-#define MODBUS_FC_READ_COILS 0x01
-#define MODBUS_FC_WRITE_SINGLE_COIL 0x05
+extern uint8_t MODBUS_FC_READ_COILS;
 
-#define MODBUS_DEFAULT_SLAVE_ADDRESS 1
-#define MODBUS_DEFAULT_MASTER_REQUEST_TIMEOUT 1000 // In milliseconds.
+// Modbus exception codes.
+extern uint8_t MODBUS_EC_ILLEGAL_FUNCTION;
+extern uint8_t MODBUS_EC_ILLEGAL_DATA_VALUE;
+extern uint8_t MODBUS_EC_ILLEGAL_DATA_ADDRESS;
+extern uint8_t MODBUS_EC_SLAVE_DEVICE_FAILURE;
 
 typedef enum {
 	MODE_RS485 = 0,
-	MODE_MODBUS_MASTER = 1,
-	MODE_MODBUS_SLAVE = 2,
+	MODE_MODBUS_SLAVE_RTU = 1,
+	MODE_MODBUS_MASTER_RTU = 2,
 } RS485Mode;
 
 typedef enum {
@@ -80,11 +85,11 @@ typedef enum {
 	ERROR_PARITY  = 1 << 1,
 } RS485Error;
 
+// Modbus specific.
 typedef enum {
-	MODBUS_RTU_WIRE_STATE_INIT = 0,
-	MODBUS_RTU_WIRE_STATE_IDLE = 1,
-	MODBUS_RTU_WIRE_STATE_RX = 2,
-	MODBUS_RTU_WIRE_STATE_TX = 3,
+	MODBUS_RTU_WIRE_STATE_IDLE = 0,
+	MODBUS_RTU_WIRE_STATE_RX = 1,
+	MODBUS_RTU_WIRE_STATE_TX = 2,
 } RS485ModbusRTUWireState;
 
 typedef enum {
@@ -93,42 +98,38 @@ typedef enum {
 	MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST = 2,
 } RS485ModbusRequestState;
 
+// Modbus specific.
 typedef struct {
 	uint8_t id;
 	bool cb_invoke;
 	uint16_t length;
 	uint8_t *rx_frame;
 	uint8_t *tx_frame;
+	bool stream_chunks;
+	uint32_t stream_chunk_total;
+	uint32_t stream_total_length;
+	uint32_t stream_chunk_current;
 	RS485ModbusRequestState state;
+	bool master_request_timed_out;
+	uint32_t time_ref_master_request_timeout;
 } RS485ModbusRequest;
 
 typedef struct {
-	uint32_t error_count_timeout;
-	uint32_t error_count_checksum;
-	uint32_t error_count_invalid_fc;
-	uint32_t error_count_frame_size;
-	uint32_t error_count_invalid_data;
-	uint32_t error_count_fc_not_implemented;
-	uint32_t error_count_invalid_slave_address;
-} RS485ModbusMasterErrorCounters;
-
-typedef struct {
-	uint32_t error_count_timeout;
-	uint32_t error_count_checksum;
-	uint32_t error_count_frame_size;
-	uint32_t error_count_invalid_data;
-	uint32_t error_count_fc_not_implemented;
-} RS485ModbusSlaveErrorCounters;
+	uint32_t timeout;
+	uint32_t checksum;
+	uint32_t frame_too_big;
+	uint32_t illegal_function;
+	uint32_t illegal_data_value;
+	uint32_t illegal_data_address;
+	uint32_t slave_device_failure;
+} RS485ModbusCommonErrorCounters;
 
 typedef struct {
 	bool tx_done;
 	uint32_t time_4_chars_us;
 	uint16_t rx_rb_last_length;
 	RS485ModbusRequest request;
-	uint32_t time_ref_go_to_state_idle;
 	RS485ModbusRTUWireState state_wire;
-	RS485ModbusSlaveErrorCounters slave_error_counters;
-	RS485ModbusMasterErrorCounters master_error_counters;
 } RS485ModbusRTU;
 
 typedef struct {
@@ -140,10 +141,7 @@ typedef struct {
 	uint16_t buffer_size_rx;
 	Ringbuffer ringbuffer_tx;
 	Ringbuffer ringbuffer_rx;
-
-	// Callback configuration.
 	bool read_callback_enabled;
-
 	RS485Wordlength wordlength;
 	uint32_t error_count_parity;
 	uint32_t error_count_overrun;
@@ -151,13 +149,13 @@ typedef struct {
 	uint32_t duplex_shift_setting;
 	LEDFlickerState yellow_led_state;
 	bool error_count_callback_enabled;
+	uint8_t buffer[RS485_BUFFER_SIZE];
 
 	// Modbus specific.
 	RS485ModbusRTU modbus_rtu;
 	uint8_t modbus_slave_address;
 	uint32_t modbus_master_request_timeout;
-
-	uint8_t buffer[RS485_BUFFER_SIZE];
+	RS485ModbusCommonErrorCounters modbus_common_error_counters;
 } RS485;
 
 void rs485_init(RS485 *rs485);

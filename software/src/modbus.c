@@ -29,6 +29,15 @@
 #include "xmc_uart.h"
 #include "xmc_scu.h"
 
+// Modbus function codes.
+uint8_t MODBUS_FC_READ_COILS = 1;
+
+// Modbus exception codes.
+uint8_t MODBUS_EC_ILLEGAL_FUNCTION = 1;
+uint8_t MODBUS_EC_ILLEGAL_DATA_ADDRESS = 2;
+uint8_t MODBUS_EC_ILLEGAL_DATA_VALUE = 3;
+uint8_t MODBUS_EC_SLAVE_DEVICE_FAILURE = 4;
+
 void modbus_init(RS485 *rs485) {
   if(rs485->baudrate > 19200) {
     rs485->modbus_rtu.time_4_chars_us = 1750;
@@ -48,24 +57,26 @@ void modbus_init(RS485 *rs485) {
     rs485->modbus_rtu.time_4_chars_us = (4 * bit_count * 1000000) / rs485->baudrate;
   }
 
-  rs485->modbus_rtu.request.id = 0;
+  rs485->modbus_rtu.request.id = 1;
   rs485->modbus_rtu.tx_done = false;
+  rs485->modbus_rtu.request.length = 0;
   rs485->modbus_rtu.rx_rb_last_length = 0;
   rs485->modbus_rtu.request.cb_invoke = false;
+  rs485->modbus_rtu.request.stream_chunks = false;
+  rs485->modbus_rtu.request.stream_chunk_total = 0;
+  rs485->modbus_rtu.request.stream_total_length = 0;
+  rs485->modbus_rtu.request.stream_chunk_current = 0;
   rs485->modbus_rtu.request.rx_frame = &rs485->buffer[0];
-  rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_INIT;
-  rs485->modbus_rtu.time_ref_go_to_state_idle = system_timer_get_ms();
+  rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_IDLE;
+  rs485->modbus_rtu.request.master_request_timed_out = false;
   rs485->modbus_rtu.request.state = MODBUS_REQUEST_PROCESS_STATE_READY;
   rs485->modbus_rtu.request.tx_frame = &rs485->buffer[rs485->buffer_size_rx];
 
   memset(rs485->modbus_rtu.request.rx_frame, 0, rs485->buffer_size_rx);
   memset(rs485->modbus_rtu.request.tx_frame, 0, RS485_BUFFER_SIZE - rs485->buffer_size_rx);
-  memset(&rs485->modbus_rtu.slave_error_counters,
+  memset(&rs485->modbus_common_error_counters,
          0,
-         sizeof(RS485ModbusSlaveErrorCounters));
-  memset(&rs485->modbus_rtu.master_error_counters,
-         0,
-         sizeof(RS485ModbusMasterErrorCounters));
+         sizeof(RS485ModbusCommonErrorCounters));
 }
 
 void modbus_clear_request(RS485 *rs485) {
@@ -76,8 +87,15 @@ void modbus_clear_request(RS485 *rs485) {
                   RS485_BUFFER_SIZE-rs485->buffer_size_rx,
                   &rs485->buffer[rs485->buffer_size_rx]);
 
+  rs485->modbus_rtu.request.length = 0;
   rs485->modbus_rtu.rx_rb_last_length = 0;
   rs485->modbus_rtu.request.cb_invoke = false;
+  rs485->modbus_rtu.request.stream_chunks = false;
+  rs485->modbus_rtu.request.stream_chunk_total = 0;
+  rs485->modbus_rtu.request.stream_total_length = 0;
+  rs485->modbus_rtu.request.stream_chunk_current = 0;
+  rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_IDLE;
+  rs485->modbus_rtu.request.master_request_timed_out = false;
   rs485->modbus_rtu.request.state = MODBUS_REQUEST_PROCESS_STATE_READY;
 }
 
@@ -105,39 +123,85 @@ bool modbus_check_frame_checksum(RS485 *rs485) {
   return (checksum_recvd[0] == checksum_gen[0] && checksum_recvd[1] == checksum_gen[1]);
 }
 
+bool modbus_master_check_slave_response(RS485 *rs485) {
+  // Check slave address.
+  if(rs485->modbus_rtu.request.rx_frame[0] != rs485->modbus_rtu.request.tx_frame[0]) {
+    return false;
+  }
+
+  // Check the function code in response.
+  if((rs485->modbus_rtu.request.rx_frame[1] != rs485->modbus_rtu.request.tx_frame[1])) {
+    if(rs485->modbus_rtu.request.rx_frame[1] != (rs485->modbus_rtu.request.tx_frame[1] + 0x80)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
-  uint16_t rx_rb_used = 0;
+  uint16_t new_bytes = 0;
 
-	if(rs485->modbus_rtu.state_wire == MODBUS_RTU_WIRE_STATE_INIT) {
-    if(system_timer_is_time_elapsed_ms(rs485->modbus_rtu.time_ref_go_to_state_idle,
-                                       rs485->modbus_rtu.time_4_chars_us/1000 + 1)) {
-      rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_IDLE;
-    }
-	}
-	else if(rs485->modbus_rtu.state_wire == MODBUS_RTU_WIRE_STATE_IDLE) {
-    if(rs485->modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_READY) {
-      return;
-    }
+	if(rs485->modbus_rtu.state_wire == MODBUS_RTU_WIRE_STATE_IDLE) {
+    // In slave mode.
+    if(rs485->mode == MODE_MODBUS_SLAVE_RTU) {
+      // Check if slave request has timedout.
+      if((rs485->modbus_rtu.request.state == MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) &&
+         (rs485->modbus_rtu.request.length < ringbuffer_get_used(&rs485->ringbuffer_rx))) {
+        /*
+         * While handling request timeout in slave mode, interrupts are disabled
+         * because ringbuffer_add() is updated which is also updated in the RX IRQ.
+         */
+        NVIC_DisableIRQ((IRQn_Type)RS485_IRQ_TFF);
+        NVIC_DisableIRQ((IRQn_Type)RS485_IRQ_TX);
+        NVIC_DisableIRQ((IRQn_Type)RS485_IRQ_RX);
+        NVIC_DisableIRQ((IRQn_Type)RS485_IRQ_RXA);
+        __DSB();
+        __ISB();
 
-    rx_rb_used = ringbuffer_get_used(&rs485->ringbuffer_rx);
+        rs485->modbus_common_error_counters.timeout++;
 
-    if(rx_rb_used == 0) {
-      return;
-    }
+        new_bytes = \
+          ringbuffer_get_used(&rs485->ringbuffer_rx) - rs485->modbus_rtu.request.length;
 
-    if((rx_rb_used > 0) &&
-       (rx_rb_used > rs485->modbus_rtu.rx_rb_last_length)) {
-        rs485->modbus_rtu.rx_rb_last_length = rx_rb_used;
-        rs485->modbus_rtu.time_ref_go_to_state_idle = system_timer_get_ms();
+        modbus_clear_request(rs485);
+
+        // Move the available bytes to the beginning of the Rx buffer.
+        if(new_bytes <= RS485_MODBUS_RTU_FRAME_SIZE_MAX) {
+          for(uint16_t i = rs485->modbus_rtu.request.length; i < new_bytes; i++) {
+            ringbuffer_add(&rs485->ringbuffer_rx, rs485->ringbuffer_rx.buffer[i]);
+          }
+        }
+
+        rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_RX;
+
+        NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_TFF);
+      	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_TX);
+      	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_RX);
+      	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_RXA);
 
         return;
-    }
+      }
 
-    if((rx_rb_used == rs485->modbus_rtu.rx_rb_last_length) &&
-       timer_us_elapsed_since_last_char(rs485->modbus_rtu.time_4_chars_us)) {
-      if(rs485->mode == MODE_MODBUS_SLAVE) {
-        if(!modbus_slave_check_address(rs485)) {
-          // The frame is not for this slave.
+      // Check if there is new data in the RX buffer.
+      if((rs485->modbus_rtu.request.state == MODBUS_REQUEST_PROCESS_STATE_READY) &&
+         (ringbuffer_get_used(&rs485->ringbuffer_rx) > 0) &&
+         (ringbuffer_get_used(&rs485->ringbuffer_rx) > rs485->modbus_rtu.rx_rb_last_length)) {
+
+        rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_RX;
+        rs485->modbus_rtu.rx_rb_last_length = ringbuffer_get_used(&rs485->ringbuffer_rx);
+
+        return;
+      }
+
+      // Check if the a frame is available in the RX buffer.
+      if((rs485->modbus_rtu.request.state == MODBUS_REQUEST_PROCESS_STATE_READY) &&
+         (ringbuffer_get_used(&rs485->ringbuffer_rx) > 0) &&
+         (ringbuffer_get_used(&rs485->ringbuffer_rx) == rs485->modbus_rtu.rx_rb_last_length)) {
+        if(ringbuffer_get_used(&rs485->ringbuffer_rx) > RS485_MODBUS_RTU_FRAME_SIZE_MAX) {
+          // Frame is too big.
+          rs485->modbus_common_error_counters.frame_too_big++;
+
           modbus_clear_request(rs485);
 
           return;
@@ -145,23 +209,125 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
 
         if(!modbus_check_frame_checksum(rs485)) {
           // Frame checksum mismatch.
+          rs485->modbus_common_error_counters.checksum++;
+
           modbus_clear_request(rs485);
 
           return;
         }
 
+        if(!modbus_slave_check_address(rs485)) {
+          // The frame is not for this slave.
+          modbus_clear_request(rs485);
+
+          return;
+        }
+
+        if(!modbus_slave_check_function_code_imlemented(rs485)) {
+          // The function is not implemented by the bricklet.
+          rs485->modbus_common_error_counters.illegal_function++;
+
+          _modbus_report_exception(rs485,
+                                   rs485->modbus_rtu.request.rx_frame[1],
+                                   MODBUS_EC_ILLEGAL_FUNCTION);
+
+          return;
+        }
+
         modbus_init_new_request(rs485,
-                                MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST,
-                                rx_rb_used);
+                               MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST,
+                               ringbuffer_get_used(&rs485->ringbuffer_rx));
+
+        return;
+      }
+    }
+    // In master mode.
+    else if(rs485->mode == MODE_MODBUS_MASTER_RTU) {
+      // Check if master request has timedout.
+      if((rs485->modbus_rtu.request.state == MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) &&
+         system_timer_is_time_elapsed_ms(rs485->modbus_rtu.request.time_ref_master_request_timeout,
+                                         rs485->modbus_master_request_timeout)) {
+        rs485->modbus_common_error_counters.timeout++;
+
+        /*
+         * Set master request timeout flag. Which will be observed by the
+         * corresponding callback handler and further processed.
+         *
+         * handle_modbus_read_coils_response_low_level_callback()
+         */
+        rs485->modbus_rtu.request.master_request_timed_out = true;
+
+        return;
+      }
+
+      /*
+       * Check if data from the salve response has started to appear in
+       * the buffer. Change to RX state if needed.
+       */
+      if((rs485->modbus_rtu.request.state == MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) &&
+         (ringbuffer_get_used(&rs485->ringbuffer_rx) > 0) &&
+         (ringbuffer_get_used(&rs485->ringbuffer_rx) > rs485->modbus_rtu.rx_rb_last_length)) {
+        rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_RX;
+        rs485->modbus_rtu.rx_rb_last_length = ringbuffer_get_used(&rs485->ringbuffer_rx);
+
+        return;
+      }
+
+      // Check if a response frame is in buffer, if so then process it.
+      if((rs485->modbus_rtu.request.state == MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) &&
+         (ringbuffer_get_used(&rs485->ringbuffer_rx) > 0) &&
+         (ringbuffer_get_used(&rs485->ringbuffer_rx) == rs485->modbus_rtu.rx_rb_last_length)) {
+        if(rs485->modbus_rtu.request.stream_chunks) {
+          // In process of streaming chunks of slave response ot the user.
+          return;
+        }
+
+        if(ringbuffer_get_used(&rs485->ringbuffer_rx) > RS485_MODBUS_RTU_FRAME_SIZE_MAX) {
+          // Frame is too big.
+          rs485->modbus_common_error_counters.frame_too_big++;
+
+          modbus_clear_request(rs485);
+
+          return;
+        }
+
+        if(!modbus_check_frame_checksum(rs485)) {
+          // Frame checksum mismatch.
+          rs485->modbus_common_error_counters.checksum++;
+
+          modbus_clear_request(rs485);
+
+          return;
+        }
+
+        if(!modbus_master_check_slave_response(rs485)) {
+          // The frame is not from expected slave.
+          modbus_clear_request(rs485);
+
+          return;
+        }
+
+        /*
+         * We have a valid response from a slave for the master request.
+         * The response will be handled with callbacks.
+         */
+        rs485->modbus_rtu.request.cb_invoke = true;
+
+        return;
       }
     }
 	}
+  else if(rs485->modbus_rtu.state_wire == MODBUS_RTU_WIRE_STATE_RX) {
+    if(timer_us_elapsed_since_last_timer_reset(rs485->modbus_rtu.time_4_chars_us)) {
+      rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_IDLE;
+    }
+  }
 	else if(rs485->modbus_rtu.state_wire == MODBUS_RTU_WIRE_STATE_TX) {
     if(rs485->modbus_rtu.tx_done) {
       rs485->modbus_rtu.tx_done = false;
       rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_IDLE;
 
-      if(rs485->mode == MODE_MODBUS_SLAVE) {
+      if(rs485->mode == MODE_MODBUS_SLAVE_RTU) {
         // In slave mode completed TX means end of a request handling.
         modbus_clear_request(rs485);
       }
@@ -169,7 +335,16 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
 	}
 }
 
-void modbus_report_exception(RS485 *rs485, uint8_t function_code, uint8_t exception_code) {
+bool modbus_slave_check_function_code_imlemented(RS485 *rs485) {
+  if(rs485->modbus_rtu.request.rx_frame[1] == MODBUS_FC_READ_COILS) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+void _modbus_report_exception(RS485 *rs485, uint8_t function_code, uint8_t exception_code) {
   ModbusExceptionResponse modbus_exception_response;
   uint8_t *modbus_exception_response_ptr = (uint8_t *)&modbus_exception_response;
 
@@ -193,8 +368,20 @@ void modbus_report_exception(RS485 *rs485, uint8_t function_code, uint8_t except
 }
 
 void modbus_init_new_request(RS485 *rs485, RS485ModbusRequestState state, uint16_t length) {
-  rs485->modbus_rtu.request.id++;
+  if(rs485->modbus_rtu.request.id == 255) {
+    rs485->modbus_rtu.request.id = 1;
+  }
+  else {
+    rs485->modbus_rtu.request.id++;
+  }
+
   rs485->modbus_rtu.request.state = state;
   rs485->modbus_rtu.request.length = length;
-  rs485->modbus_rtu.request.cb_invoke = true;
+
+  if(rs485->mode == MODE_MODBUS_SLAVE_RTU) {
+    rs485->modbus_rtu.request.cb_invoke = true;
+  }
+  else if(rs485->mode == MODE_MODBUS_MASTER_RTU) {
+    rs485->modbus_rtu.request.cb_invoke = false;
+  }
 }
