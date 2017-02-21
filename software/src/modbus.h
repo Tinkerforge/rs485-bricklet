@@ -24,11 +24,26 @@
 
 #include "rs485.h"
 
+// Modbus function codes.
+typedef enum {
+	MODBUS_FC_READ_COILS = 1,
+	MODBUS_FC_READ_HOLDING_REGISTERS = 3,
+} ModbusFunctionCode;
+
+// Modbus exception codes.
+typedef enum {
+	MODBUS_EC_TIMEOUT = -1,
+	MODBUS_EC_ILLEGAL_FUNCTION = 1,
+	MODBUS_EC_ILLEGAL_DATA_ADDRESS = 2,
+	MODBUS_EC_ILLEGAL_DATA_VALUE = 3,
+	MODBUS_EC_SLAVE_DEVICE_FAILURE = 4,
+} ModbusExceptionCode;
+
 typedef struct {
-  uint8_t address;
-  uint8_t function_code;
-  uint8_t exception_code;
-  uint8_t checksum[2];
+	uint8_t address;
+	uint8_t function_code;
+	uint8_t exception_code;
+	uint8_t checksum[2];
 } __attribute__((__packed__)) ModbusExceptionResponse;
 
 void modbus_init(RS485 *rs485);
@@ -39,6 +54,7 @@ bool modbus_check_frame_checksum(RS485 *rs485);
 bool modbus_master_check_slave_response(RS485 *rs485);
 void modbus_update_rtu_wire_state_machine(RS485 *rs485);
 bool modbus_slave_check_function_code_imlemented(RS485 * rs485);
-void _modbus_report_exception(RS485 *rs485, uint8_t function_code, uint8_t exception_code);
 void modbus_init_new_request(RS485 *rs485, RS485ModbusRequestState state, uint16_t length);
+void _modbus_report_exception(RS485 *rs485, uint8_t function_code, ModbusExceptionCode exception_code);
+
 #endif

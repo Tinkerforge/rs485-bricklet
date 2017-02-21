@@ -1,5 +1,6 @@
 /* rs485-bricklet
  * Copyright (C) 2016 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2017 Ishraq Ibne Ashraf <ishraq@tinkerforge.com>
  *
  * communication.c: TFP protocol message handling
  *
@@ -42,18 +43,31 @@ extern RS485 rs485;
 
 static bool modbus_slave_check_current_request(const uint8_t request_id) {
 	if((rs485.mode != MODE_MODBUS_SLAVE_RTU) ||
-		 (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
-		 (request_id != rs485.modbus_rtu.request.id)) {
-		return false;
+	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
+	   (request_id != rs485.modbus_rtu.request.id)) {
+	 return false;
 	}
 
 	return true;
 }
 
 static void modbus_store_tx_frame_data_bytes(const uint8_t *data,
-																						 const uint8_t length) {
+                                             const uint16_t length) {
 	for(uint16_t i = 0; i < length; i++) {
 		ringbuffer_add(&rs485.ringbuffer_tx, data[i]);
+	}
+}
+
+static void modbus_store_tx_frame_data_shorts(const uint16_t *data,
+                                              const uint16_t length) {
+	uint16_t u16_network_order = 0;
+	uint8_t *_data = (uint8_t *)&u16_network_order;
+
+	for(uint16_t i = 0; i < length; i++) {
+		u16_network_order = HTONS(data[i]);
+
+		ringbuffer_add(&rs485.ringbuffer_tx, _data[0]);
+		ringbuffer_add(&rs485.ringbuffer_tx, _data[1]);
 	}
 }
 
@@ -61,8 +75,8 @@ static void modbus_add_tx_frame_checksum(void) {
 	uint8_t checksum_gen[2];
 
 	crc16(rs485.ringbuffer_tx.buffer,
-				ringbuffer_get_used(&rs485.ringbuffer_tx),
-				&checksum_gen[0]);
+	      ringbuffer_get_used(&rs485.ringbuffer_tx),
+	      &checksum_gen[0]);
 
 	ringbuffer_add(&rs485.ringbuffer_tx, checksum_gen[0]);
 	ringbuffer_add(&rs485.ringbuffer_tx, checksum_gen[1]);
@@ -76,7 +90,7 @@ static bool send_stream_chunks(uint8_t function_code, void *cb) {
 	}
 
 	if(rs485.modbus_rtu.request.stream_chunk_total == 0 ||
-		 rs485.modbus_rtu.request.stream_total_length == 0) {
+	   rs485.modbus_rtu.request.stream_total_length == 0) {
 		modbus_clear_request(&rs485);
 
 		return true;
@@ -94,20 +108,57 @@ static bool send_stream_chunks(uint8_t function_code, void *cb) {
 			_cb->stream_chunk_offset = rs485.modbus_rtu.request.stream_chunk_current * sizeof(_cb->stream_chunk_data);
 
 			if((_cb->stream_chunk_offset == 0) ||
-				 ((_cb->stream_total_length - _cb->stream_chunk_offset) > sizeof(_cb->stream_chunk_data))) {
+			   ((_cb->stream_total_length - _cb->stream_chunk_offset) > sizeof(_cb->stream_chunk_data))) {
 					memcpy(&_cb->stream_chunk_data,
-								 &rs485.modbus_rtu.request.rx_frame[_cb->stream_chunk_offset + 3],
-								 sizeof(_cb->stream_chunk_data));
+					       &rs485.modbus_rtu.request.rx_frame[_cb->stream_chunk_offset + 3],
+					       sizeof(_cb->stream_chunk_data));
 			}
 			else {
 				memcpy(&_cb->stream_chunk_data,
-							 &rs485.modbus_rtu.request.rx_frame[_cb->stream_chunk_offset + 3],
-							 _cb->stream_total_length - _cb->stream_chunk_offset);
+				       &rs485.modbus_rtu.request.rx_frame[_cb->stream_chunk_offset + 3],
+				       _cb->stream_total_length - _cb->stream_chunk_offset);
 			}
 
 			bootloader_spitfp_send_ack_and_message(&bootloader_status,
-																						 (uint8_t *)_cb,
-																						 sizeof(ModbusReadCoilsResponseLowLevelCallback));
+			                                       (uint8_t *)_cb,
+			                                       sizeof(ModbusReadCoilsResponseLowLevelCallback));
+		}
+
+		if(rs485.modbus_rtu.request.stream_chunk_current == rs485.modbus_rtu.request.stream_chunk_total - 1) {
+			modbus_clear_request(&rs485);
+		}
+		else {
+			rs485.modbus_rtu.request.stream_chunk_current++;
+		}
+
+		return true;
+	}
+	else if(function_code == FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_RESPONSE_LOW_LEVEL) {
+		ModbusReadHoldingRegistersResponseLowLevelCallback *_cb = (ModbusReadHoldingRegistersResponseLowLevelCallback *)cb;
+
+		if(rs485.modbus_rtu.request.stream_chunk_current < rs485.modbus_rtu.request.stream_chunk_total) {
+			_cb->stream_total_length = rs485.modbus_rtu.request.stream_total_length;
+			_cb->stream_chunk_offset = rs485.modbus_rtu.request.stream_chunk_current * (sizeof(_cb->stream_chunk_data) / 2);
+
+			if((_cb->stream_chunk_offset == 0) ||
+			   ((_cb->stream_total_length - _cb->stream_chunk_offset) > (sizeof(_cb->stream_chunk_data) / 2))) {
+			     uint16_t *_data = (uint16_t *)&rs485.modbus_rtu.request.rx_frame[(_cb->stream_chunk_offset * 2) + 3];
+
+			     for(uint16_t i = 0; i < (sizeof(_cb->stream_chunk_data) / 2); i++) {
+			     _cb->stream_chunk_data[i] = NTOHS(_data[i]);
+			    }
+			}
+			else {
+				uint16_t *_data = (uint16_t *)&rs485.modbus_rtu.request.rx_frame[(_cb->stream_chunk_offset * 2) + 3];
+
+				for(uint16_t i = 0; i < _cb->stream_total_length - _cb->stream_chunk_offset; i++) {
+					_cb->stream_chunk_data[i] = NTOHS(_data[i]);
+				}
+			}
+
+			bootloader_spitfp_send_ack_and_message(&bootloader_status,
+			                                       (uint8_t *)_cb,
+			                                       sizeof(ModbusReadHoldingRegistersResponseLowLevelCallback));
 		}
 
 		if(rs485.modbus_rtu.request.stream_chunk_current == rs485.modbus_rtu.request.stream_chunk_total - 1) {
@@ -154,10 +205,12 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_ERROR_COUNT: return get_error_count(message, response);
 
 		// Modbus specific.
+		case FID_MODBUS_REPORT_EXCEPTION: return modbus_report_exception(message);
 		case FID_GET_MODBUS_COMMON_ERROR_COUNT: return get_modbus_common_error_count(message, response);
 		case FID_MODBUS_ANSWER_READ_COILS_REQUEST_LOW_LEVEL: return modbus_answer_read_coils_request_low_level(message);
-		case FID_MODBUS_REPORT_EXCEPTION: return modbus_report_exception(message);
 		case FID_MODBUS_READ_COILS: return modbus_read_coils(message, response);
+		case FID_MODBUS_ANSWER_READ_HOLDING_REGISTERS_REQUEST_LOW_LEVEL: return modbus_answer_read_holding_registers_request_low_level(message);
+		case FID_MODBUS_READ_HOLDING_REGISTERS: return modbus_read_holding_registers(message, response);
 
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
@@ -231,23 +284,22 @@ BootloaderHandleMessageResponse set_rs485_configuration(const SetRS485Configurat
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
-	rs485.baudrate                      = BETWEEN(RS485_BAUDRATE_MIN, data->baudrate, RS485_BAUDRATE_MAX);
-	rs485.parity                        = data->parity;
-	rs485.stopbits                      = data->stopbits;
-	rs485.wordlength                    = data->wordlength;
-	rs485.duplex                        = data->duplex;
+	rs485.baudrate   = BETWEEN(RS485_BAUDRATE_MIN, data->baudrate, RS485_BAUDRATE_MAX);
+	rs485.parity     = data->parity;
+	rs485.stopbits   = data->stopbits;
+	rs485.wordlength = data->wordlength;
+	rs485.duplex     = data->duplex;
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse get_rs485_configuration(const GetRS485Configuration *data,
-																												GetRS485ConfigurationResponse *response) {
-	response->header.length                 = sizeof(GetRS485ConfigurationResponse);
-	response->baudrate                      = rs485.baudrate;
-	response->parity                        = rs485.parity;
-	response->stopbits                      = rs485.stopbits;
-	response->wordlength                    = rs485.wordlength;
-	response->duplex                        = rs485.duplex;
+BootloaderHandleMessageResponse get_rs485_configuration(const GetRS485Configuration *data, GetRS485ConfigurationResponse *response) {
+	response->header.length = sizeof(GetRS485ConfigurationResponse);
+	response->baudrate      = rs485.baudrate;
+	response->parity        = rs485.parity;
+	response->stopbits      = rs485.stopbits;
+	response->wordlength    = rs485.wordlength;
+	response->duplex        = rs485.duplex;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
@@ -264,8 +316,7 @@ BootloaderHandleMessageResponse set_modbus_configuration(const SetModbusConfigur
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse get_modbus_configuration(const GetModbusConfiguration *data,
-																												 GetModbusConfigurationResponse *response) {
+BootloaderHandleMessageResponse get_modbus_configuration(const GetModbusConfiguration *data, GetModbusConfigurationResponse *response) {
 	response->header.length          = sizeof(GetModbusConfigurationResponse);
 	response->slave_address          = rs485.modbus_slave_address;
 	response->master_request_timeout = rs485.modbus_master_request_timeout;
@@ -279,8 +330,7 @@ BootloaderHandleMessageResponse set_mode(const SetMode *data) {
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse get_mode(const GetMode *data,
-																				 GetModeResponse *response) {
+BootloaderHandleMessageResponse get_mode(const GetMode *data, GetModeResponse *response) {
 	response->header.length = sizeof(GetModeResponse);
 	response->mode          = rs485.mode;
 
@@ -310,8 +360,7 @@ BootloaderHandleMessageResponse set_communication_led_config(const SetCommunicat
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse get_communication_led_config(const GetCommunicationLEDConfig *data,
-																														 GetCommunicationLEDConfigResponse *response) {
+BootloaderHandleMessageResponse get_communication_led_config(const GetCommunicationLEDConfig *data, GetCommunicationLEDConfigResponse *response) {
 	response->header.length = sizeof(GetCommunicationLEDConfigResponse);
 	response->config        = rs485.yellow_led_state.config;
 
@@ -344,8 +393,7 @@ BootloaderHandleMessageResponse set_error_led_config(const SetErrorLEDConfig *da
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse get_error_led_config(const GetErrorLEDConfig *data,
-																										 GetErrorLEDConfigResponse *response) {
+BootloaderHandleMessageResponse get_error_led_config(const GetErrorLEDConfig *data, GetErrorLEDConfigResponse *response) {
 	response->header.length = sizeof(GetErrorLEDConfigResponse);
 
 	if(rs485.red_led_state.config == LED_FLICKER_CONFIG_EXTERNAL) {
@@ -372,8 +420,7 @@ BootloaderHandleMessageResponse set_buffer_config(const SetBufferConfig *data) {
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse get_buffer_config(const GetBufferConfig *data,
-																									GetBufferConfigResponse *response) {
+BootloaderHandleMessageResponse get_buffer_config(const GetBufferConfig *data, GetBufferConfigResponse *response) {
 	response->header.length       = sizeof(GetBufferConfigResponse);
 	response->receive_buffer_size = rs485.buffer_size_rx;
 	response->send_buffer_size    = RS485_BUFFER_SIZE - rs485.buffer_size_rx;
@@ -381,8 +428,7 @@ BootloaderHandleMessageResponse get_buffer_config(const GetBufferConfig *data,
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse get_buffer_status(const GetBufferStatus *data,
-																									GetBufferStatusResponse *response) {
+BootloaderHandleMessageResponse get_buffer_status(const GetBufferStatus *data, GetBufferStatusResponse *response) {
 	response->header.length       = sizeof(GetBufferStatusResponse);
 	response->send_buffer_used    = ringbuffer_get_used(&rs485.ringbuffer_tx);
 	response->receive_buffer_used = ringbuffer_get_used(&rs485.ringbuffer_rx);
@@ -402,16 +448,14 @@ BootloaderHandleMessageResponse disable_error_count_callback(const DisableErrorC
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse is_error_count_callback_enabled(const IsErrorCountCallbackEnabled *data,
-																																IsErrorCountCallbackEnabledResponse *response) {
+BootloaderHandleMessageResponse is_error_count_callback_enabled(const IsErrorCountCallbackEnabled *data, IsErrorCountCallbackEnabledResponse *response) {
 	response->header.length = sizeof(IsErrorCountCallbackEnabledResponse);
 	response->enabled       = rs485.error_count_callback_enabled;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data,
-																								GetErrorCountResponse *response) {
+BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data, GetErrorCountResponse *response) {
 	response->header.length       = sizeof(GetErrorCountResponse);
 	response->overrun_error_count = rs485.error_count_overrun;
 	response->parity_error_count  = rs485.error_count_parity;
@@ -420,8 +464,7 @@ BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data,
 }
 
 // Modbus specific.
-BootloaderHandleMessageResponse get_modbus_common_error_count(const GetModbusCommonErrorCount *data,
-																															GetModbusCommonErrorCountResponse *response) {
+BootloaderHandleMessageResponse get_modbus_common_error_count(const GetModbusCommonErrorCount *data, GetModbusCommonErrorCountResponse *response) {
 	response->header.length                    = sizeof(GetModbusCommonErrorCountResponse);
 	response->timeout_error_count              = rs485.modbus_common_error_counters.timeout;
 	response->checksum_error_count             = rs485.modbus_common_error_counters.checksum;
@@ -432,6 +475,25 @@ BootloaderHandleMessageResponse get_modbus_common_error_count(const GetModbusCom
 	response->slave_device_failure_error_count = rs485.modbus_common_error_counters.slave_device_failure;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse modbus_report_exception(const ModbusReportException *data) {
+	// It is allowed to report an exception only in slave mode.
+	if(rs485.mode != MODE_MODBUS_SLAVE_RTU) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	if(rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	if(!modbus_slave_check_current_request(data->request_id)) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	_modbus_report_exception(&rs485, rs485.modbus_rtu.request.rx_frame[1], data->exception_code);
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
 BootloaderHandleMessageResponse
@@ -451,7 +513,7 @@ modbus_answer_read_coils_request_low_level(const ModbusAnswerReadCoilsRequestLow
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
-	if(message->stream_total_length > RS485_MODBUS_RTU_FRAME_SIZE_MAX) {
+	if(message->stream_total_length > (RS485_MODBUS_RTU_FRAME_SIZE_MAX - 5)) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
@@ -473,13 +535,12 @@ modbus_answer_read_coils_request_low_level(const ModbusAnswerReadCoilsRequestLow
 	// The first chunk.
 	if(message->stream_chunk_offset == 0) {
 		ringbuffer_add(&rs485.ringbuffer_tx, rs485.modbus_slave_address);
-		ringbuffer_add(&rs485.ringbuffer_tx, MODBUS_FC_READ_COILS);
+		ringbuffer_add(&rs485.ringbuffer_tx, (uint8_t)MODBUS_FC_READ_COILS);
 		ringbuffer_add(&rs485.ringbuffer_tx, expected_bytes);
 
-		if(message->stream_total_length <= 59) {
+		if(message->stream_total_length <= sizeof(message->stream_chunk_data)) {
 			// All data fits in the first chunk there will not be other chunks.
-			modbus_store_tx_frame_data_bytes(message->stream_chunk_data,
-																			 message->stream_total_length);
+			modbus_store_tx_frame_data_bytes(message->stream_chunk_data, message->stream_total_length);
 
 			modbus_add_tx_frame_checksum();
 
@@ -508,8 +569,7 @@ modbus_answer_read_coils_request_low_level(const ModbusAnswerReadCoilsRequestLow
 		}
 	}
 	else {
-		modbus_store_tx_frame_data_bytes(message->stream_chunk_data,
-																		 message->stream_total_length - message->stream_chunk_offset);
+		modbus_store_tx_frame_data_bytes(message->stream_chunk_data, message->stream_total_length - message->stream_chunk_offset);
 
 		// All data of the frame is in the buffer except checksum.
 		modbus_add_tx_frame_checksum();
@@ -524,29 +584,8 @@ modbus_answer_read_coils_request_low_level(const ModbusAnswerReadCoilsRequestLow
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse modbus_report_exception(const ModbusReportException *data) {
-	// It is allowed to report an exception only in slave mode.
-	if(rs485.mode != MODE_MODBUS_SLAVE_RTU) {
-		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
-	}
-
-	if(rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) {
-		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
-	}
-
-	if(!modbus_slave_check_current_request(data->request_id)) {
-		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
-	}
-
-	_modbus_report_exception(&rs485,
-													 rs485.modbus_rtu.request.rx_frame[1],
-													 data->exception_code);
-
-	return HANDLE_MESSAGE_RESPONSE_EMPTY;
-}
-
-BootloaderHandleMessageResponse modbus_read_coils(const ModbusReadCoils *data,
-																									ModbusReadCoilsResponse *response) {
+BootloaderHandleMessageResponse modbus_read_coils(const ModbusReadCoils *data, ModbusReadCoilsResponse *response) {
+  uint8_t _fc = 0;
 
 	// This function can be invoked only in master mode.
 	ModbusReadCoils _data;
@@ -555,23 +594,193 @@ BootloaderHandleMessageResponse modbus_read_coils(const ModbusReadCoils *data,
 	response->header.length = sizeof(ModbusReadCoilsResponse);
 
 	if(rs485.mode != MODE_MODBUS_MASTER_RTU ||
-	   rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_READY ||
-	   rs485.modbus_rtu.state_wire != MODBUS_RTU_WIRE_STATE_IDLE) {
-		response->request_id = 0; // FIXME: Add constants.
+		 rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_READY ||
+		 rs485.modbus_rtu.state_wire != MODBUS_RTU_WIRE_STATE_IDLE) {
+		response->request_id = 0;
 
 		return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 	}
-	modbus_init_new_request(&rs485,
-													MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE,
-													(sizeof(ModbusReadCoils) - sizeof(TFPMessageHeader) + 3));
+
+	if(data->count < 1 || data->count > 2000) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	modbus_init_new_request(&rs485, MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE, (sizeof(ModbusReadCoils) - sizeof(TFPMessageHeader) + 3));
 
 	response->request_id = rs485.modbus_rtu.request.id;
 
+  _fc = (uint8_t)MODBUS_FC_READ_COILS;
+
 	// Constructing the frame in the TX buffer.
 	modbus_store_tx_frame_data_bytes(&data->slave_address, 1); // Slave address.
-	modbus_store_tx_frame_data_bytes(&MODBUS_FC_READ_COILS, 1); // Function code.
+	modbus_store_tx_frame_data_bytes(&_fc, 1); // Function code.
 
 	memcpy(&_data, data, sizeof(ModbusReadCoils));
+
+	if(_data.starting_address > 0) {
+		_data.starting_address--;
+	}
+
+	// Fix endianness (LE->BE).
+	_data.count = HTONS(_data.count);
+	_data.starting_address = HTONS(_data.starting_address);
+
+	modbus_store_tx_frame_data_bytes((uint8_t *)&_data.starting_address, 2);
+	modbus_store_tx_frame_data_bytes((uint8_t *)&_data.count, 2);
+
+	// Calculate checksum and put it at the end of the TX buffer.
+	modbus_add_tx_frame_checksum();
+
+	// Start master request timeout timing.
+	rs485.modbus_rtu.request.time_ref_master_request_timeout = system_timer_get_ms();
+
+	// Start TX.
+	modbus_start_tx_from_buffer(&rs485);
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+BootloaderHandleMessageResponse
+modbus_answer_read_holding_registers_request_low_level(const ModbusAnswerReadHoldingRegistersRequestLowLevel *message) {
+	uint16_t count = 0;
+	uint16_t _stream_chunk_data[29];
+
+	if(rs485.mode != MODE_MODBUS_SLAVE_RTU){
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	if(!modbus_slave_check_current_request(message->request_id)){
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	if(rs485.modbus_rtu.request.rx_frame[1] != MODBUS_FC_READ_HOLDING_REGISTERS) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	if((message->stream_total_length * 2) > (RS485_MODBUS_RTU_FRAME_SIZE_MAX - 5)) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	memcpy(&count, &rs485.modbus_rtu.request.rx_frame[4], 2);
+
+	// Fix endianness (BE->LE).
+	count = NTOHS(count);
+
+	if(message->stream_total_length != count) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	/*
+	 * FIXME: Strange memcpy() problem.
+	 *
+	 * For undetermined reason calling modbus_store_tx_frame_data_shorts()
+	 * with message->stream_chunk_data as argument doesn't work and shows unspecified
+	 * behaviour.
+	 *
+	 * Copying the data to a stack local variable and then calling the function
+	 * seems to work.
+	 */
+
+	memcpy(_stream_chunk_data, message->stream_chunk_data, sizeof(message->stream_chunk_data));
+
+	// The first chunk.
+	if(message->stream_chunk_offset == 0) {
+		ringbuffer_add(&rs485.ringbuffer_tx, rs485.modbus_slave_address);
+		ringbuffer_add(&rs485.ringbuffer_tx, (uint8_t)MODBUS_FC_READ_HOLDING_REGISTERS);
+		ringbuffer_add(&rs485.ringbuffer_tx, count * 2);
+
+		if(message->stream_total_length <= sizeof(message->stream_chunk_data) / 2) {
+			// All data fits in the first chunk there will not be other chunks.
+			modbus_store_tx_frame_data_shorts(_stream_chunk_data, count);
+
+			modbus_add_tx_frame_checksum();
+
+			if(rs485.modbus_rtu.state_wire != MODBUS_RTU_WIRE_STATE_IDLE) {
+				return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+			}
+
+			modbus_start_tx_from_buffer(&rs485);
+
+			return HANDLE_MESSAGE_RESPONSE_EMPTY;
+		}
+	}
+
+	if((message->stream_chunk_offset + (sizeof(message->stream_chunk_data) / 2)) <= message->stream_total_length) {
+		// We can copy all the data available in this chunk.
+		modbus_store_tx_frame_data_shorts(_stream_chunk_data, (sizeof(message->stream_chunk_data) / 2));
+
+		if((message->stream_chunk_offset + (sizeof(message->stream_chunk_data) / 2)) == message->stream_total_length) {
+			/*
+			 * This is the last chunk of the stream. All data of the frame is in the
+			 * buffer except checksum.
+			 */
+			modbus_add_tx_frame_checksum();
+
+			if(rs485.modbus_rtu.state_wire != MODBUS_RTU_WIRE_STATE_IDLE) {
+				return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+			}
+
+			modbus_start_tx_from_buffer(&rs485);
+		}
+	}
+	else {
+		/*
+		 * This is the last chunk of the stream but we have to calculate how much
+		 * to copy from the chunk.
+		 */
+		modbus_store_tx_frame_data_shorts(_stream_chunk_data, message->stream_total_length - message->stream_chunk_offset);
+
+		// All data of the frame is in the buffer except checksum.
+		modbus_add_tx_frame_checksum();
+
+		if(rs485.modbus_rtu.state_wire != MODBUS_RTU_WIRE_STATE_IDLE) {
+			return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+		}
+
+		modbus_start_tx_from_buffer(&rs485);
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse modbus_read_holding_registers(const ModbusReadHoldingRegisters *data, ModbusReadHoldingRegistersResponse *response) {
+  uint8_t _fc = 0;
+
+	// This function can be invoked only in master mode.
+	ModbusReadHoldingRegisters _data;
+	memset(&_data, 0, sizeof(ModbusReadHoldingRegisters));
+
+	response->header.length = sizeof(ModbusReadHoldingRegistersResponse);
+
+	if(rs485.mode != MODE_MODBUS_MASTER_RTU ||
+		 rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_READY ||
+		 rs485.modbus_rtu.state_wire != MODBUS_RTU_WIRE_STATE_IDLE) {
+		response->request_id = 0;
+
+		return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+	}
+
+	if(data->count < 1 || data->count > 125) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
+	modbus_init_new_request(&rs485,
+	                        MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE,
+	                        (sizeof(ModbusReadHoldingRegisters) - sizeof(TFPMessageHeader) + 3));
+
+	response->request_id = rs485.modbus_rtu.request.id;
+
+  _fc = (uint8_t)MODBUS_FC_READ_HOLDING_REGISTERS;
+
+	// Constructing the frame in the TX buffer.
+	modbus_store_tx_frame_data_bytes(&data->slave_address, 1); // Slave address.
+	modbus_store_tx_frame_data_bytes(&_fc, 1); // Function code.
+
+	memcpy(&_data, data, sizeof(ModbusReadHoldingRegisters));
+
+	if(_data.starting_address > 0) {
+		_data.starting_address--;
+	}
 
 	// Fix endianness (LE->BE).
 	_data.count = HTONS(_data.count);
@@ -599,9 +808,8 @@ bool handle_read_callback_callback(void) {
 	static uint32_t last_used = 0;
 	static uint32_t last_time = 0;
 
-	if(rs485.mode == MODE_MODBUS_SLAVE_RTU ||
-		 rs485.mode == MODE_MODBUS_MASTER_RTU) {
-			 return false;
+	if(rs485.mode == MODE_MODBUS_SLAVE_RTU || rs485.mode == MODE_MODBUS_MASTER_RTU) {
+		return false;
 	}
 
 	if(!rs485.read_callback_enabled) {
@@ -649,10 +857,9 @@ bool handle_read_callback_callback(void) {
 	}
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
-		bootloader_spitfp_send_ack_and_message(&bootloader_status,
-																					 (uint8_t*)&cb,
-																					 sizeof(ReadCallbackCallback));
+		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(ReadCallbackCallback));
 		is_buffered = false;
+
 		return true;
 	}
 	else {
@@ -691,9 +898,8 @@ bool handle_error_count_callback(void) {
 	}
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
-		bootloader_spitfp_send_ack_and_message(&bootloader_status,
-																					 (uint8_t*)&cb,
-																					 sizeof(ErrorCountCallback));
+		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(ErrorCountCallback));
+
 		is_buffered = false;
 
 		return true;
@@ -711,10 +917,10 @@ bool handle_modbus_read_coils_request_callback(void) {
 	static ModbusReadCoilsRequestCallback cb;
 
 	if((rs485.mode != MODE_MODBUS_SLAVE_RTU) ||
-		 (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
-		 (rs485.modbus_rtu.request.rx_frame[1] != MODBUS_FC_READ_COILS) ||
+	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
+	   (rs485.modbus_rtu.request.rx_frame[1] != MODBUS_FC_READ_COILS) ||
 	   !rs485.modbus_rtu.request.cb_invoke) {
-		return false;
+	  return false;
 	}
 
 	memcpy(&cb.count, &rs485.modbus_rtu.request.rx_frame[4], 2);
@@ -725,19 +931,17 @@ bool handle_modbus_read_coils_request_callback(void) {
 	if(cb.count < 1 || cb.count > 2000) {
 		rs485.modbus_common_error_counters.illegal_data_value++;
 
-		_modbus_report_exception(&rs485,
-														 rs485.modbus_rtu.request.rx_frame[1],
-														 MODBUS_EC_ILLEGAL_DATA_VALUE);
+		_modbus_report_exception(&rs485, rs485.modbus_rtu.request.rx_frame[1], (uint8_t)MODBUS_EC_ILLEGAL_DATA_VALUE);
 
 		return true;
 	}
 
- 	// Read data from rx_frame form a TFP callback packet and send.
+	 // Read data from rx_frame form a TFP callback packet and send.
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
 		tfp_make_default_header(&cb.header,
-														bootloader_get_uid(),
-														sizeof(ModbusReadCoilsRequestCallback),
-														FID_CALLBACK_MODBUS_READ_COILS_REQUEST);
+		                        bootloader_get_uid(),
+		                        sizeof(ModbusReadCoilsRequestCallback),
+		                        FID_CALLBACK_MODBUS_READ_COILS_REQUEST);
 
 		cb.request_id = rs485.modbus_rtu.request.id;
 
@@ -747,8 +951,8 @@ bool handle_modbus_read_coils_request_callback(void) {
 		cb.starting_address = NTOHS(cb.starting_address);
 
 		bootloader_spitfp_send_ack_and_message(&bootloader_status,
-																					 (uint8_t*)&cb,
-																					 sizeof(ModbusReadCoilsRequestCallback));
+		                                       (uint8_t*)&cb,
+		                                       sizeof(ModbusReadCoilsRequestCallback));
 
 		rs485.modbus_rtu.request.cb_invoke = false;
 
@@ -766,22 +970,22 @@ bool handle_modbus_read_coils_response_low_level_callback(void) {
 	memset(&cb, 0, sizeof(ModbusReadCoilsResponseLowLevelCallback));
 
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
-		 (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
-		 (rs485.modbus_rtu.request.tx_frame[1] != MODBUS_FC_READ_COILS)) {
-		return false;
+	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
+	   (rs485.modbus_rtu.request.tx_frame[1] != MODBUS_FC_READ_COILS)) {
+	  return false;
 	}
 
 	cb.request_id = rs485.modbus_rtu.request.id;
-	cb.exception_code = 0; // FIXME: Add constants.
+	cb.exception_code = 0;
 
 	tfp_make_default_header(&cb.header,
-		                      bootloader_get_uid(),
-													sizeof(ModbusReadCoilsResponseLowLevelCallback),
-													FID_CALLBACK_MODBUS_READ_COILS_RESPONSE_LOW_LEVEL);
+	                        bootloader_get_uid(),
+	                        sizeof(ModbusReadCoilsResponseLowLevelCallback),
+	                        FID_CALLBACK_MODBUS_READ_COILS_RESPONSE_LOW_LEVEL);
 
 	// Check if the request has timed out.
 	if(rs485.modbus_rtu.request.master_request_timed_out) {
-		cb.exception_code = -2; // FIXME: Add constants.
+		cb.exception_code = (int8_t)MODBUS_EC_TIMEOUT;
 		cb.stream_total_length = 0;
 		cb.stream_chunk_offset = 0;
 
@@ -789,8 +993,8 @@ bool handle_modbus_read_coils_response_low_level_callback(void) {
 			modbus_clear_request(&rs485);
 
 			bootloader_spitfp_send_ack_and_message(&bootloader_status,
-																						 (uint8_t*)&cb,
-																						 sizeof(ModbusReadCoilsResponseLowLevelCallback));
+			                                       (uint8_t*)&cb,
+			                                       sizeof(ModbusReadCoilsResponseLowLevelCallback));
 			return true;
 		}
 		else {
@@ -823,8 +1027,8 @@ bool handle_modbus_read_coils_response_low_level_callback(void) {
 				modbus_clear_request(&rs485);
 
 				bootloader_spitfp_send_ack_and_message(&bootloader_status,
-																							 (uint8_t*)&cb,
-																							 sizeof(ModbusReadCoilsResponseLowLevelCallback));
+				                                       (uint8_t*)&cb,
+				                                       sizeof(ModbusReadCoilsResponseLowLevelCallback));
 				return true;
 			}
 			else {
@@ -839,15 +1043,13 @@ bool handle_modbus_read_coils_response_low_level_callback(void) {
 		if(cb.stream_total_length <= sizeof(cb.stream_chunk_data)) {
 			// Fits in one packet.
 			if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
-				memcpy(&cb.stream_chunk_data,
-							 &rs485.modbus_rtu.request.rx_frame[3],
-							 cb.stream_total_length);
+				memcpy(&cb.stream_chunk_data, &rs485.modbus_rtu.request.rx_frame[3], cb.stream_total_length);
 
 				modbus_clear_request(&rs485);
 
 				bootloader_spitfp_send_ack_and_message(&bootloader_status,
-																							 (uint8_t*)&cb,
-																							 sizeof(ModbusReadCoilsResponseLowLevelCallback));
+				                                       (uint8_t*)&cb,
+				                                       sizeof(ModbusReadCoilsResponseLowLevelCallback));
 
 				return true;
 			}
@@ -858,8 +1060,8 @@ bool handle_modbus_read_coils_response_low_level_callback(void) {
 		else {
 			// Need more than one packet to send the data.
 			if(!rs485.modbus_rtu.request.stream_chunks) {
-				chunks = rs485.modbus_rtu.request.rx_frame[2] / 59;
-				chunks = ((rs485.modbus_rtu.request.rx_frame[2] % 59) > 0) ? chunks + 1 : chunks;
+				chunks = rs485.modbus_rtu.request.rx_frame[2] / sizeof(cb.stream_chunk_data);
+				chunks = ((rs485.modbus_rtu.request.rx_frame[2] % sizeof(cb.stream_chunk_data)) > 0) ? chunks + 1 : chunks;
 
 				rs485.modbus_rtu.request.stream_chunks = true;
 				rs485.modbus_rtu.request.stream_chunk_current = 0;
@@ -867,8 +1069,175 @@ bool handle_modbus_read_coils_response_low_level_callback(void) {
 				rs485.modbus_rtu.request.stream_total_length = rs485.modbus_rtu.request.rx_frame[2];
 			}
 
-			return send_stream_chunks(FID_CALLBACK_MODBUS_READ_COILS_RESPONSE_LOW_LEVEL,
-																&cb);
+			return send_stream_chunks(FID_CALLBACK_MODBUS_READ_COILS_RESPONSE_LOW_LEVEL, &cb);
+		}
+	}
+
+	return false;
+}
+
+bool handle_modbus_read_holding_registers_request_callback(void) {
+	// This callback is processed only in slave mode.
+	static ModbusReadHoldingRegistersRequestCallback cb;
+
+	if((rs485.mode != MODE_MODBUS_SLAVE_RTU) ||
+	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
+	   (rs485.modbus_rtu.request.rx_frame[1] != MODBUS_FC_READ_HOLDING_REGISTERS) ||
+	   !rs485.modbus_rtu.request.cb_invoke) {
+	  return false;
+	}
+
+	memcpy(&cb.count, &rs485.modbus_rtu.request.rx_frame[4], 2);
+
+	// Fix endianness (BE->LE).
+	cb.count = NTOHS(cb.count);
+
+	if(cb.count < 1 || cb.count > 125) {
+		rs485.modbus_common_error_counters.illegal_data_value++;
+
+		_modbus_report_exception(&rs485, rs485.modbus_rtu.request.rx_frame[1], (uint8_t)MODBUS_EC_ILLEGAL_DATA_VALUE);
+
+		return true;
+	}
+
+	 // Read data from rx_frame, form a TFP callback packet and send.
+	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+		tfp_make_default_header(&cb.header,
+		                        bootloader_get_uid(),
+		                        sizeof(ModbusReadHoldingRegistersRequestCallback),
+		                        FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_REQUEST);
+
+		cb.request_id = rs485.modbus_rtu.request.id;
+
+		memcpy(&cb.starting_address, &rs485.modbus_rtu.request.rx_frame[2], 2);
+
+		// Fix endianness (BE->LE).
+		cb.starting_address = NTOHS(cb.starting_address);
+
+		bootloader_spitfp_send_ack_and_message(&bootloader_status,
+		                                       (uint8_t*)&cb,
+		                                       sizeof(ModbusReadHoldingRegistersRequestCallback));
+
+		rs485.modbus_rtu.request.cb_invoke = false;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool handle_modbus_read_holding_registers_response_low_level_callback(void) {
+	// This callback is processed only in master mode.
+	uint16_t chunks = 0;
+	static ModbusReadHoldingRegistersResponseLowLevelCallback cb;
+
+	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
+		 (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
+		 (rs485.modbus_rtu.request.tx_frame[1] != MODBUS_FC_READ_HOLDING_REGISTERS)) {
+		return false;
+	}
+
+	cb.request_id = rs485.modbus_rtu.request.id;
+	cb.exception_code = 0;
+
+	tfp_make_default_header(&cb.header,
+	                        bootloader_get_uid(),
+	                        sizeof(ModbusReadHoldingRegistersResponseLowLevelCallback),
+	                        FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_RESPONSE_LOW_LEVEL);
+
+	// Check if the request has timed out.
+	if(rs485.modbus_rtu.request.master_request_timed_out) {
+		cb.exception_code = (int8_t)MODBUS_EC_TIMEOUT;
+		cb.stream_total_length = 0;
+		cb.stream_chunk_offset = 0;
+
+		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+			modbus_clear_request(&rs485);
+
+			bootloader_spitfp_send_ack_and_message(&bootloader_status,
+			                                       (uint8_t*)&cb,
+			                                       sizeof(ModbusReadHoldingRegistersResponseLowLevelCallback));
+
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	// Check if the callback is ready to be handled.
+	if(rs485.modbus_rtu.request.cb_invoke) {
+		// Check if the slave response is an exception.
+		if(rs485.modbus_rtu.request.rx_frame[1] == rs485.modbus_rtu.request.tx_frame[1] + 0x80) {
+			cb.exception_code = rs485.modbus_rtu.request.rx_frame[2];
+			cb.stream_total_length = 0;
+			cb.stream_chunk_offset = 0;
+
+			if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_FUNCTION) {
+				rs485.modbus_common_error_counters.illegal_function++;
+			}
+			else if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_DATA_ADDRESS) {
+				rs485.modbus_common_error_counters.illegal_data_address++;
+			}
+			else if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_DATA_VALUE) {
+				rs485.modbus_common_error_counters.illegal_data_value++;
+			}
+			else if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_SLAVE_DEVICE_FAILURE) {
+				rs485.modbus_common_error_counters.slave_device_failure++;
+			}
+
+			if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+				modbus_clear_request(&rs485);
+
+				bootloader_spitfp_send_ack_and_message(&bootloader_status,
+				                                       (uint8_t*)&cb,
+				                                       sizeof(ModbusReadHoldingRegistersResponseLowLevelCallback));
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+
+		// Data to be handled.
+		cb.stream_chunk_offset = 0;
+		cb.stream_total_length = rs485.modbus_rtu.request.rx_frame[2] / 2;
+
+		if(cb.stream_total_length <= (sizeof(cb.stream_chunk_data) / 2)) {
+			// Fits in one packet.
+			if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+				uint16_t *_data = (uint16_t *)&rs485.modbus_rtu.request.rx_frame[3];
+
+				for(uint16_t i = 0; i < cb.stream_total_length; i++) {
+					// Before copying convert the data to host order from network order.
+					cb.stream_chunk_data[i] = NTOHS(_data[i]);
+				}
+
+				modbus_clear_request(&rs485);
+
+				bootloader_spitfp_send_ack_and_message(&bootloader_status,
+				                                       (uint8_t*)&cb,
+				                                       sizeof(ModbusReadHoldingRegistersResponseLowLevelCallback));
+
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			// Need more than one packet to send the data.
+			if(!rs485.modbus_rtu.request.stream_chunks) {
+				chunks = rs485.modbus_rtu.request.rx_frame[2] / sizeof(cb.stream_chunk_data);
+				chunks = ((rs485.modbus_rtu.request.rx_frame[2] % sizeof(cb.stream_chunk_data)) > 0) ? chunks + 1 : chunks;
+
+				rs485.modbus_rtu.request.stream_chunks = true;
+				rs485.modbus_rtu.request.stream_chunk_current = 0;
+				rs485.modbus_rtu.request.stream_chunk_total = chunks;
+				rs485.modbus_rtu.request.stream_total_length = rs485.modbus_rtu.request.rx_frame[2] / 2;
+			}
+
+			return send_stream_chunks(FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_RESPONSE_LOW_LEVEL, &cb);
 		}
 	}
 

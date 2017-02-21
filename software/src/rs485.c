@@ -248,11 +248,6 @@ void rs485_init_buffer(RS485 *rs485) {
 
 void rs485_init(RS485 *rs485) {
 	// Default config is RS485 mode, 115200 baud, 8N1, half-duplex.
-
-	/*
-	 * FIXME: For development default mode is set to be Modbus slave, change it
-	 * to be normal RS485 mode.
-	 */
 	rs485->mode                         = MODE_RS485;
 	rs485->baudrate                     = 115200;
 	rs485->parity                       = PARITY_NONE;

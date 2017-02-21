@@ -41,15 +41,6 @@
 #define RS485_MODBUS_RTU_FRAME_SIZE_MAX 256
 #define MODBUS_DEFAULT_MASTER_REQUEST_TIMEOUT 1000 // Milliseconds.
 
-// Modbus specific.
-extern uint8_t MODBUS_FC_READ_COILS;
-
-// Modbus exception codes.
-extern uint8_t MODBUS_EC_ILLEGAL_FUNCTION;
-extern uint8_t MODBUS_EC_ILLEGAL_DATA_VALUE;
-extern uint8_t MODBUS_EC_ILLEGAL_DATA_ADDRESS;
-extern uint8_t MODBUS_EC_SLAVE_DEVICE_FAILURE;
-
 typedef enum {
 	MODE_RS485 = 0,
 	MODE_MODBUS_SLAVE_RTU = 1,
