@@ -28,6 +28,7 @@
 typedef enum {
 	MODBUS_FC_READ_COILS = 1,
 	MODBUS_FC_READ_HOLDING_REGISTERS = 3,
+	MODBUS_FC_WRITE_SINGLE_COIL = 5,
 } ModbusFunctionCode;
 
 // Modbus exception codes.

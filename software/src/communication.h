@@ -68,16 +68,20 @@ void communication_init(void);
 #define FID_MODBUS_READ_COILS 27
 #define FID_MODBUS_ANSWER_READ_HOLDING_REGISTERS_REQUEST_LOW_LEVEL 28
 #define FID_MODBUS_READ_HOLDING_REGISTERS 29
+#define FID_MODBUS_ANSWER_WRITE_SINGLE_COIL_REQUEST 30
+#define FID_MODBUS_WRITE_SINGLE_COIL 31
 
 // Callbacks.
-#define FID_CALLBACK_READ_CALLBACK 30
-#define FID_CALLBACK_ERROR_COUNT 31
+#define FID_CALLBACK_READ_CALLBACK 32
+#define FID_CALLBACK_ERROR_COUNT 33
 
 // Modbus specific.
-#define FID_CALLBACK_MODBUS_READ_COILS_REQUEST 32
-#define FID_CALLBACK_MODBUS_READ_COILS_RESPONSE_LOW_LEVEL 33
-#define FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_REQUEST 34
-#define FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_RESPONSE_LOW_LEVEL 35
+#define FID_CALLBACK_MODBUS_READ_COILS_REQUEST 34
+#define FID_CALLBACK_MODBUS_READ_COILS_RESPONSE_LOW_LEVEL 35
+#define FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_REQUEST 36
+#define FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_RESPONSE_LOW_LEVEL 37
+#define FID_CALLBACK_MODBUS_WRITE_SINGLE_COIL_REQUEST 38
+#define FID_CALLBACK_MODBUS_WRITE_SINGLE_COIL_RESPONSE 39
 
 // enums
 typedef enum {
@@ -376,6 +380,40 @@ typedef struct {
 	uint16_t stream_chunk_data[29];
 } __attribute__((__packed__)) ModbusReadHoldingRegistersResponseLowLevelCallback;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t slave_address;
+	uint16_t coil_address;
+	uint16_t coil_value;
+} __attribute__((__packed__)) ModbusWriteSingleCoil;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+} __attribute__((__packed__)) ModbusWriteSingleCoilResponse;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+  uint16_t coil_address;
+	uint16_t coil_value;
+} __attribute__((__packed__)) ModbusAnswerWriteSingleCoilRequest;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+  uint16_t coil_address;
+	uint16_t coil_value;
+} __attribute__((__packed__)) ModbusWriteSingleCoilRequestCallback;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+  int8_t exception_code;
+  uint16_t coil_address;
+	uint16_t coil_value;
+} __attribute__((__packed__)) ModbusWriteSingleCoilResponseCallback;
+
 // Function prototypes
 BootloaderHandleMessageResponse write(const Write *data, WriteResponse *response);
 BootloaderHandleMessageResponse read(const Read *data, ReadResponse *response);
@@ -420,11 +458,12 @@ BootloaderHandleMessageResponse get_modbus_common_error_count(const GetModbusCom
 BootloaderHandleMessageResponse modbus_answer_read_coils_request_low_level(const ModbusAnswerReadCoilsRequestLowLevel *data);
 BootloaderHandleMessageResponse modbus_read_coils(const ModbusReadCoils *data,
                                                   ModbusReadCoilsResponse *response);
-
 BootloaderHandleMessageResponse modbus_answer_read_holding_registers_request_low_level(const ModbusAnswerReadHoldingRegistersRequestLowLevel *data);
 BootloaderHandleMessageResponse modbus_read_holding_registers(const ModbusReadHoldingRegisters *data,
                                                               ModbusReadHoldingRegistersResponse *response);
-
+BootloaderHandleMessageResponse modbus_answer_write_single_coil_request(const ModbusAnswerWriteSingleCoilRequest *data);
+BootloaderHandleMessageResponse modbus_write_single_coil(const ModbusWriteSingleCoil *data,
+                                                         ModbusWriteSingleCoilResponse *response);
 // Callbacks
 bool handle_read_callback_callback(void);
 bool handle_error_count_callback(void);
@@ -434,10 +473,12 @@ bool handle_modbus_read_coils_request_callback(void);
 bool handle_modbus_read_coils_response_low_level_callback(void);
 bool handle_modbus_read_holding_registers_request_callback(void);
 bool handle_modbus_read_holding_registers_response_low_level_callback(void);
+bool handle_modbus_write_single_coil_request_callback(void);
+bool handle_modbus_write_single_coil_response_callback(void);
 
 #define CALLBACK_ERROR_COUNT_DEBOUNCE_MS 100
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
-#define COMMUNICATION_CALLBACK_HANDLER_NUM 6
+#define COMMUNICATION_CALLBACK_HANDLER_NUM 8
 #define COMMUNICATION_CALLBACK_LIST_INIT \
 	handle_read_callback_callback, \
 	handle_error_count_callback, \
@@ -445,5 +486,7 @@ bool handle_modbus_read_holding_registers_response_low_level_callback(void);
 	handle_modbus_read_coils_response_low_level_callback, \
 	handle_modbus_read_holding_registers_request_callback,\
 	handle_modbus_read_holding_registers_response_low_level_callback,\
+	handle_modbus_write_single_coil_request_callback,\
+	handle_modbus_write_single_coil_response_callback,\
 
 #endif
