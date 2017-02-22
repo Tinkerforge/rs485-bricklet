@@ -101,11 +101,10 @@ bool modbus_check_frame_checksum(RS485 *rs485) {
 	uint8_t checksum_gen[2];
 
 	crc16(rs485->modbus_rtu.request.rx_frame,
-				rs485->modbus_rtu.rx_rb_last_length - 2,
-				&checksum_gen[0]);
+	      rs485->modbus_rtu.rx_rb_last_length - 2,
+	      &checksum_gen[0]);
 
-	uint8_t *checksum_recvd =
-		&rs485->modbus_rtu.request.rx_frame[rs485->modbus_rtu.rx_rb_last_length - 2];
+	uint8_t *checksum_recvd = &rs485->modbus_rtu.request.rx_frame[rs485->modbus_rtu.rx_rb_last_length - 2];
 
 	return (checksum_recvd[0] == checksum_gen[0] && checksum_recvd[1] == checksum_gen[1]);
 }
@@ -326,6 +325,9 @@ bool modbus_slave_check_function_code_imlemented(RS485 *rs485) {
 		return true;
 	}
 	else if(rs485->modbus_rtu.request.rx_frame[1] == MODBUS_FC_WRITE_SINGLE_COIL) {
+		return true;
+	}
+	else if(rs485->modbus_rtu.request.rx_frame[1] == MODBUS_FC_WRITE_SINGLE_REGISTER) {
 		return true;
 	}
 	else {
