@@ -91,18 +91,22 @@ typedef enum {
 
 // Modbus specific.
 typedef struct {
+	bool in_progress;
+	uint32_t chunk_total;
+	uint32_t stream_total;
+	uint32_t chunk_current;
+} RS485ModbusStreamChunking;
+
+typedef struct {
 	uint8_t id;
 	bool cb_invoke;
 	uint16_t length;
 	uint8_t *rx_frame;
 	uint8_t *tx_frame;
-	bool stream_chunks;
-	uint32_t stream_chunk_total;
-	uint32_t stream_total_length;
-	uint32_t stream_chunk_current;
 	RS485ModbusRequestState state;
 	bool master_request_timed_out;
 	uint32_t time_ref_master_request_timeout;
+	RS485ModbusStreamChunking *stream_chunking;
 } RS485ModbusRequest;
 
 typedef struct {

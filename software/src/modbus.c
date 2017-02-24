@@ -29,6 +29,8 @@
 #include "xmc_uart.h"
 #include "xmc_scu.h"
 
+RS485ModbusStreamChunking stream_chunking;
+
 void modbus_init(RS485 *rs485) {
 	if(rs485->baudrate > 19200) {
 		rs485->modbus_rtu.time_4_chars_us = 1750;
@@ -53,10 +55,6 @@ void modbus_init(RS485 *rs485) {
 	rs485->modbus_rtu.request.length = 0;
 	rs485->modbus_rtu.rx_rb_last_length = 0;
 	rs485->modbus_rtu.request.cb_invoke = false;
-	rs485->modbus_rtu.request.stream_chunks = false;
-	rs485->modbus_rtu.request.stream_chunk_total = 0;
-	rs485->modbus_rtu.request.stream_total_length = 0;
-	rs485->modbus_rtu.request.stream_chunk_current = 0;
 	rs485->modbus_rtu.request.rx_frame = &rs485->buffer[0];
 	rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_IDLE;
 	rs485->modbus_rtu.request.master_request_timed_out = false;
@@ -66,6 +64,9 @@ void modbus_init(RS485 *rs485) {
 	memset(rs485->modbus_rtu.request.rx_frame, 0, rs485->buffer_size_rx);
 	memset(rs485->modbus_rtu.request.tx_frame, 0, RS485_BUFFER_SIZE - rs485->buffer_size_rx);
 	memset(&rs485->modbus_common_error_counters, 0, sizeof(RS485ModbusCommonErrorCounters));
+	memset(&stream_chunking, 0, sizeof(RS485ModbusStreamChunking));
+
+	rs485->modbus_rtu.request.stream_chunking = &stream_chunking;
 }
 
 void modbus_clear_request(RS485 *rs485) {
@@ -74,13 +75,11 @@ void modbus_clear_request(RS485 *rs485) {
 	ringbuffer_init(&rs485->ringbuffer_rx, rs485->buffer_size_rx, &rs485->buffer[0]);
 	ringbuffer_init(&rs485->ringbuffer_tx, RS485_BUFFER_SIZE-rs485->buffer_size_rx, &rs485->buffer[rs485->buffer_size_rx]);
 
+	memset(&stream_chunking, 0, sizeof(RS485ModbusStreamChunking));
+
 	rs485->modbus_rtu.request.length = 0;
 	rs485->modbus_rtu.rx_rb_last_length = 0;
 	rs485->modbus_rtu.request.cb_invoke = false;
-	rs485->modbus_rtu.request.stream_chunks = false;
-	rs485->modbus_rtu.request.stream_chunk_total = 0;
-	rs485->modbus_rtu.request.stream_total_length = 0;
-	rs485->modbus_rtu.request.stream_chunk_current = 0;
 	rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_IDLE;
 	rs485->modbus_rtu.request.master_request_timed_out = false;
 	rs485->modbus_rtu.request.state = MODBUS_REQUEST_PROCESS_STATE_READY;
@@ -230,8 +229,8 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
 			// Check if master request has timedout.
 			if((rs485->modbus_rtu.request.state == MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) &&
 			   system_timer_is_time_elapsed_ms(rs485->modbus_rtu.request.time_ref_master_request_timeout,
-			   rs485->modbus_master_request_timeout)) {
-				rs485->modbus_common_error_counters.timeout++;
+			                                   rs485->modbus_master_request_timeout)) {
+			  rs485->modbus_common_error_counters.timeout++;
 
 				/*
 				 * Set master request timeout flag. Which will be observed by the
@@ -259,7 +258,7 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
 			if((rs485->modbus_rtu.request.state == MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) &&
 				 (ringbuffer_get_used(&rs485->ringbuffer_rx) > 0) &&
 				 (ringbuffer_get_used(&rs485->ringbuffer_rx) == rs485->modbus_rtu.rx_rb_last_length)) {
-				if(rs485->modbus_rtu.request.stream_chunks) {
+				if(rs485->modbus_rtu.request.stream_chunking->in_progress) {
 					// In process of streaming chunks of slave response ot the user.
 					return;
 				}
@@ -328,6 +327,9 @@ bool modbus_slave_check_function_code_imlemented(RS485 *rs485) {
 		return true;
 	}
 	else if(rs485->modbus_rtu.request.rx_frame[1] == MODBUS_FC_WRITE_SINGLE_REGISTER) {
+		return true;
+	}
+	else if(rs485->modbus_rtu.request.rx_frame[1] == MODBUS_FC_WRITE_MULTIPLE_COILS) {
 		return true;
 	}
 	else {
