@@ -76,24 +76,28 @@ void communication_init(void);
 #define FID_MODBUS_WRITE_MULTIPLE_COILS_LOW_LEVEL 35
 #define FID_MODBUS_ANSWER_WRITE_MULTIPLE_REGISTERS_REQUEST 36
 #define FID_MODBUS_WRITE_MULTIPLE_REGISTERS_LOW_LEVEL 37
+#define FID_MODBUS_ANSWER_READ_DISCRETE_INPUTS_REQUEST_LOW_LEVEL 38
+#define FID_MODBUS_READ_DISCRETE_INPUTS 39
 
 // Callbacks.
-#define FID_CALLBACK_READ_CALLBACK 38
-#define FID_CALLBACK_ERROR_COUNT 39
+#define FID_CALLBACK_READ_CALLBACK 40
+#define FID_CALLBACK_ERROR_COUNT 41
 
 // Modbus specific.
-#define FID_CALLBACK_MODBUS_READ_COILS_REQUEST 40
-#define FID_CALLBACK_MODBUS_READ_COILS_RESPONSE_LOW_LEVEL 41
-#define FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_REQUEST 42
-#define FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_RESPONSE_LOW_LEVEL 43
-#define FID_CALLBACK_MODBUS_WRITE_SINGLE_COIL_REQUEST 44
-#define FID_CALLBACK_MODBUS_WRITE_SINGLE_COIL_RESPONSE 45
-#define FID_CALLBACK_MODBUS_WRITE_SINGLE_REGISTER_REQUEST 46
-#define FID_CALLBACK_MODBUS_WRITE_SINGLE_REGISTER_RESPONSE 47
-#define FID_CALLBACK_MODBUS_WRITE_MULTIPLE_COILS_REQUEST_LOW_LEVEL 48
-#define FID_CALLBACK_MODBUS_WRITE_MULTIPLE_COILS_RESPONSE 49
-#define FID_CALLBACK_MODBUS_WRITE_MULTIPLE_REGISTERS_REQUEST_LOW_LEVEL 50
-#define FID_CALLBACK_MODBUS_WRITE_MULTIPLE_REGISTERS_RESPONSE 51
+#define FID_CALLBACK_MODBUS_READ_COILS_REQUEST 42
+#define FID_CALLBACK_MODBUS_READ_COILS_RESPONSE_LOW_LEVEL 43
+#define FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_REQUEST 44
+#define FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_RESPONSE_LOW_LEVEL 45
+#define FID_CALLBACK_MODBUS_WRITE_SINGLE_COIL_REQUEST 46
+#define FID_CALLBACK_MODBUS_WRITE_SINGLE_COIL_RESPONSE 47
+#define FID_CALLBACK_MODBUS_WRITE_SINGLE_REGISTER_REQUEST 48
+#define FID_CALLBACK_MODBUS_WRITE_SINGLE_REGISTER_RESPONSE 49
+#define FID_CALLBACK_MODBUS_WRITE_MULTIPLE_COILS_REQUEST_LOW_LEVEL 50
+#define FID_CALLBACK_MODBUS_WRITE_MULTIPLE_COILS_RESPONSE 51
+#define FID_CALLBACK_MODBUS_WRITE_MULTIPLE_REGISTERS_REQUEST_LOW_LEVEL 52
+#define FID_CALLBACK_MODBUS_WRITE_MULTIPLE_REGISTERS_RESPONSE 53
+#define FID_CALLBACK_MODBUS_READ_DISCRETE_INPUTS_REQUEST 54
+#define FID_CALLBACK_MODBUS_READ_DISCRETE_INPUTS_RESPONSE_LOW_LEVEL 55
 
 // enums
 typedef enum {
@@ -540,6 +544,42 @@ typedef struct {
 	uint16_t count;
 } __attribute__((__packed__)) ModbusWriteMultipleRegistersResponseCallback;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+	uint16_t stream_total_length;
+	uint16_t stream_chunk_offset;
+	uint8_t stream_chunk_data[59];
+} __attribute__((__packed__)) ModbusAnswerReadDiscreteInputsRequestLowLevel;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t slave_address;
+	uint16_t starting_address;
+	uint16_t count;
+} __attribute__((__packed__)) ModbusReadDiscreteInputs;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+} __attribute__((__packed__)) ModbusReadDiscreteInputsResponse;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+	uint16_t starting_address;
+	uint16_t count;
+} __attribute__((__packed__)) ModbusReadDiscreteInputsRequestCallback;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+	int8_t exception_code;
+	uint16_t stream_total_length;
+	uint16_t stream_chunk_offset;
+	uint8_t stream_chunk_data[58];
+} __attribute__((__packed__)) ModbusReadDiscreteInputsResponseLowLevelCallback;
+
 // Function prototypes
 BootloaderHandleMessageResponse write(const Write *data, WriteResponse *response);
 BootloaderHandleMessageResponse read(const Read *data, ReadResponse *response);
@@ -599,6 +639,9 @@ BootloaderHandleMessageResponse modbus_write_multiple_coils_low_level(const Modb
 BootloaderHandleMessageResponse modbus_answer_write_multiple_registers_request(const ModbusAnswerWriteMultipleRegistersRequest *data);
 BootloaderHandleMessageResponse modbus_write_multiple_registers_low_level(const ModbusWriteMultipleRegistersLowLevel *data,
                                                                           ModbusWriteMultipleRegistersLowLevelResponse *response);
+BootloaderHandleMessageResponse modbus_answer_read_discrete_inputs_request_low_level(const ModbusAnswerReadDiscreteInputsRequestLowLevel *data);
+BootloaderHandleMessageResponse modbus_read_discrete_inputs(const ModbusReadDiscreteInputs *data,
+                                                            ModbusReadDiscreteInputsResponse *response);
 
 // Callbacks
 bool handle_read_callback_callback(void);
@@ -617,24 +660,28 @@ bool handle_modbus_write_multiple_coils_request_low_level_callback(void);
 bool handle_modbus_write_multiple_coils_response_callback(void);
 bool handle_modbus_write_multiple_registers_request_low_level_callback(void);
 bool handle_modbus_write_multiple_registers_response_callback(void);
+bool handle_modbus_read_discrete_inputs_request_callback(void);
+bool handle_modbus_read_discrete_inputs_response_low_level_callback(void);
 
 #define CALLBACK_ERROR_COUNT_DEBOUNCE_MS 100
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
-#define COMMUNICATION_CALLBACK_HANDLER_NUM 14
+#define COMMUNICATION_CALLBACK_HANDLER_NUM 16
 #define COMMUNICATION_CALLBACK_LIST_INIT \
 	handle_read_callback_callback, \
 	handle_error_count_callback, \
 	handle_modbus_read_coils_request_callback, \
 	handle_modbus_read_coils_response_low_level_callback, \
-	handle_modbus_read_holding_registers_request_callback,\
-	handle_modbus_read_holding_registers_response_low_level_callback,\
-	handle_modbus_write_single_coil_request_callback,\
-	handle_modbus_write_single_coil_response_callback,\
-	handle_modbus_write_single_register_request_callback,\
-	handle_modbus_write_single_register_response_callback,\
-	handle_modbus_write_multiple_coils_request_low_level_callback,\
-	handle_modbus_write_multiple_coils_response_callback,\
-	handle_modbus_write_multiple_registers_request_low_level_callback,\
-	handle_modbus_write_multiple_registers_response_callback,\
+	handle_modbus_read_holding_registers_request_callback, \
+	handle_modbus_read_holding_registers_response_low_level_callback, \
+	handle_modbus_write_single_coil_request_callback, \
+	handle_modbus_write_single_coil_response_callback, \
+	handle_modbus_write_single_register_request_callback, \
+	handle_modbus_write_single_register_response_callback, \
+	handle_modbus_write_multiple_coils_request_low_level_callback, \
+	handle_modbus_write_multiple_coils_response_callback, \
+	handle_modbus_write_multiple_registers_request_low_level_callback, \
+	handle_modbus_write_multiple_registers_response_callback, \
+	handle_modbus_read_discrete_inputs_request_callback, \
+	handle_modbus_read_discrete_inputs_response_low_level_callback, \
 
 #endif
