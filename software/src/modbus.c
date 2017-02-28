@@ -86,7 +86,16 @@ void modbus_clear_request(RS485 *rs485) {
 }
 
 bool modbus_slave_check_address(RS485 *rs485) {
-	return (rs485->modbus_rtu.request.rx_frame[0] == rs485->modbus_slave_address);
+	if(rs485->modbus_rtu.request.rx_frame[0] == rs485->modbus_slave_address) {
+		return true;
+	}
+	else if(rs485->modbus_rtu.request.rx_frame[0] == 0) {
+		// Broadcast.
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 void modbus_start_tx_from_buffer(RS485 *rs485) {
@@ -308,9 +317,15 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
 			rs485->modbus_rtu.tx_done = false;
 			rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_IDLE;
 
-			if(rs485->mode == MODE_MODBUS_SLAVE_RTU) {
-				// In slave mode completed TX means end of a request handling.
-				modbus_clear_request(rs485);
+			if(rs485->mode == MODE_MODBUS_SLAVE_RTU ||
+			   (rs485->mode == MODE_MODBUS_MASTER_RTU && rs485->modbus_rtu.request.tx_frame[0] == 0)) {
+			  /*
+			   * In slave mode completed TX means end of a request handling.
+			   *
+			   * In master mode if a broadcast frame is TXed then no response is
+			   * expected and that is the end of that particular request.
+			   */
+			  modbus_clear_request(rs485);
 			}
 		}
 	}
