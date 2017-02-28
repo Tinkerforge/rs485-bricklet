@@ -338,6 +338,9 @@ bool modbus_slave_check_function_code_imlemented(RS485 *rs485) {
 	else if(rs485->modbus_rtu.request.rx_frame[1] == MODBUS_FC_READ_DISCRETE_INPUTS) {
 		return true;
 	}
+	else if(rs485->modbus_rtu.request.rx_frame[1] == MODBUS_FC_READ_INPUT_REGISTERS) {
+		return true;
+	}
 	else {
 		return false;
 	}
