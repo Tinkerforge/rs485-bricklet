@@ -667,7 +667,7 @@ BootloaderHandleMessageResponse modbus_report_exception(const ModbusReportExcept
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast.
+		// Broadcast. Slave should not respond to a broadcast message.
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
@@ -700,7 +700,7 @@ modbus_answer_read_coils_request_low_level(const ModbusAnswerReadCoilsRequestLow
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast.
+		// Broadcast. Slave must not respond to a broadcast message.
 		modbus_clear_request(&rs485);
 
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
@@ -855,7 +855,7 @@ modbus_answer_read_holding_registers_request_low_level(const ModbusAnswerReadHol
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast.
+		// Broadcast. Slave must not respond to a broadcast message.
 		modbus_clear_request(&rs485);
 
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
@@ -1024,7 +1024,7 @@ BootloaderHandleMessageResponse modbus_answer_write_single_coil_request(const Mo
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast.
+		// Broadcast. Slave must not respond to a broadcast message.
 		modbus_clear_request(&rs485);
 
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
@@ -1133,7 +1133,7 @@ BootloaderHandleMessageResponse modbus_answer_write_single_register_request(cons
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast.
+		// Broadcast. Slave must not respond to a broadcast message.
 		modbus_clear_request(&rs485);
 
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
@@ -1239,7 +1239,7 @@ BootloaderHandleMessageResponse modbus_answer_write_multiple_coils_request(const
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast.
+		// Broadcast. Slave must not respond to a broadcast message.
 		modbus_clear_request(&rs485);
 
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
@@ -1406,7 +1406,7 @@ BootloaderHandleMessageResponse modbus_answer_write_multiple_registers_request(c
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast.
+		// Broadcast. Slave must not respond to a broadcast message.
 		modbus_clear_request(&rs485);
 
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
@@ -1618,7 +1618,7 @@ BootloaderHandleMessageResponse modbus_answer_read_discrete_inputs_request_low_l
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast.
+		// Broadcast. Slave must not respond to a broadcast message.
 		modbus_clear_request(&rs485);
 
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
@@ -1773,7 +1773,7 @@ modbus_answer_read_input_registers_request_low_level(const ModbusAnswerReadInput
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast.
+		// Broadcast. Slave must not respond to a broadcast message.
 		modbus_clear_request(&rs485);
 
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
@@ -2101,13 +2101,6 @@ bool handle_modbus_read_coils_response_low_level_callback(void) {
 	  return false;
 	}
 
-	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast. No read callback is invoked for broadcast.
-		modbus_clear_request(&rs485);
-
-		return false;
-	}
-
 	cb.request_id = rs485.modbus_rtu.request.id;
 	cb.exception_code = 0;
 
@@ -2274,13 +2267,6 @@ bool handle_modbus_read_holding_registers_response_low_level_callback(void) {
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
 	   (rs485.modbus_rtu.request.tx_frame[1] != MODBUS_FC_READ_HOLDING_REGISTERS) ||
 	   !rs485.modbus_rtu.request.cb_invoke) {
-		return false;
-	}
-
-	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast. No read callback is invoked for broadcast.
-		modbus_clear_request(&rs485);
-
 		return false;
 	}
 
@@ -3072,13 +3058,6 @@ bool handle_modbus_read_discrete_inputs_response_low_level_callback(void) {
 	  return false;
 	}
 
-	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast. No read callback is invoked for broadcast.
-		modbus_clear_request(&rs485);
-
-		return false;
-	}
-
 	cb.request_id = rs485.modbus_rtu.request.id;
 	cb.exception_code = 0;
 
@@ -3245,13 +3224,6 @@ bool handle_modbus_read_input_registers_response_low_level_callback(void) {
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
 	   (rs485.modbus_rtu.request.tx_frame[1] != MODBUS_FC_READ_INPUT_REGISTERS) ||
 	   !rs485.modbus_rtu.request.cb_invoke) {
-		return false;
-	}
-
-	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
-		// Broadcast. No read callback is invoked for broadcast.
-		modbus_clear_request(&rs485);
-
 		return false;
 	}
 

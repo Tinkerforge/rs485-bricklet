@@ -245,6 +245,7 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
 				 * Set master request timeout flag. Which will be observed by the
 				 * corresponding callback handler and processed further.
 				 */
+				rs485->modbus_rtu.request.cb_invoke = true;
 				rs485->modbus_rtu.request.master_request_timed_out = true;
 
 				return;
@@ -317,14 +318,8 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
 			rs485->modbus_rtu.tx_done = false;
 			rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_IDLE;
 
-			if(rs485->mode == MODE_MODBUS_SLAVE_RTU ||
-			   (rs485->mode == MODE_MODBUS_MASTER_RTU && rs485->modbus_rtu.request.tx_frame[0] == 0)) {
-			  /*
-			   * In slave mode completed TX means end of a request handling.
-			   *
-			   * In master mode if a broadcast frame is TXed then no response is
-			   * expected and that is the end of that particular request.
-			   */
+			if(rs485->mode == MODE_MODBUS_SLAVE_RTU) {
+			  // In slave mode completed TX means end of a request handling.
 			  modbus_clear_request(rs485);
 			}
 		}
