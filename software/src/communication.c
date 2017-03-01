@@ -354,7 +354,6 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 
 		case FID_SET_MODE: return set_mode(message);
 		case FID_GET_MODE: return get_mode(message, response);
-		case FID_APPLY_CONFIGURATION : return apply_configuration(message);
 		case FID_SET_COMMUNICATION_LED_CONFIG: return set_communication_led_config(message);
 		case FID_GET_COMMUNICATION_LED_CONFIG: return get_communication_led_config(message, response);
 		case FID_SET_ERROR_LED_CONFIG: return set_error_led_config(message);
@@ -465,10 +464,13 @@ BootloaderHandleMessageResponse set_rs485_configuration(const SetRS485Configurat
 	rs485.wordlength = data->wordlength;
 	rs485.duplex     = data->duplex;
 
+	rs485_apply_configuration(&rs485);
+
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse get_rs485_configuration(const GetRS485Configuration *data, GetRS485ConfigurationResponse *response) {
+BootloaderHandleMessageResponse get_rs485_configuration(const GetRS485Configuration *data,
+                                                        GetRS485ConfigurationResponse *response) {
 	response->header.length = sizeof(GetRS485ConfigurationResponse);
 	response->baudrate      = rs485.baudrate;
 	response->parity        = rs485.parity;
@@ -488,6 +490,8 @@ BootloaderHandleMessageResponse set_modbus_configuration(const SetModbusConfigur
 	rs485.modbus_slave_address = data->slave_address;
 	rs485.modbus_master_request_timeout = data->master_request_timeout;
 
+	rs485_apply_configuration(&rs485);
+
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
@@ -502,6 +506,8 @@ BootloaderHandleMessageResponse get_modbus_configuration(const GetModbusConfigur
 BootloaderHandleMessageResponse set_mode(const SetMode *data) {
 	rs485.mode = data->mode;
 
+	rs485_apply_configuration(&rs485);
+
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
@@ -510,12 +516,6 @@ BootloaderHandleMessageResponse get_mode(const GetMode *data, GetModeResponse *r
 	response->mode          = rs485.mode;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
-}
-
-BootloaderHandleMessageResponse apply_configuration(const ApplyConfiguration *data) {
-	rs485_apply_configuration(&rs485);
-
-	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
 BootloaderHandleMessageResponse set_communication_led_config(const SetCommunicationLEDConfig *data) {
@@ -535,7 +535,8 @@ BootloaderHandleMessageResponse set_communication_led_config(const SetCommunicat
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse get_communication_led_config(const GetCommunicationLEDConfig *data, GetCommunicationLEDConfigResponse *response) {
+BootloaderHandleMessageResponse get_communication_led_config(const GetCommunicationLEDConfig *data,
+                                                             GetCommunicationLEDConfigResponse *response) {
 	response->header.length = sizeof(GetCommunicationLEDConfigResponse);
 	response->config        = rs485.yellow_led_state.config;
 
@@ -623,7 +624,8 @@ BootloaderHandleMessageResponse disable_error_count_callback(const DisableErrorC
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
-BootloaderHandleMessageResponse is_error_count_callback_enabled(const IsErrorCountCallbackEnabled *data, IsErrorCountCallbackEnabledResponse *response) {
+BootloaderHandleMessageResponse is_error_count_callback_enabled(const IsErrorCountCallbackEnabled *data,
+                                                                IsErrorCountCallbackEnabledResponse *response) {
 	response->header.length = sizeof(IsErrorCountCallbackEnabledResponse);
 	response->enabled       = rs485.error_count_callback_enabled;
 
@@ -639,7 +641,8 @@ BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data, GetEr
 }
 
 // Modbus specific.
-BootloaderHandleMessageResponse get_modbus_common_error_count(const GetModbusCommonErrorCount *data, GetModbusCommonErrorCountResponse *response) {
+BootloaderHandleMessageResponse get_modbus_common_error_count(const GetModbusCommonErrorCount *data,
+                                                              GetModbusCommonErrorCountResponse *response) {
 	response->header.length                    = sizeof(GetModbusCommonErrorCountResponse);
 	response->timeout_error_count              = rs485.modbus_common_error_counters.timeout;
 	response->checksum_error_count             = rs485.modbus_common_error_counters.checksum;
@@ -696,7 +699,7 @@ modbus_answer_read_coils_request_low_level(const ModbusAnswerReadCoilsRequestLow
 	}
 
 	if(data->stream_total_length > (RS485_MODBUS_RTU_FRAME_SIZE_MAX - 5)) {
-		return HANDLE_MESSAGE_RESPONSE_EMPTY;
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
@@ -718,7 +721,7 @@ modbus_answer_read_coils_request_low_level(const ModbusAnswerReadCoilsRequestLow
 	}
 
 	if(data->stream_total_length != expected_bytes) {
-		return HANDLE_MESSAGE_RESPONSE_EMPTY;
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
 	// The first chunk.
@@ -851,7 +854,7 @@ modbus_answer_read_holding_registers_request_low_level(const ModbusAnswerReadHol
 	}
 
 	if((data->stream_total_length * 2) > (RS485_MODBUS_RTU_FRAME_SIZE_MAX - 5)) {
-		return HANDLE_MESSAGE_RESPONSE_EMPTY;
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
@@ -1020,7 +1023,7 @@ BootloaderHandleMessageResponse modbus_answer_write_single_coil_request(const Mo
 	}
 
 	if(data->coil_value != 0x0000 && data->coil_value != 0xFF00) {
-		return HANDLE_MESSAGE_RESPONSE_EMPTY;
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
@@ -1614,7 +1617,7 @@ BootloaderHandleMessageResponse modbus_answer_read_discrete_inputs_request_low_l
 	}
 
 	if(data->stream_total_length > (RS485_MODBUS_RTU_FRAME_SIZE_MAX - 5)) {
-		return HANDLE_MESSAGE_RESPONSE_EMPTY;
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
@@ -1769,7 +1772,7 @@ modbus_answer_read_input_registers_request_low_level(const ModbusAnswerReadInput
 	}
 
 	if((data->stream_total_length * 2) > (RS485_MODBUS_RTU_FRAME_SIZE_MAX - 5)) {
-		return HANDLE_MESSAGE_RESPONSE_EMPTY;
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
 	if(rs485.modbus_rtu.request.rx_frame[0] == 0) {
