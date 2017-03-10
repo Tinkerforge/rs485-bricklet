@@ -519,7 +519,7 @@ BootloaderHandleMessageResponse get_mode(const GetMode *data, GetModeResponse *r
 }
 
 BootloaderHandleMessageResponse set_communication_led_config(const SetCommunicationLEDConfig *data) {
-	if(data->config > COMMUNICATION_LED_CONFIG_SHOW_HEARTBEAT) {
+	if(data->config > COMMUNICATION_LED_CONFIG_SHOW_COMMUNICATION) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
@@ -544,7 +544,7 @@ BootloaderHandleMessageResponse get_communication_led_config(const GetCommunicat
 }
 
 BootloaderHandleMessageResponse set_error_led_config(const SetErrorLEDConfig *data) {
-	if(data->config > ERROR_LED_CONFIG_SHOW_HEARTBEAT) {
+	if(data->config > ERROR_LED_CONFIG_SHOW_ERROR) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
