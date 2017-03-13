@@ -106,15 +106,12 @@ void modbus_start_tx_from_buffer(RS485 *rs485) {
 }
 
 bool modbus_check_frame_checksum(RS485 *rs485) {
-	uint8_t checksum_gen[2];
-
-	crc16(rs485->modbus_rtu.request.rx_frame,
-	      rs485->modbus_rtu.rx_rb_last_length - 2,
-	      &checksum_gen[0]);
+	uint16_t checksum = crc16_modbus(rs485->modbus_rtu.request.rx_frame,
+	                                 rs485->modbus_rtu.rx_rb_last_length - 2);
 
 	uint8_t *checksum_recvd = &rs485->modbus_rtu.request.rx_frame[rs485->modbus_rtu.rx_rb_last_length - 2];
 
-	return (checksum_recvd[0] == checksum_gen[0] && checksum_recvd[1] == checksum_gen[1]);
+	return (checksum_recvd[0] == (checksum & 0xFF) && checksum_recvd[1] == (checksum >> 8));
 }
 
 bool modbus_master_check_slave_response(RS485 *rs485) {
@@ -382,10 +379,8 @@ void _modbus_report_exception(RS485 *rs485, uint8_t function_code, ModbusExcepti
 	modbus_exception_response.address = rs485->modbus_slave_address;
 	modbus_exception_response.function_code = function_code + 0x80;
 	modbus_exception_response.exception_code = (uint8_t)exception_code;
-
-	crc16(modbus_exception_response_ptr,
-				sizeof(ModbusExceptionResponse) - 2,
-				modbus_exception_response.checksum);
+	modbus_exception_response.checksum = crc16_modbus(modbus_exception_response_ptr,
+	                                                  sizeof(ModbusExceptionResponse) - 2);
 
 	ringbuffer_init(&rs485->ringbuffer_tx,
 	                RS485_BUFFER_SIZE - rs485->buffer_size_rx,

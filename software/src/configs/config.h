@@ -24,6 +24,8 @@
 
 #include "xmc_device.h"
 
+#define CRC16_USE_MODBUS
+
 #define STARTUP_SYSTEM_INIT_ALREADY_DONE
 
 #define UARTBB_TX_PIN  P4_6

@@ -49,7 +49,7 @@ typedef struct {
 	uint8_t address;
 	uint8_t function_code;
 	uint8_t exception_code;
-	uint8_t checksum[2];
+	uint16_t checksum;
 } __attribute__((__packed__)) ModbusExceptionResponse;
 
 void modbus_init(RS485 *rs485);

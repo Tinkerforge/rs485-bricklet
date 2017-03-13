@@ -1,5 +1,5 @@
 /* rs485-bricklet
- * Copyright (C) 2016 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2016-2017 Olaf Lüke <olaf@tinkerforge.com>
  * Copyright (C) 2017 Ishraq Ibne Ashraf <ishraq@tinkerforge.com>
  *
  * communication.c: TFP protocol message handling
@@ -73,14 +73,11 @@ static void modbus_store_tx_frame_data_shorts(const uint16_t *data,
 }
 
 static void modbus_add_tx_frame_checksum(void) {
-	uint8_t checksum_gen[2];
+	uint16_t checksum = crc16_modbus(rs485.ringbuffer_tx.buffer,
+	                                 ringbuffer_get_used(&rs485.ringbuffer_tx));
 
-	crc16(rs485.ringbuffer_tx.buffer,
-	      ringbuffer_get_used(&rs485.ringbuffer_tx),
-	      &checksum_gen[0]);
-
-	ringbuffer_add(&rs485.ringbuffer_tx, checksum_gen[0]);
-	ringbuffer_add(&rs485.ringbuffer_tx, checksum_gen[1]);
+	ringbuffer_add(&rs485.ringbuffer_tx, checksum & 0xFF);
+	ringbuffer_add(&rs485.ringbuffer_tx, checksum >> 8);
 }
 
 static bool send_stream_chunks(uint8_t function_code, void *cb) {
