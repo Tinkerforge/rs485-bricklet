@@ -417,7 +417,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-  uint16_t coil_address;
+	uint16_t coil_address;
 	uint16_t coil_value;
 } __attribute__((__packed__)) ModbusWriteSingleCoilRequestCallback;
 
@@ -451,14 +451,14 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-  uint16_t register_address;
+	uint16_t register_address;
 	uint16_t register_value;
 } __attribute__((__packed__)) ModbusWriteSingleRegisterRequestCallback;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-  int8_t exception_code;
+	int8_t exception_code;
   uint16_t register_address;
 	uint16_t register_value;
 } __attribute__((__packed__)) ModbusWriteSingleRegisterResponseCallback;
