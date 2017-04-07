@@ -62,45 +62,45 @@ void communication_init(void);
 
 // Modbus specific.
 #define FID_GET_MODBUS_COMMON_ERROR_COUNT 23
-#define FID_MODBUS_REPORT_EXCEPTION 24
-#define FID_MODBUS_ANSWER_READ_COILS_REQUEST_LOW_LEVEL 25
-#define FID_MODBUS_READ_COILS 26
-#define FID_MODBUS_ANSWER_READ_HOLDING_REGISTERS_REQUEST_LOW_LEVEL 27
-#define FID_MODBUS_READ_HOLDING_REGISTERS 28
-#define FID_MODBUS_ANSWER_WRITE_SINGLE_COIL_REQUEST 29
-#define FID_MODBUS_WRITE_SINGLE_COIL 30
-#define FID_MODBUS_ANSWER_WRITE_SINGLE_REGISTER_REQUEST 31
-#define FID_MODBUS_WRITE_SINGLE_REGISTER 32
-#define FID_MODBUS_ANSWER_WRITE_MULTIPLE_COILS_REQUEST 33
-#define FID_MODBUS_WRITE_MULTIPLE_COILS_LOW_LEVEL 34
-#define FID_MODBUS_ANSWER_WRITE_MULTIPLE_REGISTERS_REQUEST 35
-#define FID_MODBUS_WRITE_MULTIPLE_REGISTERS_LOW_LEVEL 36
-#define FID_MODBUS_ANSWER_READ_DISCRETE_INPUTS_REQUEST_LOW_LEVEL 37
-#define FID_MODBUS_READ_DISCRETE_INPUTS 38
-#define FID_MODBUS_ANSWER_READ_INPUT_REGISTERS_REQUEST_LOW_LEVEL 39
-#define FID_MODBUS_READ_INPUT_REGISTERS 40
+#define FID_MODBUS_SLAVE_REPORT_EXCEPTION 24
+#define FID_MODBUS_SLAVE_ANSWER_READ_COILS_REQUEST_LOW_LEVEL 25
+#define FID_MODBUS_MASTER_READ_COILS 26
+#define FID_MODBUS_SLAVE_ANSWER_READ_HOLDING_REGISTERS_REQUEST_LOW_LEVEL 27
+#define FID_MODBUS_MASTER_READ_HOLDING_REGISTERS 28
+#define FID_MODBUS_SLAVE_ANSWER_WRITE_SINGLE_COIL_REQUEST 29
+#define FID_MODBUS_MASTER_WRITE_SINGLE_COIL 30
+#define FID_MODBUS_SLAVE_ANSWER_WRITE_SINGLE_REGISTER_REQUEST 31
+#define FID_MODBUS_MASTER_WRITE_SINGLE_REGISTER 32
+#define FID_MODBUS_SLAVE_ANSWER_WRITE_MULTIPLE_COILS_REQUEST 33
+#define FID_MODBUS_MASTER_WRITE_MULTIPLE_COILS_LOW_LEVEL 34
+#define FID_MODBUS_SLAVE_ANSWER_WRITE_MULTIPLE_REGISTERS_REQUEST 35
+#define FID_MODBUS_MASTER_WRITE_MULTIPLE_REGISTERS_LOW_LEVEL 36
+#define FID_MODBUS_SLAVE_ANSWER_READ_DISCRETE_INPUTS_REQUEST_LOW_LEVEL 37
+#define FID_MODBUS_MASTER_READ_DISCRETE_INPUTS 38
+#define FID_MODBUS_SLAVE_ANSWER_READ_INPUT_REGISTERS_REQUEST_LOW_LEVEL 39
+#define FID_MODBUS_MASTER_READ_INPUT_REGISTERS 40
 
 // Callbacks.
-#define FID_CALLBACK_READ_CALLBACK 41
+#define FID_CALLBACK_READ 41
 #define FID_CALLBACK_ERROR_COUNT 42
 
 // Modbus specific.
-#define FID_CALLBACK_MODBUS_READ_COILS_REQUEST 43
-#define FID_CALLBACK_MODBUS_READ_COILS_RESPONSE_LOW_LEVEL 44
-#define FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_REQUEST 45
-#define FID_CALLBACK_MODBUS_READ_HOLDING_REGISTERS_RESPONSE_LOW_LEVEL 46
-#define FID_CALLBACK_MODBUS_WRITE_SINGLE_COIL_REQUEST 47
-#define FID_CALLBACK_MODBUS_WRITE_SINGLE_COIL_RESPONSE 48
-#define FID_CALLBACK_MODBUS_WRITE_SINGLE_REGISTER_REQUEST 49
-#define FID_CALLBACK_MODBUS_WRITE_SINGLE_REGISTER_RESPONSE 50
-#define FID_CALLBACK_MODBUS_WRITE_MULTIPLE_COILS_REQUEST_LOW_LEVEL 51
-#define FID_CALLBACK_MODBUS_WRITE_MULTIPLE_COILS_RESPONSE 52
-#define FID_CALLBACK_MODBUS_WRITE_MULTIPLE_REGISTERS_REQUEST_LOW_LEVEL 53
-#define FID_CALLBACK_MODBUS_WRITE_MULTIPLE_REGISTERS_RESPONSE 54
-#define FID_CALLBACK_MODBUS_READ_DISCRETE_INPUTS_REQUEST 55
-#define FID_CALLBACK_MODBUS_READ_DISCRETE_INPUTS_RESPONSE_LOW_LEVEL 56
-#define FID_CALLBACK_MODBUS_READ_INPUT_REGISTERS_REQUEST 57
-#define FID_CALLBACK_MODBUS_READ_INPUT_REGISTERS_RESPONSE_LOW_LEVEL 58
+#define FID_CALLBACK_MODBUS_SLAVE_READ_COILS_REQUEST 43
+#define FID_CALLBACK_MODBUS_MASTER_READ_COILS_RESPONSE_LOW_LEVEL 44
+#define FID_CALLBACK_MODBUS_SLAVE_READ_HOLDING_REGISTERS_REQUEST 45
+#define FID_CALLBACK_MODBUS_MASTER_READ_HOLDING_REGISTERS_RESPONSE_LOW_LEVEL 46
+#define FID_CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_COIL_REQUEST 47
+#define FID_CALLBACK_MODBUS_MASTER_WRITE_SINGLE_COIL_RESPONSE 48
+#define FID_CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST 49
+#define FID_CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE 50
+#define FID_CALLBACK_MODBUS_SLAVE_WRITE_MULTIPLE_COILS_REQUEST_LOW_LEVEL 51
+#define FID_CALLBACK_MODBUS_MASTER_WRITE_MULTIPLE_COILS_RESPONSE 52
+#define FID_CALLBACK_MODBUS_SLAVE_WRITE_MULTIPLE_REGISTERS_REQUEST_LOW_LEVEL 53
+#define FID_CALLBACK_MODBUS_MASTER_WRITE_MULTIPLE_REGISTERS_RESPONSE 54
+#define FID_CALLBACK_MODBUS_SLAVE_READ_DISCRETE_INPUTS_REQUEST 55
+#define FID_CALLBACK_MODBUS_MASTER_READ_DISCRETE_INPUTS_RESPONSE_LOW_LEVEL 56
+#define FID_CALLBACK_MODBUS_SLAVE_READ_INPUT_REGISTERS_REQUEST 57
+#define FID_CALLBACK_MODBUS_MASTER_READ_INPUT_REGISTERS_RESPONSE_LOW_LEVEL 58
 
 // enums
 typedef enum {
@@ -126,7 +126,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t written;
-} __attribute__((__packed__)) WriteResponse;
+} __attribute__((__packed__)) Write_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -136,7 +136,7 @@ typedef struct {
 	TFPMessageHeader header;
 	char message[60];
 	uint8_t length;
-} __attribute__((__packed__)) ReadResponse;
+} __attribute__((__packed__)) Read_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -153,7 +153,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	bool enabled;
-} __attribute__((__packed__)) IsReadCallbackEnabledResponse;
+} __attribute__((__packed__)) IsReadCallbackEnabled_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -175,7 +175,7 @@ typedef struct {
 	uint8_t stopbits;
 	uint8_t wordlength;
 	uint8_t duplex;
-} __attribute__((__packed__)) GetRS485ConfigurationResponse;
+} __attribute__((__packed__)) GetRS485Configuration_Response;
 
 // Modbus specific.
 typedef struct {
@@ -192,7 +192,7 @@ typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
 	uint32_t master_request_timeout;
-} __attribute__((__packed__)) GetModbusConfigurationResponse;
+} __attribute__((__packed__)) GetModbusConfiguration_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -206,7 +206,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t mode;
-} __attribute__((__packed__)) GetModeResponse;
+} __attribute__((__packed__)) GetMode_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -220,7 +220,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t config;
-} __attribute__((__packed__)) GetCommunicationLEDConfigResponse;
+} __attribute__((__packed__)) GetCommunicationLEDConfig_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -234,7 +234,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t config;
-} __attribute__((__packed__)) GetErrorLEDConfigResponse;
+} __attribute__((__packed__)) GetErrorLEDConfig_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -250,7 +250,7 @@ typedef struct {
 	TFPMessageHeader header;
 	uint16_t send_buffer_size;
 	uint16_t receive_buffer_size;
-} __attribute__((__packed__)) GetBufferConfigResponse;
+} __attribute__((__packed__)) GetBufferConfig_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -260,7 +260,7 @@ typedef struct {
 	TFPMessageHeader header;
 	uint16_t send_buffer_used;
 	uint16_t receive_buffer_used;
-} __attribute__((__packed__)) GetBufferStatusResponse;
+} __attribute__((__packed__)) GetBufferStatus_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -277,7 +277,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	bool enabled;
-} __attribute__((__packed__)) IsErrorCountCallbackEnabledResponse;
+} __attribute__((__packed__)) IsErrorCountCallbackEnabled_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -287,19 +287,19 @@ typedef struct {
 	TFPMessageHeader header;
 	uint32_t overrun_error_count;
 	uint32_t parity_error_count;
-} __attribute__((__packed__)) GetErrorCountResponse;
+} __attribute__((__packed__)) GetErrorCount_Response;
 
 typedef struct {
 	TFPMessageHeader header;
 	char message[60];
 	uint8_t length;
-} __attribute__((__packed__)) ReadCallbackCallback;
+} __attribute__((__packed__)) Read_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint32_t overrun_error_count;
 	uint32_t parity_error_count;
-} __attribute__((__packed__)) ErrorCountCallback;
+} __attribute__((__packed__)) ErrorCount_Callback;
 
 // Modbus specific.
 typedef struct {
@@ -315,13 +315,13 @@ typedef struct {
 	uint32_t illegal_data_address_error_count;
 	uint32_t illegal_data_value_error_count;
 	uint32_t slave_device_failure_error_count;
-} __attribute__((__packed__)) GetModbusCommonErrorCountResponse;
+} __attribute__((__packed__)) GetModbusCommonErrorCount_Response;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-	uint8_t exception_code;
-} __attribute__((__packed__)) ModbusReportException;
+	int8_t exception_code;
+} __attribute__((__packed__)) ModbusSlaveReportException;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -329,26 +329,26 @@ typedef struct {
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint8_t stream_chunk_data[59];
-} __attribute__((__packed__)) ModbusAnswerReadCoilsRequestLowLevel;
+} __attribute__((__packed__)) ModbusSlaveAnswerReadCoilsRequestLowLevel;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
 	uint16_t starting_address;
 	uint16_t count;
-} __attribute__((__packed__)) ModbusReadCoils;
+} __attribute__((__packed__)) ModbusMasterReadCoils;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-} __attribute__((__packed__)) ModbusReadCoilsResponse;
+} __attribute__((__packed__)) ModbusMasterReadCoils_Response;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
 	uint16_t starting_address;
 	uint16_t count;
-} __attribute__((__packed__)) ModbusReadCoilsRequestCallback;
+} __attribute__((__packed__)) ModbusSlaveReadCoilsRequest_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -357,7 +357,7 @@ typedef struct {
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint8_t stream_chunk_data[58];
-} __attribute__((__packed__)) ModbusReadCoilsResponseLowLevelCallback;
+} __attribute__((__packed__)) ModbusMasterReadCoilsResponseLowLevel_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -365,26 +365,26 @@ typedef struct {
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint16_t stream_chunk_data[29];
-} __attribute__((__packed__)) ModbusAnswerReadHoldingRegistersRequestLowLevel;
+} __attribute__((__packed__)) ModbusSlaveAnswerReadHoldingRegistersRequestLowLevel;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
 	uint16_t starting_address;
 	uint16_t count;
-} __attribute__((__packed__)) ModbusReadHoldingRegisters;
+} __attribute__((__packed__)) ModbusMasterReadHoldingRegisters;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-} __attribute__((__packed__)) ModbusReadHoldingRegistersResponse;
+} __attribute__((__packed__)) ModbusMasterReadHoldingRegisters_Response;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
 	uint16_t starting_address;
 	uint16_t count;
-} __attribute__((__packed__)) ModbusReadHoldingRegistersRequestCallback;
+} __attribute__((__packed__)) ModbusSlaveReadHoldingRegistersRequest_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -393,82 +393,72 @@ typedef struct {
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint16_t stream_chunk_data[29];
-} __attribute__((__packed__)) ModbusReadHoldingRegistersResponseLowLevelCallback;
+} __attribute__((__packed__)) ModbusMasterReadHoldingRegistersResponseLowLevel_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
 	uint16_t coil_address;
-	uint16_t coil_value;
-} __attribute__((__packed__)) ModbusWriteSingleCoil;
+	bool coil_value;
+} __attribute__((__packed__)) ModbusMasterWriteSingleCoil;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-} __attribute__((__packed__)) ModbusWriteSingleCoilResponse;
+} __attribute__((__packed__)) ModbusMasterWriteSingleCoil_Response;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-  uint16_t coil_address;
-	uint16_t coil_value;
-} __attribute__((__packed__)) ModbusAnswerWriteSingleCoilRequest;
+} __attribute__((__packed__)) ModbusSlaveAnswerWriteSingleCoilRequest;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
 	uint16_t coil_address;
-	uint16_t coil_value;
-} __attribute__((__packed__)) ModbusWriteSingleCoilRequestCallback;
-
-typedef struct {
-	TFPMessageHeader header;
-	uint8_t request_id;
-  int8_t exception_code;
-  uint16_t coil_address;
-	uint16_t coil_value;
-} __attribute__((__packed__)) ModbusWriteSingleCoilResponseCallback;
-
-typedef struct {
-	TFPMessageHeader header;
-	uint8_t slave_address;
-	uint16_t register_address;
-	uint16_t register_value;
-} __attribute__((__packed__)) ModbusWriteSingleRegister;
-
-typedef struct {
-	TFPMessageHeader header;
-	uint8_t request_id;
-} __attribute__((__packed__)) ModbusWriteSingleRegisterResponse;
-
-typedef struct {
-	TFPMessageHeader header;
-	uint8_t request_id;
-  uint16_t register_address;
-	uint16_t register_value;
-} __attribute__((__packed__)) ModbusAnswerWriteSingleRegisterRequest;
-
-typedef struct {
-	TFPMessageHeader header;
-	uint8_t request_id;
-	uint16_t register_address;
-	uint16_t register_value;
-} __attribute__((__packed__)) ModbusWriteSingleRegisterRequestCallback;
+	bool coil_value;
+} __attribute__((__packed__)) ModbusSlaveWriteSingleCoilRequest_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
 	int8_t exception_code;
-  uint16_t register_address;
+} __attribute__((__packed__)) ModbusMasterWriteSingleCoilResponse_Callback;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t slave_address;
+	uint16_t register_address;
 	uint16_t register_value;
-} __attribute__((__packed__)) ModbusWriteSingleRegisterResponseCallback;
+} __attribute__((__packed__)) ModbusMasterWriteSingleRegister;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-	uint16_t starting_address;
-	uint16_t count;
-} __attribute__((__packed__)) ModbusAnswerWriteMultipleCoilsRequest;
+} __attribute__((__packed__)) ModbusMasterWriteSingleRegister_Response;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+} __attribute__((__packed__)) ModbusSlaveAnswerWriteSingleRegisterRequest;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+	uint16_t register_address;
+	uint16_t register_value;
+} __attribute__((__packed__)) ModbusSlaveWriteSingleRegisterRequest_Callback;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+	int8_t exception_code;
+} __attribute__((__packed__)) ModbusMasterWriteSingleRegisterResponse_Callback;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint8_t request_id;
+} __attribute__((__packed__)) ModbusSlaveAnswerWriteMultipleCoilsRequest;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -478,12 +468,12 @@ typedef struct {
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint8_t stream_chunk_data[54];
-} __attribute__((__packed__)) ModbusWriteMultipleCoilsLowLevel;
+} __attribute__((__packed__)) ModbusMasterWriteMultipleCoilsLowLevel;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-} __attribute__((__packed__)) ModbusWriteMultipleCoilsLowLevelResponse;
+} __attribute__((__packed__)) ModbusMasterWriteMultipleCoilsLowLevel_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -493,22 +483,18 @@ typedef struct {
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint8_t stream_chunk_data[55];
-} __attribute__((__packed__)) ModbusWriteMultipleCoilsRequestLowLevelCallback;
+} __attribute__((__packed__)) ModbusSlaveWriteMultipleCoilsRequestLowLevel_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
 	int8_t exception_code;
-	uint16_t starting_address;
-	uint16_t count;
-} __attribute__((__packed__)) ModbusWriteMultipleCoilsResponseCallback;
+} __attribute__((__packed__)) ModbusMasterWriteMultipleCoilsResponse_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-	uint16_t starting_address;
-	uint16_t count;
-} __attribute__((__packed__)) ModbusAnswerWriteMultipleRegistersRequest;
+} __attribute__((__packed__)) ModbusSlaveAnswerWriteMultipleRegistersRequest;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -518,12 +504,12 @@ typedef struct {
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint16_t stream_chunk_data[27];
-} __attribute__((__packed__)) ModbusWriteMultipleRegistersLowLevel;
+} __attribute__((__packed__)) ModbusMasterWriteMultipleRegistersLowLevel;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-} __attribute__((__packed__)) ModbusWriteMultipleRegistersLowLevelResponse;
+} __attribute__((__packed__)) ModbusMasterWriteMultipleRegistersLowLevel_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -533,15 +519,13 @@ typedef struct {
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint16_t stream_chunk_data[27];
-} __attribute__((__packed__)) ModbusWriteMultipleRegistersRequestLowLevelCallback;
+} __attribute__((__packed__)) ModbusSlaveWriteMultipleRegistersRequestLowLevel_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
 	int8_t exception_code;
-	uint16_t starting_address;
-	uint16_t count;
-} __attribute__((__packed__)) ModbusWriteMultipleRegistersResponseCallback;
+} __attribute__((__packed__)) ModbusMasterWriteMultipleRegistersResponse_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -549,26 +533,26 @@ typedef struct {
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint8_t stream_chunk_data[59];
-} __attribute__((__packed__)) ModbusAnswerReadDiscreteInputsRequestLowLevel;
+} __attribute__((__packed__)) ModbusSlaveAnswerReadDiscreteInputsRequestLowLevel;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
 	uint16_t starting_address;
 	uint16_t count;
-} __attribute__((__packed__)) ModbusReadDiscreteInputs;
+} __attribute__((__packed__)) ModbusMasterReadDiscreteInputs;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-} __attribute__((__packed__)) ModbusReadDiscreteInputsResponse;
+} __attribute__((__packed__)) ModbusMasterReadDiscreteInputs_Response;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
 	uint16_t starting_address;
 	uint16_t count;
-} __attribute__((__packed__)) ModbusReadDiscreteInputsRequestCallback;
+} __attribute__((__packed__)) ModbusSlaveReadDiscreteInputsRequest_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -577,7 +561,7 @@ typedef struct {
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint8_t stream_chunk_data[58];
-} __attribute__((__packed__)) ModbusReadDiscreteInputsResponseLowLevelCallback;
+} __attribute__((__packed__)) ModbusMasterReadDiscreteInputsResponseLowLevel_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -585,26 +569,26 @@ typedef struct {
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint16_t stream_chunk_data[29];
-} __attribute__((__packed__)) ModbusAnswerReadInputRegistersRequestLowLevel;
+} __attribute__((__packed__)) ModbusSlaveAnswerReadInputRegistersRequestLowLevel;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
 	uint16_t starting_address;
 	uint16_t count;
-} __attribute__((__packed__)) ModbusReadInputRegisters;
+} __attribute__((__packed__)) ModbusMasterReadInputRegisters;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-} __attribute__((__packed__)) ModbusReadInputRegistersResponse;
+} __attribute__((__packed__)) ModbusMasterReadInputRegisters_Response;
 
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
 	uint16_t starting_address;
 	uint16_t count;
-} __attribute__((__packed__)) ModbusReadInputRegistersRequestCallback;
+} __attribute__((__packed__)) ModbusSlaveReadInputRegistersRequest_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -613,116 +597,151 @@ typedef struct {
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint16_t stream_chunk_data[29];
-} __attribute__((__packed__)) ModbusReadInputRegistersResponseLowLevelCallback;
+} __attribute__((__packed__)) ModbusMasterReadInputRegistersResponseLowLevel_Callback;
 
 // Function prototypes
-BootloaderHandleMessageResponse write(const Write *data, WriteResponse *response);
-BootloaderHandleMessageResponse read(const Read *data, ReadResponse *response);
+BootloaderHandleMessageResponse write(const Write *data, Write_Response *response);
+BootloaderHandleMessageResponse read(const Read *data, Read_Response *response);
 BootloaderHandleMessageResponse enable_read_callback(const EnableReadCallback *data);
 BootloaderHandleMessageResponse disable_read_callback(const DisableReadCallback *data);
 BootloaderHandleMessageResponse is_read_callback_enabled(const IsReadCallbackEnabled *data,
-                                                         IsReadCallbackEnabledResponse *response);
+                                                         IsReadCallbackEnabled_Response *response);
 BootloaderHandleMessageResponse set_rs485_configuration(const SetRS485Configuration *data);
 BootloaderHandleMessageResponse get_rs485_configuration(const GetRS485Configuration *data,
-                                                        GetRS485ConfigurationResponse *response);
+                                                        GetRS485Configuration_Response *response);
 
 // Modbus specific.
 BootloaderHandleMessageResponse set_modbus_configuration(const SetModbusConfiguration *data);
 BootloaderHandleMessageResponse get_modbus_configuration(const GetModbusConfiguration *data,
-                                                         GetModbusConfigurationResponse *response);
+                                                         GetModbusConfiguration_Response *response);
 
 BootloaderHandleMessageResponse set_mode(const SetMode *data);
-BootloaderHandleMessageResponse get_mode(const GetMode *data, GetModeResponse *response);
+BootloaderHandleMessageResponse get_mode(const GetMode *data, GetMode_Response *response);
 BootloaderHandleMessageResponse set_communication_led_config(const SetCommunicationLEDConfig *data);
 BootloaderHandleMessageResponse get_communication_led_config(const GetCommunicationLEDConfig *data,
-                                                             GetCommunicationLEDConfigResponse *response);
+                                                             GetCommunicationLEDConfig_Response *response);
 BootloaderHandleMessageResponse set_error_led_config(const SetErrorLEDConfig *data);
 BootloaderHandleMessageResponse get_error_led_config(const GetErrorLEDConfig *data,
-                                                     GetErrorLEDConfigResponse *response);
+                                                     GetErrorLEDConfig_Response *response);
 BootloaderHandleMessageResponse set_buffer_config(const SetBufferConfig *data);
 BootloaderHandleMessageResponse get_buffer_config(const GetBufferConfig *data,
-                                                  GetBufferConfigResponse *response);
+                                                  GetBufferConfig_Response *response);
 BootloaderHandleMessageResponse get_buffer_status(const GetBufferStatus *data,
-                                                  GetBufferStatusResponse *response);
+                                                  GetBufferStatus_Response *response);
 BootloaderHandleMessageResponse enable_error_count_callback(const EnableErrorCountCallback *data);
 BootloaderHandleMessageResponse disable_error_count_callback(const DisableErrorCountCallback *data);
 BootloaderHandleMessageResponse is_error_count_callback_enabled(const IsErrorCountCallbackEnabled *data,
-                                                                IsErrorCountCallbackEnabledResponse *response);
+                                                                IsErrorCountCallbackEnabled_Response *response);
 BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data,
-                                                GetErrorCountResponse *response);
+                                                GetErrorCount_Response *response);
 
 // Modbus specific.
-BootloaderHandleMessageResponse modbus_report_exception(const ModbusReportException *data);
-BootloaderHandleMessageResponse get_modbus_common_error_count(const GetModbusCommonErrorCount *data,
-                                                              GetModbusCommonErrorCountResponse *response);
-BootloaderHandleMessageResponse modbus_answer_read_coils_request_low_level(const ModbusAnswerReadCoilsRequestLowLevel *data);
-BootloaderHandleMessageResponse modbus_read_coils(const ModbusReadCoils *data,
-                                                  ModbusReadCoilsResponse *response);
-BootloaderHandleMessageResponse modbus_answer_read_holding_registers_request_low_level(const ModbusAnswerReadHoldingRegistersRequestLowLevel *data);
-BootloaderHandleMessageResponse modbus_read_holding_registers(const ModbusReadHoldingRegisters *data,
-                                                              ModbusReadHoldingRegistersResponse *response);
-BootloaderHandleMessageResponse modbus_answer_write_single_coil_request(const ModbusAnswerWriteSingleCoilRequest *data);
-BootloaderHandleMessageResponse modbus_write_single_coil(const ModbusWriteSingleCoil *data,
-                                                         ModbusWriteSingleCoilResponse *response);
-BootloaderHandleMessageResponse modbus_answer_write_single_register_request(const ModbusAnswerWriteSingleRegisterRequest *data);
-BootloaderHandleMessageResponse modbus_write_single_register(const ModbusWriteSingleRegister *data,
-                                                             ModbusWriteSingleRegisterResponse *response);
-BootloaderHandleMessageResponse modbus_answer_write_multiple_coils_request(const ModbusAnswerWriteMultipleCoilsRequest *data);
-BootloaderHandleMessageResponse modbus_write_multiple_coils_low_level(const ModbusWriteMultipleCoilsLowLevel *data,
-                                                                      ModbusWriteMultipleCoilsLowLevelResponse *response);
-BootloaderHandleMessageResponse modbus_answer_write_multiple_registers_request(const ModbusAnswerWriteMultipleRegistersRequest *data);
-BootloaderHandleMessageResponse modbus_write_multiple_registers_low_level(const ModbusWriteMultipleRegistersLowLevel *data,
-                                                                          ModbusWriteMultipleRegistersLowLevelResponse *response);
-BootloaderHandleMessageResponse modbus_answer_read_discrete_inputs_request_low_level(const ModbusAnswerReadDiscreteInputsRequestLowLevel *data);
-BootloaderHandleMessageResponse modbus_read_discrete_inputs(const ModbusReadDiscreteInputs *data,
-                                                            ModbusReadDiscreteInputsResponse *response);
-BootloaderHandleMessageResponse modbus_answer_read_input_registers_request_low_level(const ModbusAnswerReadInputRegistersRequestLowLevel *data);
-BootloaderHandleMessageResponse modbus_read_input_registers(const ModbusReadInputRegisters *data,
-                                                            ModbusReadInputRegistersResponse *response);
+BootloaderHandleMessageResponse
+get_modbus_common_error_count(const GetModbusCommonErrorCount *data,
+                              GetModbusCommonErrorCount_Response *response);
+
+BootloaderHandleMessageResponse
+modbus_slave_report_exception(const ModbusSlaveReportException *data);
+
+BootloaderHandleMessageResponse
+modbus_slave_answer_read_coils_request_low_level(const ModbusSlaveAnswerReadCoilsRequestLowLevel *data);
+
+BootloaderHandleMessageResponse
+modbus_master_read_coils(const ModbusMasterReadCoils *data,
+                         ModbusMasterReadCoils_Response *response);
+
+BootloaderHandleMessageResponse
+modbus_slave_answer_read_holding_registers_request_low_level(const ModbusSlaveAnswerReadHoldingRegistersRequestLowLevel *data);
+
+BootloaderHandleMessageResponse
+modbus_master_read_holding_registers(const ModbusMasterReadHoldingRegisters *data,
+                                     ModbusMasterReadHoldingRegisters_Response *response);
+
+BootloaderHandleMessageResponse
+modbus_slave_answer_write_single_coil_request(const ModbusSlaveAnswerWriteSingleCoilRequest *data);
+
+BootloaderHandleMessageResponse
+modbus_master_write_single_coil(const ModbusMasterWriteSingleCoil *data,
+                                ModbusMasterWriteSingleCoil_Response *response);
+
+BootloaderHandleMessageResponse
+modbus_slave_answer_write_single_register_request(const ModbusSlaveAnswerWriteSingleRegisterRequest *data);
+
+BootloaderHandleMessageResponse
+modbus_master_write_single_register(const ModbusMasterWriteSingleRegister *data,
+                                    ModbusMasterWriteSingleRegister_Response *response);
+
+BootloaderHandleMessageResponse
+modbus_slave_answer_write_multiple_coils_request(const ModbusSlaveAnswerWriteMultipleCoilsRequest *data);
+
+BootloaderHandleMessageResponse
+modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoilsLowLevel *data,
+                                             ModbusMasterWriteMultipleCoilsLowLevel_Response *response);
+
+BootloaderHandleMessageResponse
+modbus_slave_answer_write_multiple_registers_request(const ModbusSlaveAnswerWriteMultipleRegistersRequest *data);
+
+BootloaderHandleMessageResponse
+modbus_master_write_multiple_registers_low_level(const ModbusMasterWriteMultipleRegistersLowLevel *data,
+                                                 ModbusMasterWriteMultipleRegistersLowLevel_Response *response);
+
+BootloaderHandleMessageResponse
+modbus_slave_answer_read_discrete_inputs_request_low_level(const ModbusSlaveAnswerReadDiscreteInputsRequestLowLevel *data);
+
+BootloaderHandleMessageResponse
+modbus_master_read_discrete_inputs(const ModbusMasterReadDiscreteInputs *data,
+                                   ModbusMasterReadDiscreteInputs_Response *response);
+
+BootloaderHandleMessageResponse
+modbus_slave_answer_read_input_registers_request_low_level(const ModbusSlaveAnswerReadInputRegistersRequestLowLevel *data);
+
+BootloaderHandleMessageResponse
+modbus_master_read_input_registers(const ModbusMasterReadInputRegisters *data,
+                                   ModbusMasterReadInputRegisters_Response *response);
 
 // Callbacks
-bool handle_read_callback_callback(void);
+bool handle_read_callback(void);
 bool handle_error_count_callback(void);
 
 // Modbus specific.
-bool handle_modbus_read_coils_request_callback(void);
-bool handle_modbus_read_coils_response_low_level_callback(void);
-bool handle_modbus_read_holding_registers_request_callback(void);
-bool handle_modbus_read_holding_registers_response_low_level_callback(void);
-bool handle_modbus_write_single_coil_request_callback(void);
-bool handle_modbus_write_single_coil_response_callback(void);
-bool handle_modbus_write_single_register_request_callback(void);
-bool handle_modbus_write_single_register_response_callback(void);
-bool handle_modbus_write_multiple_coils_request_low_level_callback(void);
-bool handle_modbus_write_multiple_coils_response_callback(void);
-bool handle_modbus_write_multiple_registers_request_low_level_callback(void);
-bool handle_modbus_write_multiple_registers_response_callback(void);
-bool handle_modbus_read_discrete_inputs_request_callback(void);
-bool handle_modbus_read_discrete_inputs_response_low_level_callback(void);
-bool handle_modbus_read_input_registers_request_callback(void);
-bool handle_modbus_read_input_registers_response_low_level_callback(void);
+bool handle_modbus_slave_read_coils_request_callback(void);
+bool handle_modbus_master_read_coils_response_low_level_callback(void);
+bool handle_modbus_slave_read_holding_registers_request_callback(void);
+bool handle_modbus_master_read_holding_registers_response_low_level_callback(void);
+bool handle_modbus_slave_write_single_coil_request_callback(void);
+bool handle_modbus_master_write_single_coil_response_callback(void);
+bool handle_modbus_slave_write_single_register_request_callback(void);
+bool handle_modbus_master_write_single_register_response_callback(void);
+bool handle_modbus_slave_write_multiple_coils_request_low_level_callback(void);
+bool handle_modbus_master_write_multiple_coils_response_callback(void);
+bool handle_modbus_slave_write_multiple_registers_request_low_level_callback(void);
+bool handle_modbus_master_write_multiple_registers_response_callback(void);
+bool handle_modbus_slave_read_discrete_inputs_request_callback(void);
+bool handle_modbus_master_read_discrete_inputs_response_low_level_callback(void);
+bool handle_modbus_slave_read_input_registers_request_callback(void);
+bool handle_modbus_master_read_input_registers_response_low_level_callback(void);
 
 #define CALLBACK_ERROR_COUNT_DEBOUNCE_MS 100
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
 #define COMMUNICATION_CALLBACK_HANDLER_NUM 18
 #define COMMUNICATION_CALLBACK_LIST_INIT \
-	handle_read_callback_callback, \
+	handle_read_callback, \
 	handle_error_count_callback, \
-	handle_modbus_read_coils_request_callback, \
-	handle_modbus_read_coils_response_low_level_callback, \
-	handle_modbus_read_holding_registers_request_callback, \
-	handle_modbus_read_holding_registers_response_low_level_callback, \
-	handle_modbus_write_single_coil_request_callback, \
-	handle_modbus_write_single_coil_response_callback, \
-	handle_modbus_write_single_register_request_callback, \
-	handle_modbus_write_single_register_response_callback, \
-	handle_modbus_write_multiple_coils_request_low_level_callback, \
-	handle_modbus_write_multiple_coils_response_callback, \
-	handle_modbus_write_multiple_registers_request_low_level_callback, \
-	handle_modbus_write_multiple_registers_response_callback, \
-	handle_modbus_read_discrete_inputs_request_callback, \
-	handle_modbus_read_discrete_inputs_response_low_level_callback, \
-	handle_modbus_read_input_registers_request_callback, \
-	handle_modbus_read_input_registers_response_low_level_callback, \
+	handle_modbus_slave_read_coils_request_callback, \
+	handle_modbus_master_read_coils_response_low_level_callback, \
+	handle_modbus_slave_read_holding_registers_request_callback, \
+	handle_modbus_master_read_holding_registers_response_low_level_callback, \
+	handle_modbus_slave_write_single_coil_request_callback, \
+	handle_modbus_master_write_single_coil_response_callback, \
+	handle_modbus_slave_write_single_register_request_callback, \
+	handle_modbus_master_write_single_register_response_callback, \
+	handle_modbus_slave_write_multiple_coils_request_low_level_callback, \
+	handle_modbus_master_write_multiple_coils_response_callback, \
+	handle_modbus_slave_write_multiple_registers_request_low_level_callback, \
+	handle_modbus_master_write_multiple_registers_response_callback, \
+	handle_modbus_slave_read_discrete_inputs_request_callback, \
+	handle_modbus_master_read_discrete_inputs_response_low_level_callback, \
+	handle_modbus_slave_read_input_registers_request_callback, \
+	handle_modbus_master_read_input_registers_response_low_level_callback, \
 
 #endif

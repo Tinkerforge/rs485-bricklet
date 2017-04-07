@@ -61,6 +61,6 @@ bool modbus_master_check_slave_response(RS485 *rs485);
 void modbus_update_rtu_wire_state_machine(RS485 *rs485);
 bool modbus_slave_check_function_code_imlemented(RS485 * rs485);
 void modbus_init_new_request(RS485 *rs485, RS485ModbusRequestState state, uint16_t length);
-void _modbus_report_exception(RS485 *rs485, uint8_t function_code, ModbusExceptionCode exception_code);
+void modbus_report_exception(RS485 *rs485, uint8_t function_code, ModbusExceptionCode exception_code);
 
 #endif

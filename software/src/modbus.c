@@ -218,7 +218,7 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
 					// The function is not implemented by the bricklet.
 					rs485->modbus_common_error_counters.illegal_function++;
 
-					_modbus_report_exception(rs485, rs485->modbus_rtu.request.rx_frame[1], MODBUS_EC_ILLEGAL_FUNCTION);
+					modbus_report_exception(rs485, rs485->modbus_rtu.request.rx_frame[1], MODBUS_EC_ILLEGAL_FUNCTION);
 
 					return;
 				}
@@ -372,7 +372,7 @@ void modbus_init_new_request(RS485 *rs485, RS485ModbusRequestState state, uint16
 	}
 }
 
-void _modbus_report_exception(RS485 *rs485, uint8_t function_code, ModbusExceptionCode exception_code) {
+void modbus_report_exception(RS485 *rs485, uint8_t function_code, ModbusExceptionCode exception_code) {
 	ModbusExceptionResponse modbus_exception_response;
 	uint8_t *modbus_exception_response_ptr = (uint8_t *)&modbus_exception_response;
 
