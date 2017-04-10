@@ -316,8 +316,13 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
 			rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_IDLE;
 
 			if(rs485->mode == MODE_MODBUS_SLAVE_RTU) {
-			  // In slave mode completed TX means end of a request handling.
-			  modbus_clear_request(rs485);
+				// In slave mode completed TX means end of a request handling.
+				modbus_clear_request(rs485);
+			}
+
+			if(rs485->mode == MODE_MODBUS_MASTER_RTU && rs485->modbus_rtu.request.tx_frame[0] == 0) {
+				// In master mode generate a callback response for broadcast requests.
+				rs485->modbus_rtu.request.cb_invoke = true;
 			}
 		}
 	}

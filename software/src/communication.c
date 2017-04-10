@@ -2462,6 +2462,22 @@ bool handle_modbus_master_write_single_coil_response_callback(void) {
 	                        sizeof(ModbusMasterWriteSingleCoilResponse_Callback),
 	                        FID_CALLBACK_MODBUS_MASTER_WRITE_SINGLE_COIL_RESPONSE);
 
+	if(rs485.modbus_rtu.request.tx_frame[0] == 0) {
+		// Generate callback locally for broadcast write requests.
+		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+			bootloader_spitfp_send_ack_and_message(&bootloader_status,
+			                                       (uint8_t*)&cb,
+			                                       sizeof(ModbusMasterWriteSingleCoilResponse_Callback));
+
+			modbus_clear_request(&rs485);
+
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
 	// Check if the request has timed out.
 	if(rs485.modbus_rtu.request.master_request_timed_out) {
 		cb.exception_code = (int8_t)MODBUS_EC_TIMEOUT;
@@ -2559,6 +2575,22 @@ bool handle_modbus_master_write_single_register_response_callback(void) {
 	                        bootloader_get_uid(),
 	                        sizeof(ModbusMasterWriteSingleRegisterResponse_Callback),
 	                        FID_CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE);
+
+	if(rs485.modbus_rtu.request.tx_frame[0] == 0) {
+		// Generate callback locally for broadcast write requests.
+		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+			bootloader_spitfp_send_ack_and_message(&bootloader_status,
+			                                       (uint8_t*)&cb,
+			                                       sizeof(ModbusMasterWriteSingleRegisterResponse_Callback));
+
+			modbus_clear_request(&rs485);
+
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 
 	// Check if the request has timed out.
 	if(rs485.modbus_rtu.request.master_request_timed_out) {
@@ -2693,6 +2725,22 @@ bool handle_modbus_master_write_multiple_coils_response_callback(void) {
 	                        bootloader_get_uid(),
 	                        sizeof(ModbusMasterWriteMultipleCoilsResponse_Callback),
 	                        FID_CALLBACK_MODBUS_MASTER_WRITE_MULTIPLE_COILS_RESPONSE);
+
+	if(rs485.modbus_rtu.request.tx_frame[0] == 0) {
+		// Generate callback locally for broadcast write requests.
+		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+			bootloader_spitfp_send_ack_and_message(&bootloader_status,
+			                                       (uint8_t*)&cb,
+			                                       sizeof(ModbusMasterWriteMultipleCoilsResponse_Callback));
+
+			modbus_clear_request(&rs485);
+
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 
 	// Check if the request has timed out.
 	if(rs485.modbus_rtu.request.master_request_timed_out) {
@@ -2834,6 +2882,22 @@ bool handle_modbus_master_write_multiple_registers_response_callback(void) {
 	                        bootloader_get_uid(),
 	                        sizeof(ModbusMasterWriteMultipleRegistersResponse_Callback),
 	                        FID_CALLBACK_MODBUS_MASTER_WRITE_MULTIPLE_REGISTERS_RESPONSE);
+
+	if(rs485.modbus_rtu.request.tx_frame[0] == 0) {
+		// Generate callback locally for broadcast write requests.
+		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+			bootloader_spitfp_send_ack_and_message(&bootloader_status,
+			                                       (uint8_t*)&cb,
+			                                       sizeof(ModbusMasterWriteMultipleRegistersResponse_Callback));
+
+			modbus_clear_request(&rs485);
+
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 
 	// Check if the request has timed out.
 	if(rs485.modbus_rtu.request.master_request_timed_out) {
