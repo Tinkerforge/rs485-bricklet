@@ -793,6 +793,11 @@ modbus_master_read_coils(const ModbusMasterReadCoils *data,
 	response->request_id = 0;
 	response->header.length = sizeof(ModbusMasterReadCoils_Response);
 
+	// Broadcast for read requests are invalid.
+	if(data->slave_address == 0) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
 	if(rs485.mode != MODE_MODBUS_MASTER_RTU ||
 	   rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_READY ||
 	   rs485.modbus_rtu.state_wire != MODBUS_RTU_WIRE_STATE_IDLE) {
@@ -961,6 +966,11 @@ modbus_master_read_holding_registers(const ModbusMasterReadHoldingRegisters *dat
 
 	response->header.length = sizeof(ModbusMasterReadHoldingRegisters_Response);
 	response->request_id = 0;
+
+	// Broadcast for read requests are invalid.
+	if(data->slave_address == 0) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
 
 	if(rs485.mode != MODE_MODBUS_MASTER_RTU ||
 	   rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_READY ||
@@ -1704,6 +1714,11 @@ modbus_master_read_discrete_inputs(const ModbusMasterReadDiscreteInputs *data,
 	response->request_id = 0;
 	response->header.length = sizeof(ModbusMasterReadDiscreteInputs_Response);
 
+	// Broadcast for read requests are invalid.
+	if(data->slave_address == 0) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
 	if(rs485.mode != MODE_MODBUS_MASTER_RTU ||
 	   rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_READY ||
 	   rs485.modbus_rtu.state_wire != MODBUS_RTU_WIRE_STATE_IDLE) {
@@ -1872,6 +1887,11 @@ modbus_master_read_input_registers(const ModbusMasterReadInputRegisters *data,
 
 	response->header.length = sizeof(ModbusMasterReadInputRegisters_Response);
 	response->request_id = 0;
+
+	// Broadcast for read requests are invalid.
+	if(data->slave_address == 0) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
 
 	if(data->count < 1 || data->count > 125) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
