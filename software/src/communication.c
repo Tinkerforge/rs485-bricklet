@@ -1021,15 +1021,11 @@ BootloaderHandleMessageResponse
 modbus_slave_answer_write_single_coil_request(const ModbusSlaveAnswerWriteSingleCoilRequest *data) {
 	// This function can be invoked only in slave mode.
 
-	uint8_t fc = MODBUS_FC_WRITE_SINGLE_COIL;
-	uint16_t coil_address;
-	uint16_t coil_value;
-
 	if(rs485.mode != MODE_MODBUS_SLAVE_RTU) {
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
-	if(!modbus_slave_check_current_request(data->request_id)){
+	if(!modbus_slave_check_current_request(data->request_id)) {
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
@@ -1044,21 +1040,8 @@ modbus_slave_answer_write_single_coil_request(const ModbusSlaveAnswerWriteSingle
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
-	coil_address = 0; // FIXME: get value from request
-	coil_value = 0; // FIXME: get value from request
-
-	// Fix endianness (LE->BE).
-	coil_address = HTONS(coil_address);
-	coil_value = HTONS(coil_value);
-
-	// Constructing the frame in the TX buffer.
-	modbus_store_tx_frame_data_bytes(&rs485.modbus_slave_address, 1); // Slave address.
-	modbus_store_tx_frame_data_bytes(&fc, 1); // Function code.
-	modbus_store_tx_frame_data_bytes((uint8_t *)&coil_address, 2);
-	modbus_store_tx_frame_data_bytes((uint8_t *)&coil_value, 2);
-
-	// Calculate checksum and put it at the end of the TX buffer.
-	modbus_add_tx_frame_checksum();
+	// Copy the request from the RX buffer to the TX buffer and then initiate a TX.
+	modbus_store_tx_frame_data_bytes(&rs485.modbus_rtu.request.rx_frame, 8);
 
 	// Start master request timeout timing.
 	rs485.modbus_rtu.request.time_ref_master_request_timeout = system_timer_get_ms();
@@ -1126,10 +1109,6 @@ BootloaderHandleMessageResponse
 modbus_slave_answer_write_single_register_request(const ModbusSlaveAnswerWriteSingleRegisterRequest *data) {
 	// This function can be invoked only in slave mode.
 
-	uint8_t fc = MODBUS_FC_WRITE_SINGLE_REGISTER;
-	uint16_t register_address;
-	uint16_t register_value;
-
 	if(rs485.mode != MODE_MODBUS_SLAVE_RTU) {
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
@@ -1149,21 +1128,8 @@ modbus_slave_answer_write_single_register_request(const ModbusSlaveAnswerWriteSi
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
-	register_address = 0; // FIXME: get data from request
-	register_value = 0; // FIXME: get data from request
-
-	// Fix endianness (LE->BE).
-	register_address = HTONS(register_address);
-	register_value = HTONS(register_value);
-
-	// Constructing the frame in the TX buffer.
-	modbus_store_tx_frame_data_bytes(&rs485.modbus_slave_address, 1); // Slave address.
-	modbus_store_tx_frame_data_bytes(&fc, 1); // Function code.
-	modbus_store_tx_frame_data_bytes((uint8_t *)&register_address, 2);
-	modbus_store_tx_frame_data_bytes((uint8_t *)&register_value, 2);
-
-	// Calculate checksum and put it at the end of the TX buffer.
-	modbus_add_tx_frame_checksum();
+	// Copy the request from the RX buffer to the TX buffer and then initiate a TX.
+	modbus_store_tx_frame_data_bytes(&rs485.modbus_rtu.request.rx_frame, 8);
 
 	// Start master request timeout timing.
 	rs485.modbus_rtu.request.time_ref_master_request_timeout = system_timer_get_ms();
@@ -1231,10 +1197,6 @@ BootloaderHandleMessageResponse
 modbus_slave_answer_write_multiple_coils_request(const ModbusSlaveAnswerWriteMultipleCoilsRequest *data) {
 	// This function can be invoked only in slave mode.
 
-	uint8_t fc = MODBUS_FC_WRITE_MULTIPLE_COILS;
-	uint16_t starting_address;
-	uint16_t count;
-
 	if(rs485.mode != MODE_MODBUS_SLAVE_RTU) {
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
@@ -1254,20 +1216,9 @@ modbus_slave_answer_write_multiple_coils_request(const ModbusSlaveAnswerWriteMul
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
-	starting_address = 0; // FIXME: get data from request
-	count = 0; // FIXME: get data from request
+	// Copy the request from the RX buffer to the TX buffer and then initiate a TX.
+	modbus_store_tx_frame_data_bytes(&rs485.modbus_rtu.request.rx_frame, 6);
 
-	// Fix endianness (LE->BE).
-	starting_address = HTONS(starting_address);
-	count = HTONS(count);
-
-	// Constructing the frame in the TX buffer.
-	modbus_store_tx_frame_data_bytes(&rs485.modbus_slave_address, 1); // Slave address.
-	modbus_store_tx_frame_data_bytes(&fc, 1); // Function code.
-	modbus_store_tx_frame_data_bytes((uint8_t *)&starting_address, 2);
-	modbus_store_tx_frame_data_bytes((uint8_t *)&count, 2);
-
-	// Calculate checksum and put it at the end of the TX buffer.
 	modbus_add_tx_frame_checksum();
 
 	// Start TX.
@@ -1399,10 +1350,6 @@ BootloaderHandleMessageResponse
 modbus_slave_answer_write_multiple_registers_request(const ModbusSlaveAnswerWriteMultipleRegistersRequest *data) {
 	// This function can be invoked only in slave mode.
 
-	uint8_t fc = MODBUS_FC_WRITE_MULTIPLE_REGISTERS;
-	uint16_t starting_address;
-	uint16_t count;
-
 	if(rs485.mode != MODE_MODBUS_SLAVE_RTU) {
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
@@ -1422,20 +1369,9 @@ modbus_slave_answer_write_multiple_registers_request(const ModbusSlaveAnswerWrit
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
-	starting_address = 0; // FIXME: get data from request
-	count = 0; // FIXME: get data from request
+	// Copy the request from the RX buffer to the TX buffer and then initiate a TX.
+	modbus_store_tx_frame_data_bytes(&rs485.modbus_rtu.request.rx_frame, 6);
 
-	// Fix endianness (LE->BE).
-	starting_address = HTONS(starting_address);
-	count = HTONS(count);
-
-	// Constructing the frame in the TX buffer.
-	modbus_store_tx_frame_data_bytes(&rs485.modbus_slave_address, 1); // Slave address.
-	modbus_store_tx_frame_data_bytes(&fc, 1); // Function code.
-	modbus_store_tx_frame_data_bytes((uint8_t *)&starting_address, 2);
-	modbus_store_tx_frame_data_bytes((uint8_t *)&count, 2);
-
-	// Calculate checksum and put it at the end of the TX buffer.
 	modbus_add_tx_frame_checksum();
 
 	// Start TX.
