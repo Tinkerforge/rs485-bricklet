@@ -1041,7 +1041,7 @@ modbus_slave_answer_write_single_coil_request(const ModbusSlaveAnswerWriteSingle
 	}
 
 	// Copy the request from the RX buffer to the TX buffer and then initiate a TX.
-	modbus_store_tx_frame_data_bytes(&rs485.modbus_rtu.request.rx_frame, 8);
+	modbus_store_tx_frame_data_bytes(rs485.modbus_rtu.request.rx_frame, 8);
 
 	// Start master request timeout timing.
 	rs485.modbus_rtu.request.time_ref_master_request_timeout = system_timer_get_ms();
@@ -1129,7 +1129,7 @@ modbus_slave_answer_write_single_register_request(const ModbusSlaveAnswerWriteSi
 	}
 
 	// Copy the request from the RX buffer to the TX buffer and then initiate a TX.
-	modbus_store_tx_frame_data_bytes(&rs485.modbus_rtu.request.rx_frame, 8);
+	modbus_store_tx_frame_data_bytes(rs485.modbus_rtu.request.rx_frame, 8);
 
 	// Start master request timeout timing.
 	rs485.modbus_rtu.request.time_ref_master_request_timeout = system_timer_get_ms();
@@ -1217,7 +1217,7 @@ modbus_slave_answer_write_multiple_coils_request(const ModbusSlaveAnswerWriteMul
 	}
 
 	// Copy the request from the RX buffer to the TX buffer and then initiate a TX.
-	modbus_store_tx_frame_data_bytes(&rs485.modbus_rtu.request.rx_frame, 6);
+	modbus_store_tx_frame_data_bytes(rs485.modbus_rtu.request.rx_frame, 6);
 
 	modbus_add_tx_frame_checksum();
 
@@ -1370,7 +1370,7 @@ modbus_slave_answer_write_multiple_registers_request(const ModbusSlaveAnswerWrit
 	}
 
 	// Copy the request from the RX buffer to the TX buffer and then initiate a TX.
-	modbus_store_tx_frame_data_bytes(&rs485.modbus_rtu.request.rx_frame, 6);
+	modbus_store_tx_frame_data_bytes(rs485.modbus_rtu.request.rx_frame, 6);
 
 	modbus_add_tx_frame_checksum();
 
