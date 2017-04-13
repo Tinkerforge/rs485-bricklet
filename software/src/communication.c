@@ -717,7 +717,6 @@ modbus_slave_answer_read_coils_request_low_level(const ModbusSlaveAnswerReadCoil
 	uint16_t stream_total_length_bytes = \
 		((data->stream_total_length % 8) != 0) ? stream_total_length_div_8 + 1 : stream_total_length_div_8;
 
-
 	if(rs485.mode != MODE_MODBUS_SLAVE_RTU) {
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
@@ -758,7 +757,7 @@ modbus_slave_answer_read_coils_request_low_level(const ModbusSlaveAnswerReadCoil
 	if(stream_chunk_offset_bytes == 0) {
 		ringbuffer_add(&rs485.ringbuffer_tx, rs485.modbus_slave_address);
 		ringbuffer_add(&rs485.ringbuffer_tx, (uint8_t)MODBUS_FC_READ_COILS);
-		ringbuffer_add(&rs485.ringbuffer_tx, expected_bytes);
+		ringbuffer_add(&rs485.ringbuffer_tx, stream_total_length_bytes);
 
 		if(stream_total_length_bytes <= sizeof(data->stream_chunk_data)) {
 			// All data fits in the first chunk there will not be other chunks.
