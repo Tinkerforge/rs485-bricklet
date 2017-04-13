@@ -119,6 +119,13 @@ static bool send_stream_chunks(uint8_t function_code, void *cb) {
 				       _cb->stream_total_length - _cb->stream_chunk_offset);
 			}
 
+			/*
+			 * While streaming with bool array type, override the callback's stream
+			 * total length with the bool array version of the stream total length.
+			 */
+			_cb->stream_chunk_offset *= 8;
+			_cb->stream_total_length = rs485.modbus_rtu.request.stream_chunking->stream_total_bool_array;
+
 			bootloader_spitfp_send_ack_and_message(&bootloader_status,
 			                                       (uint8_t *)_cb,
 			                                       sizeof(ModbusMasterReadCoilsResponseLowLevel_Callback));
@@ -196,6 +203,13 @@ static bool send_stream_chunks(uint8_t function_code, void *cb) {
 
 			memcpy(&temp1, &rs485.modbus_rtu.request.rx_frame[4], 2);
 			_cb->count = NTOHS(temp1);
+
+			/*
+			 * While streaming with bool array type, override the callback's stream
+			 * total length with the bool array version of the stream total length.
+			 */
+			_cb->stream_chunk_offset *= 8;
+			_cb->stream_total_length = rs485.modbus_rtu.request.stream_chunking->stream_total_bool_array;
 
 			bootloader_spitfp_send_ack_and_message(&bootloader_status,
 			                                       (uint8_t *)_cb,
@@ -278,6 +292,13 @@ static bool send_stream_chunks(uint8_t function_code, void *cb) {
 				       &rs485.modbus_rtu.request.rx_frame[_cb->stream_chunk_offset + 3],
 				       _cb->stream_total_length - _cb->stream_chunk_offset);
 			}
+
+			/*
+			 * While streaming with bool array type, override the callback's stream
+			 * total length with the bool array version of the stream total length.
+			 */
+			_cb->stream_chunk_offset *= 8;
+			_cb->stream_total_length = rs485.modbus_rtu.request.stream_chunking->stream_total_bool_array;
 
 			bootloader_spitfp_send_ack_and_message(&bootloader_status,
 			                                       (uint8_t *)_cb,
@@ -690,6 +711,12 @@ modbus_slave_answer_read_coils_request_low_level(const ModbusSlaveAnswerReadCoil
 
 	uint16_t count = 0;
 	uint16_t expected_bytes = 0;
+	uint16_t expected_bytes_div_8 = 0;
+	uint16_t stream_chunk_offset_bytes = data->stream_chunk_offset / 8;
+	uint16_t stream_total_length_div_8 = data->stream_total_length / 8;
+	uint16_t stream_total_length_bytes = \
+		((data->stream_total_length % 8) != 0) ? stream_total_length_div_8 + 1 : stream_total_length_div_8;
+
 
 	if(rs485.mode != MODE_MODBUS_SLAVE_RTU) {
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
@@ -703,7 +730,7 @@ modbus_slave_answer_read_coils_request_low_level(const ModbusSlaveAnswerReadCoil
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
-	if(data->stream_total_length > (RS485_MODBUS_RTU_FRAME_SIZE_MAX - 5)) {
+	if(stream_total_length_bytes > (RS485_MODBUS_RTU_FRAME_SIZE_MAX - 5)) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
@@ -714,30 +741,28 @@ modbus_slave_answer_read_coils_request_low_level(const ModbusSlaveAnswerReadCoil
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
+	// Check if the stream total length agrees with the request.
 	memcpy(&count, &rs485.modbus_rtu.request.rx_frame[4], 2);
 
 	// Fix endianness (BE->LE).
 	count = NTOHS(count);
 
-	expected_bytes = count / 8;
+	expected_bytes_div_8 = count / 8;
+	expected_bytes = ((count % 8) != 0) ? expected_bytes_div_8 + 1 : expected_bytes_div_8;
 
-	if((count % 8) != 0) {
-		expected_bytes++;
-	}
-
-	if(data->stream_total_length != expected_bytes) {
+	if(stream_total_length_bytes != expected_bytes) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
 	// The first chunk.
-	if(data->stream_chunk_offset == 0) {
+	if(stream_chunk_offset_bytes == 0) {
 		ringbuffer_add(&rs485.ringbuffer_tx, rs485.modbus_slave_address);
 		ringbuffer_add(&rs485.ringbuffer_tx, (uint8_t)MODBUS_FC_READ_COILS);
 		ringbuffer_add(&rs485.ringbuffer_tx, expected_bytes);
 
-		if(data->stream_total_length <= sizeof(data->stream_chunk_data)) {
+		if(stream_total_length_bytes <= sizeof(data->stream_chunk_data)) {
 			// All data fits in the first chunk there will not be other chunks.
-			modbus_store_tx_frame_data_bytes(data->stream_chunk_data, data->stream_total_length);
+			modbus_store_tx_frame_data_bytes(data->stream_chunk_data, stream_total_length_bytes);
 
 			modbus_add_tx_frame_checksum();
 
@@ -751,10 +776,10 @@ modbus_slave_answer_read_coils_request_low_level(const ModbusSlaveAnswerReadCoil
 		}
 	}
 
-	if((data->stream_chunk_offset + sizeof(data->stream_chunk_data)) <= data->stream_total_length) {
+	if((stream_chunk_offset_bytes + sizeof(data->stream_chunk_data)) <= stream_total_length_bytes) {
 		modbus_store_tx_frame_data_bytes(data->stream_chunk_data, sizeof(data->stream_chunk_data));
 
-		if((data->stream_chunk_offset + sizeof(data->stream_chunk_data)) == data->stream_total_length) {
+		if((stream_chunk_offset_bytes + sizeof(data->stream_chunk_data)) == stream_total_length_bytes) {
 			// All data of the frame is in the buffer except checksum.
 			modbus_add_tx_frame_checksum();
 
@@ -766,7 +791,7 @@ modbus_slave_answer_read_coils_request_low_level(const ModbusSlaveAnswerReadCoil
 		}
 	}
 	else {
-		modbus_store_tx_frame_data_bytes(data->stream_chunk_data, data->stream_total_length - data->stream_chunk_offset);
+		modbus_store_tx_frame_data_bytes(data->stream_chunk_data, stream_total_length_bytes - stream_chunk_offset_bytes);
 
 		// All data of the frame is in the buffer except checksum.
 		modbus_add_tx_frame_checksum();
@@ -1233,6 +1258,9 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 	// This function can be invoked only in master mode.
 
 	response->request_id = 0;
+	uint16_t stream_total_length_bytes = 0;
+	uint16_t stream_total_length_div_8 = 0;
+	uint16_t stream_chunk_offset_bytes = data->stream_chunk_offset / 8;
 	response->header.length = sizeof(ModbusMasterWriteMultipleCoilsLowLevel_Response);
 
 	if(rs485.mode != MODE_MODBUS_MASTER_RTU ||
@@ -1241,7 +1269,10 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 		return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 	}
 
-	if(data->stream_total_length > (RS485_MODBUS_RTU_FRAME_SIZE_MAX - 9)) {
+	stream_total_length_div_8 = data->stream_total_length / 8;
+	stream_total_length_bytes = ((data->stream_total_length % 8) != 0) ? stream_total_length_div_8 + 1 : stream_total_length_div_8;
+
+	if(stream_total_length_bytes > (RS485_MODBUS_RTU_FRAME_SIZE_MAX - 9)) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
@@ -1250,7 +1281,7 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 	}
 
 	// The first chunk.
-	if(data->stream_chunk_offset == 0) {
+	if(stream_chunk_offset_bytes == 0) {
 		uint8_t fc = MODBUS_FC_WRITE_MULTIPLE_COILS;
 		uint16_t starting_address;
 		uint16_t count;
@@ -1271,11 +1302,11 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 		modbus_store_tx_frame_data_bytes(&fc, 1); // Function code.
 		modbus_store_tx_frame_data_bytes((uint8_t *)&starting_address, 2); // Starting address.
 		modbus_store_tx_frame_data_bytes((uint8_t *)&count, 2); // Count.
-		modbus_store_tx_frame_data_bytes((uint8_t *)&data->stream_total_length, 1); // Byte count.
+		modbus_store_tx_frame_data_bytes((uint8_t *)&stream_total_length_bytes, 1); // Byte count.
 
-		if(data->stream_total_length <= sizeof(data->stream_chunk_data)) {
+		if(stream_total_length_bytes <= sizeof(data->stream_chunk_data)) {
 			// All data fits in the first chunk there will not be other chunks.
-			modbus_store_tx_frame_data_bytes(data->stream_chunk_data, data->stream_total_length);
+			modbus_store_tx_frame_data_bytes(data->stream_chunk_data, stream_total_length_bytes);
 
 			modbus_add_tx_frame_checksum();
 
@@ -1285,7 +1316,7 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 
 			modbus_init_new_request(&rs485,
 			                        MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE,
-			                        data->stream_total_length + 9);
+			                        stream_total_length_bytes + 9);
 
 			modbus_start_tx_from_buffer(&rs485);
 
@@ -1298,10 +1329,10 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 		}
 	}
 
-	if((data->stream_chunk_offset + sizeof(data->stream_chunk_data)) <= data->stream_total_length) {
+	if((stream_chunk_offset_bytes + sizeof(data->stream_chunk_data)) <= stream_total_length_bytes) {
 		modbus_store_tx_frame_data_bytes(data->stream_chunk_data, sizeof(data->stream_chunk_data));
 
-		if((data->stream_chunk_offset + sizeof(data->stream_chunk_data)) == data->stream_total_length) {
+		if((stream_chunk_offset_bytes + sizeof(data->stream_chunk_data)) == stream_total_length_bytes) {
 			// All data of the frame is in the buffer except checksum.
 			modbus_add_tx_frame_checksum();
 
@@ -1311,7 +1342,7 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 
 			modbus_init_new_request(&rs485,
 			                        MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE,
-			                        data->stream_total_length + 9);
+			                        stream_total_length_bytes + 9);
 
 			response->request_id = rs485.modbus_rtu.request.id;
 
@@ -1322,7 +1353,7 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 		}
 	}
 	else {
-		modbus_store_tx_frame_data_bytes(data->stream_chunk_data, data->stream_total_length - data->stream_chunk_offset);
+		modbus_store_tx_frame_data_bytes(data->stream_chunk_data, stream_total_length_bytes - stream_chunk_offset_bytes);
 
 		// All data of the frame is in the buffer except checksum.
 		modbus_add_tx_frame_checksum();
@@ -1333,7 +1364,7 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 
 		modbus_init_new_request(&rs485,
 		                        MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE,
-		                        data->stream_total_length + 9);
+		                        stream_total_length_bytes + 9);
 
 		response->request_id = rs485.modbus_rtu.request.id;
 
@@ -1547,8 +1578,12 @@ modbus_slave_answer_read_discrete_inputs_request_low_level(const ModbusSlaveAnsw
 
 	uint16_t count = 0;
 	uint16_t expected_bytes = 0;
+	uint16_t stream_total_length_div_8 = data->stream_total_length / 8;
+	uint16_t stream_total_length_bytes = \
+		((data->stream_total_length % 8) != 0) ? stream_total_length_div_8 + 1 : stream_total_length_div_8;
+	uint16_t stream_chunk_offset_bytes = data->stream_chunk_offset / 8;
 
-	if(rs485.mode != MODE_MODBUS_SLAVE_RTU){
+	if(rs485.mode != MODE_MODBUS_SLAVE_RTU) {
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
@@ -1560,7 +1595,7 @@ modbus_slave_answer_read_discrete_inputs_request_low_level(const ModbusSlaveAnsw
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
-	if(data->stream_total_length > (RS485_MODBUS_RTU_FRAME_SIZE_MAX - 5)) {
+	if(stream_total_length_bytes > (RS485_MODBUS_RTU_FRAME_SIZE_MAX - 5)) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
@@ -1582,19 +1617,19 @@ modbus_slave_answer_read_discrete_inputs_request_low_level(const ModbusSlaveAnsw
 		expected_bytes ++;
 	}
 
-	if(data->stream_total_length != expected_bytes) {
+	if(stream_total_length_bytes != expected_bytes) {
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
 	// The first chunk.
-	if(data->stream_chunk_offset == 0) {
+	if(stream_chunk_offset_bytes == 0) {
 		ringbuffer_add(&rs485.ringbuffer_tx, rs485.modbus_slave_address);
 		ringbuffer_add(&rs485.ringbuffer_tx, (uint8_t)MODBUS_FC_READ_DISCRETE_INPUTS);
 		ringbuffer_add(&rs485.ringbuffer_tx, expected_bytes);
 
-		if(data->stream_total_length <= sizeof(data->stream_chunk_data)) {
+		if(stream_total_length_bytes <= sizeof(data->stream_chunk_data)) {
 			// All data fits in the first chunk there will not be other chunks.
-			modbus_store_tx_frame_data_bytes(data->stream_chunk_data, data->stream_total_length);
+			modbus_store_tx_frame_data_bytes(data->stream_chunk_data, stream_total_length_bytes);
 
 			modbus_add_tx_frame_checksum();
 
@@ -1608,10 +1643,10 @@ modbus_slave_answer_read_discrete_inputs_request_low_level(const ModbusSlaveAnsw
 		}
 	}
 
-	if((data->stream_chunk_offset + sizeof(data->stream_chunk_data)) <= data->stream_total_length) {
+	if((stream_chunk_offset_bytes + sizeof(data->stream_chunk_data)) <= stream_total_length_bytes) {
 		modbus_store_tx_frame_data_bytes(data->stream_chunk_data, sizeof(data->stream_chunk_data));
 
-		if((data->stream_chunk_offset + sizeof(data->stream_chunk_data)) == data->stream_total_length) {
+		if((stream_chunk_offset_bytes + sizeof(data->stream_chunk_data)) == stream_total_length_bytes) {
 			// All data of the frame is in the buffer except checksum.
 			modbus_add_tx_frame_checksum();
 
@@ -1623,7 +1658,7 @@ modbus_slave_answer_read_discrete_inputs_request_low_level(const ModbusSlaveAnsw
 		}
 	}
 	else {
-		modbus_store_tx_frame_data_bytes(data->stream_chunk_data, data->stream_total_length - data->stream_chunk_offset);
+		modbus_store_tx_frame_data_bytes(data->stream_chunk_data, stream_total_length_bytes - stream_chunk_offset_bytes);
 
 		// All data of the frame is in the buffer except checksum.
 		modbus_add_tx_frame_checksum();
@@ -2044,6 +2079,9 @@ bool handle_modbus_master_read_coils_response_low_level_callback(void) {
 	// This callback is processed only in master mode.
 
 	uint16_t chunks = 0;
+	uint16_t tx_quantity_of_coils = 0;
+	uint16_t rx_expected_byte_count = 0;
+	uint16_t tx_quantity_of_coils_div_8 = 0;
 	ModbusMasterReadCoilsResponseLowLevel_Callback cb;
 
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
@@ -2112,14 +2150,32 @@ bool handle_modbus_master_read_coils_response_low_level_callback(void) {
 		}
 	}
 
-	// Data to be handled.
-	cb.stream_chunk_offset = 0;
-	cb.stream_total_length = rs485.modbus_rtu.request.rx_frame[2];
+	// Check if byte count field of the response agrees with the request.
+	memcpy(&tx_quantity_of_coils, &rs485.modbus_rtu.request.tx_frame[4], sizeof(tx_quantity_of_coils));
+	tx_quantity_of_coils = NTOHS(tx_quantity_of_coils);
+	tx_quantity_of_coils_div_8 = tx_quantity_of_coils / 8;
+	rx_expected_byte_count = \
+		((tx_quantity_of_coils % 8) != 0) ?  tx_quantity_of_coils_div_8 + 1 : tx_quantity_of_coils_div_8;
 
-	if(cb.stream_total_length <= sizeof(cb.stream_chunk_data)) {
+	if(rs485.modbus_rtu.request.rx_frame[2] != (uint8_t)rx_expected_byte_count) {
+		modbus_clear_request(&rs485);
+
+		rs485.modbus_common_error_counters.illegal_data_value++;
+
+		return false;
+	}
+
+	// Data to be handled.
+	if(rs485.modbus_rtu.request.rx_frame[2] <= sizeof(cb.stream_chunk_data)) {
 		// Fits in one packet.
 		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
-			memcpy(&cb.stream_chunk_data, &rs485.modbus_rtu.request.rx_frame[3], cb.stream_total_length);
+			memcpy(&cb.stream_chunk_data, &rs485.modbus_rtu.request.rx_frame[3], rs485.modbus_rtu.request.rx_frame[2]);
+
+			/*
+			 * While streaming with bool array type, override the callback's stream
+			 * total length with the bool array version of the stream total length.
+			 */
+			cb.stream_total_length = tx_quantity_of_coils;
 
 			modbus_clear_request(&rs485);
 
@@ -2137,11 +2193,12 @@ bool handle_modbus_master_read_coils_response_low_level_callback(void) {
 		// Need more than one packet to send the data.
 		if(!rs485.modbus_rtu.request.stream_chunking->in_progress) {
 			chunks = rs485.modbus_rtu.request.rx_frame[2] / sizeof(cb.stream_chunk_data);
-			chunks = ((rs485.modbus_rtu.request.rx_frame[2] % sizeof(cb.stream_chunk_data)) > 0) ? chunks + 1 : chunks;
+			chunks = ((rs485.modbus_rtu.request.rx_frame[2] % sizeof(cb.stream_chunk_data)) != 0) ? chunks + 1 : chunks;
 
 			rs485.modbus_rtu.request.stream_chunking->in_progress = true;
 			rs485.modbus_rtu.request.stream_chunking->chunk_current = 0;
 			rs485.modbus_rtu.request.stream_chunking->chunk_total = chunks;
+			rs485.modbus_rtu.request.stream_chunking->stream_total_bool_array = tx_quantity_of_coils;
 			rs485.modbus_rtu.request.stream_chunking->stream_total = rs485.modbus_rtu.request.rx_frame[2];
 		}
 
@@ -2312,7 +2369,7 @@ bool handle_modbus_master_read_holding_registers_response_low_level_callback(voi
 		// Need more than one packet to send the data.
 		if(!rs485.modbus_rtu.request.stream_chunking->in_progress) {
 			chunks = rs485.modbus_rtu.request.rx_frame[2] / sizeof(cb.stream_chunk_data);
-			chunks = ((rs485.modbus_rtu.request.rx_frame[2] % sizeof(cb.stream_chunk_data)) > 0) ? chunks + 1 : chunks;
+			chunks = ((rs485.modbus_rtu.request.rx_frame[2] % sizeof(cb.stream_chunk_data)) != 0) ? chunks + 1 : chunks;
 
 			rs485.modbus_rtu.request.stream_chunking->in_progress = true;
 			rs485.modbus_rtu.request.stream_chunking->chunk_current = 0;
@@ -2401,11 +2458,11 @@ bool handle_modbus_master_write_single_coil_response_callback(void) {
 	if(rs485.modbus_rtu.request.tx_frame[0] == 0) {
 		// Generate callback locally for broadcast write requests.
 		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+			modbus_clear_request(&rs485);
+
 			bootloader_spitfp_send_ack_and_message(&bootloader_status,
 			                                       (uint8_t*)&cb,
 			                                       sizeof(ModbusMasterWriteSingleCoilResponse_Callback));
-
-			modbus_clear_request(&rs485);
 
 			return true;
 		}
@@ -2515,11 +2572,11 @@ bool handle_modbus_master_write_single_register_response_callback(void) {
 	if(rs485.modbus_rtu.request.tx_frame[0] == 0) {
 		// Generate callback locally for broadcast write requests.
 		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+			modbus_clear_request(&rs485);
+
 			bootloader_spitfp_send_ack_and_message(&bootloader_status,
 			                                       (uint8_t*)&cb,
 			                                       sizeof(ModbusMasterWriteSingleRegisterResponse_Callback));
-
-			modbus_clear_request(&rs485);
 
 			return true;
 		}
@@ -2569,6 +2626,7 @@ bool handle_modbus_slave_write_multiple_coils_request_low_level_callback(void) {
 	// This callback is processed only in slave mode.
 
 	uint16_t chunks = 0;
+	uint16_t quantity_of_coils = 0;
 	ModbusSlaveWriteMultipleCoilsRequestLowLevel_Callback cb;
 
 	if((rs485.mode != MODE_MODBUS_SLAVE_RTU) ||
@@ -2594,9 +2652,11 @@ bool handle_modbus_slave_write_multiple_coils_request_low_level_callback(void) {
 	}
 
 	memcpy(&cb.starting_address, &rs485.modbus_rtu.request.rx_frame[2], 2);
+	memcpy(&quantity_of_coils, &rs485.modbus_rtu.request.rx_frame[4], 2);
 
 	// Fix endianness (BE->LE).
 	cb.starting_address = NTOHS(cb.starting_address);
+	quantity_of_coils = NTOHS(quantity_of_coils);
 
 	cb.request_id = rs485.modbus_rtu.request.id;
 
@@ -2614,6 +2674,8 @@ bool handle_modbus_slave_write_multiple_coils_request_low_level_callback(void) {
 		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
 			memcpy(&cb.stream_chunk_data, &rs485.modbus_rtu.request.rx_frame[7], cb.stream_total_length);
 
+			cb.stream_total_length = quantity_of_coils;
+
 			bootloader_spitfp_send_ack_and_message(&bootloader_status,
 			                                       (uint8_t*)&cb,
 			                                       sizeof(ModbusSlaveWriteMultipleCoilsRequestLowLevel_Callback));
@@ -2630,11 +2692,12 @@ bool handle_modbus_slave_write_multiple_coils_request_low_level_callback(void) {
 		// Need more than one packet to send the data.
 		if(!rs485.modbus_rtu.request.stream_chunking->in_progress) {
 			chunks = rs485.modbus_rtu.request.rx_frame[6] / sizeof(cb.stream_chunk_data);
-			chunks = ((rs485.modbus_rtu.request.rx_frame[6] % sizeof(cb.stream_chunk_data)) > 0) ? chunks + 1 : chunks;
+			chunks = ((rs485.modbus_rtu.request.rx_frame[6] % sizeof(cb.stream_chunk_data)) != 0) ? chunks + 1 : chunks;
 
 			rs485.modbus_rtu.request.stream_chunking->in_progress = true;
 			rs485.modbus_rtu.request.stream_chunking->chunk_current = 0;
 			rs485.modbus_rtu.request.stream_chunking->chunk_total = chunks;
+			rs485.modbus_rtu.request.stream_chunking->stream_total_bool_array = quantity_of_coils;
 			rs485.modbus_rtu.request.stream_chunking->stream_total = rs485.modbus_rtu.request.rx_frame[6];
 		}
 
@@ -2665,11 +2728,11 @@ bool handle_modbus_master_write_multiple_coils_response_callback(void) {
 	if(rs485.modbus_rtu.request.tx_frame[0] == 0) {
 		// Generate callback locally for broadcast write requests.
 		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+			modbus_clear_request(&rs485);
+
 			bootloader_spitfp_send_ack_and_message(&bootloader_status,
 			                                       (uint8_t*)&cb,
 			                                       sizeof(ModbusMasterWriteMultipleCoilsResponse_Callback));
-
-			modbus_clear_request(&rs485);
 
 			return true;
 		}
@@ -2787,7 +2850,7 @@ bool handle_modbus_slave_write_multiple_registers_request_low_level_callback(voi
 		// Need more than one packet to send the data.
 		if(!rs485.modbus_rtu.request.stream_chunking->in_progress) {
 			chunks = rs485.modbus_rtu.request.rx_frame[6] / sizeof(cb.stream_chunk_data);
-			chunks = ((rs485.modbus_rtu.request.rx_frame[6] % sizeof(cb.stream_chunk_data)) > 0) ? chunks + 1 : chunks;
+			chunks = ((rs485.modbus_rtu.request.rx_frame[6] % sizeof(cb.stream_chunk_data)) != 0) ? chunks + 1 : chunks;
 
 			rs485.modbus_rtu.request.stream_chunking->in_progress = true;
 			rs485.modbus_rtu.request.stream_chunking->chunk_current = 0;
@@ -2822,11 +2885,11 @@ bool handle_modbus_master_write_multiple_registers_response_callback(void) {
 	if(rs485.modbus_rtu.request.tx_frame[0] == 0) {
 		// Generate callback locally for broadcast write requests.
 		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+			modbus_clear_request(&rs485);
+
 			bootloader_spitfp_send_ack_and_message(&bootloader_status,
 			                                       (uint8_t*)&cb,
 			                                       sizeof(ModbusMasterWriteMultipleRegistersResponse_Callback));
-
-			modbus_clear_request(&rs485);
 
 			return true;
 		}
@@ -2934,6 +2997,9 @@ bool handle_modbus_master_read_discrete_inputs_response_low_level_callback(void)
 	// This callback is processed only in master mode.
 
 	uint16_t chunks = 0;
+	uint16_t tx_quantity_of_inputs = 0;
+	uint16_t rx_expected_byte_count = 0;
+	uint16_t tx_quantity_of_inputs_div_8 = 0;
 	ModbusMasterReadDiscreteInputsResponseLowLevel_Callback cb;
 
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
@@ -3003,14 +3069,32 @@ bool handle_modbus_master_read_discrete_inputs_response_low_level_callback(void)
 		}
 	}
 
-	// Data to be handled.
-	cb.stream_chunk_offset = 0;
-	cb.stream_total_length = rs485.modbus_rtu.request.rx_frame[2];
+	// Check if byte count field of the response agrees with the request.
+	memcpy(&tx_quantity_of_inputs, &rs485.modbus_rtu.request.tx_frame[4], sizeof(tx_quantity_of_inputs));
+	tx_quantity_of_inputs = NTOHS(tx_quantity_of_inputs);
+	tx_quantity_of_inputs_div_8 = tx_quantity_of_inputs / 8;
+	rx_expected_byte_count = \
+		((tx_quantity_of_inputs % 8) > 0) ?  tx_quantity_of_inputs_div_8 + 1 : tx_quantity_of_inputs_div_8;
 
-	if(cb.stream_total_length <= sizeof(cb.stream_chunk_data)) {
+	if(rs485.modbus_rtu.request.rx_frame[2] != (uint8_t)rx_expected_byte_count) {
+		modbus_clear_request(&rs485);
+
+		rs485.modbus_common_error_counters.illegal_data_value++;
+
+		return false;
+	}
+
+	// Data to be handled.
+	if(rs485.modbus_rtu.request.rx_frame[2] <= sizeof(cb.stream_chunk_data)) {
 		// Fits in one packet.
 		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
-			memcpy(&cb.stream_chunk_data, &rs485.modbus_rtu.request.rx_frame[3], cb.stream_total_length);
+			memcpy(&cb.stream_chunk_data, &rs485.modbus_rtu.request.rx_frame[3], rs485.modbus_rtu.request.rx_frame[2]);
+
+			/*
+			 * While streaming with bool array type, override the callback's stream
+			 * total length with the bool array version of the stream total length.
+			 */
+			cb.stream_total_length = tx_quantity_of_inputs;
 
 			modbus_clear_request(&rs485);
 
@@ -3028,11 +3112,12 @@ bool handle_modbus_master_read_discrete_inputs_response_low_level_callback(void)
 		// Need more than one packet to send the data.
 		if(!rs485.modbus_rtu.request.stream_chunking->in_progress) {
 			chunks = rs485.modbus_rtu.request.rx_frame[2] / sizeof(cb.stream_chunk_data);
-			chunks = ((rs485.modbus_rtu.request.rx_frame[2] % sizeof(cb.stream_chunk_data)) > 0) ? chunks + 1 : chunks;
+			chunks = ((rs485.modbus_rtu.request.rx_frame[2] % sizeof(cb.stream_chunk_data)) != 0) ? chunks + 1 : chunks;
 
 			rs485.modbus_rtu.request.stream_chunking->in_progress = true;
 			rs485.modbus_rtu.request.stream_chunking->chunk_current = 0;
 			rs485.modbus_rtu.request.stream_chunking->chunk_total = chunks;
+			rs485.modbus_rtu.request.stream_chunking->stream_total_bool_array = tx_quantity_of_inputs;
 			rs485.modbus_rtu.request.stream_chunking->stream_total = rs485.modbus_rtu.request.rx_frame[2];
 		}
 
@@ -3204,7 +3289,7 @@ bool handle_modbus_master_read_input_registers_response_low_level_callback(void)
 		// Need more than one packet to send the data.
 		if(!rs485.modbus_rtu.request.stream_chunking->in_progress) {
 			chunks = rs485.modbus_rtu.request.rx_frame[2] / sizeof(cb.stream_chunk_data);
-			chunks = ((rs485.modbus_rtu.request.rx_frame[2] % sizeof(cb.stream_chunk_data)) > 0) ? chunks + 1 : chunks;
+			chunks = ((rs485.modbus_rtu.request.rx_frame[2] % sizeof(cb.stream_chunk_data)) != 0) ? chunks + 1 : chunks;
 
 			rs485.modbus_rtu.request.stream_chunking->in_progress = true;
 			rs485.modbus_rtu.request.stream_chunking->chunk_current = 0;

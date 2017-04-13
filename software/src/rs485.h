@@ -95,6 +95,7 @@ typedef struct {
 	uint32_t chunk_total;
 	uint32_t stream_total;
 	uint32_t chunk_current;
+	uint32_t stream_total_bool_array;
 } RS485ModbusStreamChunking;
 
 typedef struct {
