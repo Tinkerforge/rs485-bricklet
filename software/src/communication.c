@@ -2000,6 +2000,8 @@ bool handle_read_low_level_callback(void) {
 	static uint32_t last_used = 0;
 	static uint32_t last_time = 0;
 
+	memset(&cb, 0, sizeof(cb));
+
 	if(rs485.mode != MODE_RS485 || !rs485.read_callback_enabled) {
 		return false;
 	}
@@ -2071,6 +2073,8 @@ bool handle_error_count_callback(void) {
 	static uint32_t last_error_count_overrun = 0;
 	static uint32_t last_time = 0;
 
+	memset(&cb, 0, sizeof(cb));
+
 	if(!rs485.error_count_callback_enabled) {
 		return false;
 	}
@@ -2111,6 +2115,8 @@ bool handle_modbus_slave_read_coils_request_callback(void) {
 	// This callback is processed only in slave mode.
 
 	ModbusSlaveReadCoilsRequest_Callback cb;
+
+	memset(&cb, 0, sizeof(cb));
 
 	if((rs485.mode != MODE_MODBUS_SLAVE_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
@@ -2173,6 +2179,8 @@ bool handle_modbus_master_read_coils_response_low_level_callback(void) {
 	uint16_t rx_expected_byte_count = 0;
 	uint16_t tx_quantity_of_coils_div_8 = 0;
 	ModbusMasterReadCoilsResponseLowLevel_Callback cb;
+
+	memset(&cb, 0, sizeof(cb));
 
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
@@ -2303,6 +2311,8 @@ bool handle_modbus_slave_read_holding_registers_request_callback(void) {
 
 	ModbusSlaveReadHoldingRegistersRequest_Callback cb;
 
+	memset(&cb, 0, sizeof(cb));
+
 	if((rs485.mode != MODE_MODBUS_SLAVE_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
 	   (rs485.modbus_rtu.request.rx_frame[1] != MODBUS_FC_READ_HOLDING_REGISTERS) ||
@@ -2361,6 +2371,8 @@ bool handle_modbus_master_read_holding_registers_response_low_level_callback(voi
 
 	uint16_t chunks = 0;
 	ModbusMasterReadHoldingRegistersResponseLowLevel_Callback cb;
+
+	memset(&cb, 0, sizeof(cb));
 
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
@@ -2479,6 +2491,8 @@ bool handle_modbus_slave_write_single_coil_request_callback(void) {
 	ModbusSlaveWriteSingleCoilRequest_Callback cb;
 	uint16_t coil_value;
 
+	memset(&cb, 0, sizeof(cb));
+
 	if((rs485.mode != MODE_MODBUS_SLAVE_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
 	   (rs485.modbus_rtu.request.rx_frame[1] != MODBUS_FC_WRITE_SINGLE_COIL) ||
@@ -2529,6 +2543,8 @@ bool handle_modbus_master_write_single_coil_response_callback(void) {
 	// This callback is processed only in master mode.
 
 	ModbusMasterWriteSingleCoilResponse_Callback cb;
+
+	memset(&cb, 0, sizeof(cb));
 
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
@@ -2603,6 +2619,8 @@ bool handle_modbus_slave_write_single_register_request_callback(void) {
 
 	ModbusSlaveWriteSingleRegisterRequest_Callback cb;
 
+	memset(&cb, 0, sizeof(cb));
+
 	if((rs485.mode != MODE_MODBUS_SLAVE_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
 	   (rs485.modbus_rtu.request.rx_frame[1] != MODBUS_FC_WRITE_SINGLE_REGISTER) ||
@@ -2643,6 +2661,8 @@ bool handle_modbus_master_write_single_register_response_callback(void) {
 	// This callback is processed only in master mode.
 
 	ModbusMasterWriteSingleRegisterResponse_Callback cb;
+
+	memset(&cb, 0, sizeof(cb));
 
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
@@ -2718,6 +2738,8 @@ bool handle_modbus_slave_write_multiple_coils_request_low_level_callback(void) {
 	uint16_t chunks = 0;
 	uint16_t quantity_of_coils = 0;
 	ModbusSlaveWriteMultipleCoilsRequestLowLevel_Callback cb;
+
+	memset(&cb, 0, sizeof(cb));
 
 	if((rs485.mode != MODE_MODBUS_SLAVE_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
@@ -2800,6 +2822,8 @@ bool handle_modbus_master_write_multiple_coils_response_callback(void) {
 
 	ModbusMasterWriteMultipleCoilsResponse_Callback cb;
 
+	memset(&cb, 0, sizeof(cb));
+
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
 	   (rs485.modbus_rtu.request.tx_frame[1] != MODBUS_FC_WRITE_MULTIPLE_COILS) ||
@@ -2873,6 +2897,8 @@ bool handle_modbus_slave_write_multiple_registers_request_low_level_callback(voi
 
 	uint16_t chunks = 0;
 	ModbusSlaveWriteMultipleRegistersRequestLowLevel_Callback cb;
+
+	memset(&cb, 0, sizeof(cb));
 
 	if((rs485.mode != MODE_MODBUS_SLAVE_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
@@ -2957,6 +2983,8 @@ bool handle_modbus_master_write_multiple_registers_response_callback(void) {
 
 	ModbusMasterWriteMultipleRegistersResponse_Callback cb;
 
+	memset(&cb, 0, sizeof(cb));
+
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
 	   (rs485.modbus_rtu.request.tx_frame[1] != MODBUS_FC_WRITE_MULTIPLE_REGISTERS) ||
@@ -3030,6 +3058,8 @@ bool handle_modbus_slave_read_discrete_inputs_request_callback(void) {
 
 	ModbusSlaveReadDiscreteInputsRequest_Callback cb;
 
+	memset(&cb, 0, sizeof(cb));
+
 	if((rs485.mode != MODE_MODBUS_SLAVE_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
 	   (rs485.modbus_rtu.request.rx_frame[1] != MODBUS_FC_READ_DISCRETE_INPUTS) ||
@@ -3091,6 +3121,8 @@ bool handle_modbus_master_read_discrete_inputs_response_low_level_callback(void)
 	uint16_t rx_expected_byte_count = 0;
 	uint16_t tx_quantity_of_inputs_div_8 = 0;
 	ModbusMasterReadDiscreteInputsResponseLowLevel_Callback cb;
+
+	memset(&cb, 0, sizeof(cb));
 
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
@@ -3222,6 +3254,8 @@ bool handle_modbus_slave_read_input_registers_request_callback(void) {
 
 	ModbusSlaveReadInputRegistersRequest_Callback cb;
 
+	memset(&cb, 0, sizeof(cb));
+
 	if((rs485.mode != MODE_MODBUS_SLAVE_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST) ||
 	   (rs485.modbus_rtu.request.rx_frame[1] != MODBUS_FC_READ_INPUT_REGISTERS) ||
@@ -3280,6 +3314,8 @@ bool handle_modbus_master_read_input_registers_response_low_level_callback(void)
 
 	uint16_t chunks = 0;
 	ModbusMasterReadInputRegistersResponseLowLevel_Callback cb;
+
+	memset(&cb, 0, sizeof(cb));
 
 	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
 	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
