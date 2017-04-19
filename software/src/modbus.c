@@ -29,7 +29,7 @@
 #include "xmc_uart.h"
 #include "xmc_scu.h"
 
-RS485ModbusStreamChunking stream_chunking;
+RS485ModbusStreamChunking modbus_stream_chunking;
 
 void modbus_init(RS485 *rs485) {
 	if(rs485->baudrate > 19200) {
@@ -64,9 +64,9 @@ void modbus_init(RS485 *rs485) {
 	memset(rs485->modbus_rtu.request.rx_frame, 0, rs485->buffer_size_rx);
 	memset(rs485->modbus_rtu.request.tx_frame, 0, RS485_BUFFER_SIZE - rs485->buffer_size_rx);
 	memset(&rs485->modbus_common_error_counters, 0, sizeof(RS485ModbusCommonErrorCounters));
-	memset(&stream_chunking, 0, sizeof(RS485ModbusStreamChunking));
+	memset(&modbus_stream_chunking, 0, sizeof(RS485ModbusStreamChunking));
 
-	rs485->modbus_rtu.request.stream_chunking = &stream_chunking;
+	rs485->modbus_rtu.request.stream_chunking = &modbus_stream_chunking;
 }
 
 void modbus_clear_request(RS485 *rs485) {
@@ -75,7 +75,7 @@ void modbus_clear_request(RS485 *rs485) {
 	ringbuffer_init(&rs485->ringbuffer_rx, rs485->buffer_size_rx, &rs485->buffer[0]);
 	ringbuffer_init(&rs485->ringbuffer_tx, RS485_BUFFER_SIZE-rs485->buffer_size_rx, &rs485->buffer[rs485->buffer_size_rx]);
 
-	memset(&stream_chunking, 0, sizeof(RS485ModbusStreamChunking));
+	memset(&modbus_stream_chunking, 0, sizeof(RS485ModbusStreamChunking));
 
 	rs485->modbus_rtu.request.length = 0;
 	rs485->modbus_rtu.rx_rb_last_length = 0;

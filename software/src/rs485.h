@@ -89,6 +89,13 @@ typedef enum {
 	MODBUS_REQUEST_PROCESS_STATE_SLAVE_PROCESSING_REQUEST = 2,
 } RS485ModbusRequestState;
 
+typedef struct {
+	bool in_progress;
+	uint16_t stream_sent;
+	uint16_t stream_chunk_offset;
+	uint16_t stream_total_length;
+} RS485ReadStreamChunking;
+
 // Modbus specific.
 typedef struct {
 	bool in_progress;

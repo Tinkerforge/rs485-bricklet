@@ -34,8 +34,8 @@ void communication_tick(void);
 void communication_init(void);
 
 // Function and callback IDs and structs
-#define FID_WRITE 1
-#define FID_READ 2
+#define FID_WRITE_LOW_LEVEL 1
+#define FID_READ_LOW_LEVEL 2
 #define FID_ENABLE_READ_CALLBACK 3
 #define FID_DISABLE_READ_CALLBACK 4
 #define FID_IS_READ_CALLBACK_ENABLED 5
@@ -81,7 +81,7 @@ void communication_init(void);
 #define FID_MODBUS_MASTER_READ_INPUT_REGISTERS 40
 
 // Callbacks.
-#define FID_CALLBACK_READ 41
+#define FID_CALLBACK_READ_LOW_LEVEL 41
 #define FID_CALLBACK_ERROR_COUNT 42
 
 // Modbus specific.
@@ -119,24 +119,27 @@ typedef enum {
 
 typedef struct {
 	TFPMessageHeader header;
-	char message[60];
-	uint8_t length;
-} __attribute__((__packed__)) Write;
+	uint16_t stream_total_length;
+	uint16_t stream_chunk_offset;
+	uint8_t stream_chunk_data[59];
+} __attribute__((__packed__)) WriteLowLevel;
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t written;
-} __attribute__((__packed__)) Write_Response;
+	uint8_t stream_chunk_written;
+} __attribute__((__packed__)) WriteLowLevel_Response;
 
 typedef struct {
 	TFPMessageHeader header;
-} __attribute__((__packed__)) Read;
+	uint16_t length;
+} __attribute__((__packed__)) ReadLowLevel;
 
 typedef struct {
 	TFPMessageHeader header;
-	char message[60];
-	uint8_t length;
-} __attribute__((__packed__)) Read_Response;
+	uint16_t stream_total_length;
+	uint16_t stream_chunk_offset;
+	char stream_chunk_data[60];
+} __attribute__((__packed__)) ReadLowLevel_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -291,9 +294,10 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	char message[60];
-	uint8_t length;
-} __attribute__((__packed__)) Read_Callback;
+	uint16_t stream_total_length;
+	uint16_t stream_chunk_offset;
+	char stream_chunk_data[60];
+} __attribute__((__packed__)) ReadLowLevel_Callback;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -600,8 +604,8 @@ typedef struct {
 } __attribute__((__packed__)) ModbusMasterReadInputRegistersResponseLowLevel_Callback;
 
 // Function prototypes
-BootloaderHandleMessageResponse write(const Write *data, Write_Response *response);
-BootloaderHandleMessageResponse read(const Read *data, Read_Response *response);
+BootloaderHandleMessageResponse write_low_level(const WriteLowLevel *data, WriteLowLevel_Response *response);
+BootloaderHandleMessageResponse read_low_level(const ReadLowLevel *data, ReadLowLevel_Response *response);
 BootloaderHandleMessageResponse enable_read_callback(const EnableReadCallback *data);
 BootloaderHandleMessageResponse disable_read_callback(const DisableReadCallback *data);
 BootloaderHandleMessageResponse is_read_callback_enabled(const IsReadCallbackEnabled *data,
@@ -700,7 +704,7 @@ modbus_master_read_input_registers(const ModbusMasterReadInputRegisters *data,
                                    ModbusMasterReadInputRegisters_Response *response);
 
 // Callbacks
-bool handle_read_callback(void);
+bool handle_read_low_level_callback(void);
 bool handle_error_count_callback(void);
 
 // Modbus specific.
@@ -725,7 +729,7 @@ bool handle_modbus_master_read_input_registers_response_low_level_callback(void)
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
 #define COMMUNICATION_CALLBACK_HANDLER_NUM 18
 #define COMMUNICATION_CALLBACK_LIST_INIT \
-	handle_read_callback, \
+	handle_read_low_level_callback, \
 	handle_error_count_callback, \
 	handle_modbus_slave_read_coils_request_callback, \
 	handle_modbus_master_read_coils_response_low_level_callback, \
