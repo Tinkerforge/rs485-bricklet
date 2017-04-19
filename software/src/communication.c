@@ -37,8 +37,6 @@
 #include "xmc_usic.h"
 #include "xmc_uart.h"
 
-#define MESSAGE_LENGTH 60
-
 extern RS485 rs485;
 extern RS485ModbusStreamChunking modbus_stream_chunking;
 
@@ -2020,34 +2018,33 @@ bool handle_read_low_level_callback(void) {
 			last_time = system_timer_get_ms();
 		}
 		// We send a read callback if there is data in the buffer and it hasn't changed
-		// for at least two bytes worth of time or if there are 60 or more bytes in the buffer
-		if((used > 0 && no_change && time_elapsed) || used >= 60) {
+		// for at least two bytes worth of time or if there are sizeof(cb.stream_chunk_data) or more bytes in the buffer
+		if((used > 0 && no_change && time_elapsed) || used >= sizeof(cb.stream_chunk_data)) {
 			tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(ReadLowLevel_Callback), FID_CALLBACK_READ_LOW_LEVEL);
 			// Read bytes available in ringbuffer
 			uint8_t read = 0;
-
-			for(; read < MESSAGE_LENGTH; read++) {
-				if(!ringbuffer_get(&rs485.ringbuffer_rx, (uint8_t *)&cb.stream_chunk_data[read])) {
-					break;
-				}
-			}
-
 			cb.stream_chunk_offset = 0;
-			cb.stream_total_length = read;
 
-			// Fill rest with 0
-			/*
-			for(uint8_t i = read; i < MESSAGE_LENGTH; i++) {
-				cb.stream_chunk_data[read] = 0;
+			if(used >= sizeof(cb.stream_chunk_data)) {
+				for(; read < sizeof(cb.stream_chunk_data); read++) {
+					ringbuffer_get(&rs485.ringbuffer_rx, (uint8_t *)&cb.stream_chunk_data[read]);
+				}
+
+				cb.stream_total_length = sizeof(cb.stream_chunk_data);
 			}
-			*/
+			else {
+				for(; read < used; read++) {
+					ringbuffer_get(&rs485.ringbuffer_rx, (uint8_t *)&cb.stream_chunk_data[read]);
+				}
 
-			//cb.length = read;
+				cb.stream_total_length = read;
+			}
 
 			is_buffered = true;
 		}
 		else {
 			is_buffered = false;
+
 			return false;
 		}
 	}
