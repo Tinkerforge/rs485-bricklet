@@ -468,7 +468,6 @@ typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
 	uint16_t starting_address;
-	uint16_t count;
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint8_t stream_chunk_data[54];
@@ -504,7 +503,6 @@ typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
 	uint16_t starting_address;
-	uint16_t count;
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
 	uint16_t stream_chunk_data[27];

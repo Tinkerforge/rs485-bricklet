@@ -1358,7 +1358,7 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
-	if(data->count < 1 || data->count > 1968) {
+	if(data->stream_total_length < 1 || data->stream_total_length > 1968) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
@@ -1369,7 +1369,7 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 		uint16_t count;
 
 		starting_address = data->starting_address;
-		count = data->count;
+		count = data->stream_total_length;
 
 		if(starting_address > 0) {
 			starting_address--;
@@ -1513,7 +1513,7 @@ modbus_master_write_multiple_registers_low_level(const ModbusMasterWriteMultiple
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
-	if(data->count < 1 || data->count > 123) {
+	if(data->stream_total_length < 1 || data->stream_total_length > 123) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
@@ -1525,7 +1525,7 @@ modbus_master_write_multiple_registers_low_level(const ModbusMasterWriteMultiple
 		uint8_t byte_count;
 
 		starting_address = data->starting_address;
-		count = data->count;
+		count = data->stream_total_length;
 
 		if(starting_address > 0) {
 			starting_address--;
