@@ -235,7 +235,8 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
 			// Check if master request has timedout.
 			if((rs485->modbus_rtu.request.state == MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) &&
 			   system_timer_is_time_elapsed_ms(rs485->modbus_rtu.request.time_ref_master_request_timeout,
-			                                   rs485->modbus_master_request_timeout)) {
+			                                   rs485->modbus_master_request_timeout) &&
+			   !rs485->modbus_rtu.request.master_request_timed_out) {
 			  rs485->modbus_common_error_counters.timeout++;
 
 				/*
@@ -266,31 +267,51 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
 				 (ringbuffer_get_used(&rs485->ringbuffer_rx) > 0) &&
 				 (ringbuffer_get_used(&rs485->ringbuffer_rx) == rs485->modbus_rtu.rx_rb_last_length)) {
 				if(rs485->modbus_rtu.request.stream_chunking->in_progress) {
-					// In process of streaming chunks of slave response ot the user.
+					// In process of streaming chunks of slave response to the user.
 					return;
 				}
 
-				if(ringbuffer_get_used(&rs485->ringbuffer_rx) > RS485_MODBUS_RTU_FRAME_SIZE_MAX) {
+				if(ringbuffer_get_used(&rs485->ringbuffer_rx) > RS485_MODBUS_RTU_FRAME_SIZE_MAX &&
+				   !rs485->modbus_rtu.request.master_request_timed_out) {
 					// Frame is too big.
+					rs485->modbus_common_error_counters.timeout++;
 					rs485->modbus_common_error_counters.frame_too_big++;
 
-					modbus_clear_request(rs485);
+					rs485->modbus_rtu.request.cb_invoke = true;
+					rs485->modbus_rtu.request.master_request_timed_out = true;
 
 					return;
 				}
 
-				if(!modbus_check_frame_checksum(rs485)) {
+				if(!modbus_check_frame_checksum(rs485) &&
+				   !rs485->modbus_rtu.request.master_request_timed_out) {
 					// Frame checksum mismatch.
+					rs485->modbus_common_error_counters.timeout++;
 					rs485->modbus_common_error_counters.checksum++;
 
-					modbus_clear_request(rs485);
+					/*
+					 * Since the master is waiting for a valid response from the slave and
+					 * we received mangled response hence this is handled by generating a
+					 * request timeout callback.
+					 */
+					rs485->modbus_rtu.request.cb_invoke = true;
+					rs485->modbus_rtu.request.master_request_timed_out = true;
 
 					return;
 				}
 
-				if(!modbus_master_check_slave_response(rs485)) {
+				if(!modbus_master_check_slave_response(rs485) &&
+				   !rs485->modbus_rtu.request.master_request_timed_out) {
 					// The frame is not from expected slave.
-					modbus_clear_request(rs485);
+					rs485->modbus_common_error_counters.timeout++;
+
+					/*
+					 * Since the master is waiting for a valid response from the slave and
+					 * we received mangled response hence this is handled by generating a
+					 * request timeout callback.
+					 */
+					rs485->modbus_rtu.request.cb_invoke = true;
+					rs485->modbus_rtu.request.master_request_timed_out = true;
 
 					return;
 				}
