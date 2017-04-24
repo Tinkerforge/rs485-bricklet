@@ -78,15 +78,11 @@ void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
 
 			// In the case of an overrun we read the byte and throw it away.
 			volatile uint8_t __attribute__((unused)) _  = RS485_USIC->OUTR;
-
-			TIMER_RESET();
-
-			return;
 		}
-
-		rs485.ringbuffer_rx.buffer[rs485.ringbuffer_rx.end] = RS485_USIC->OUTR;
-
-		rs485.ringbuffer_rx.end = new_end;
+		else {
+			rs485.ringbuffer_rx.buffer[rs485.ringbuffer_rx.end] = RS485_USIC->OUTR;
+			rs485.ringbuffer_rx.end = new_end;
+		}
 	}
 
 	TIMER_RESET();
