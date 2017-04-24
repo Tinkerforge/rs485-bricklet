@@ -458,6 +458,10 @@ BootloaderHandleMessageResponse read_low_level(const ReadLowLevel *data,
                                                ReadLowLevel_Response *response) {
 	response->header.length = sizeof(ReadLowLevel_Response);
 
+	response->stream_total_length = 0;
+	response->stream_chunk_offset = 0;
+	memset(response->stream_chunk_data, 0, sizeof(response->stream_chunk_data));
+
 	// This function operates only in raw RS485 mode when read callback is disabled.
 	if(rs485.mode != MODE_RS485 || rs485.read_callback_enabled) {
 		reset_rs485_read_stream();
