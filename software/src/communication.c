@@ -456,6 +456,7 @@ BootloaderHandleMessageResponse write_low_level(const WriteLowLevel *data, Write
 
 BootloaderHandleMessageResponse read_low_level(const ReadLowLevel *data,
                                                ReadLowLevel_Response *response) {
+	uint32_t rb_available = 0;
 	response->header.length = sizeof(ReadLowLevel_Response);
 
 	response->stream_total_length = 0;
@@ -469,7 +470,9 @@ BootloaderHandleMessageResponse read_low_level(const ReadLowLevel *data,
 		return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 	}
 
-	if(ringbuffer_get_used(&rs485.ringbuffer_rx) == 0) {
+	rb_available = ringbuffer_get_used(&rs485.ringbuffer_rx);
+
+	if(rb_available == 0) {
 		// There are no data available at the moment in the RX buffer.
 		reset_rs485_read_stream();
 
@@ -480,12 +483,12 @@ BootloaderHandleMessageResponse read_low_level(const ReadLowLevel *data,
 		// Start of new stream.
 		rs485_read_stream_chunking.in_progress = true;
 
-		if(data->length >= ringbuffer_get_used(&rs485.ringbuffer_rx)) {
+		if(data->length >= rb_available) {
 			/*
 			 * Requested total data is more than currently available data.
 			 * So create a stream to transfer all of the currently available data.
 			 */
-			rs485_read_stream_chunking.stream_total_length = ringbuffer_get_used(&rs485.ringbuffer_rx);
+			rs485_read_stream_chunking.stream_total_length = rb_available;
 		}
 		else {
 			rs485_read_stream_chunking.stream_total_length = data->length;
@@ -496,9 +499,9 @@ BootloaderHandleMessageResponse read_low_level(const ReadLowLevel *data,
 		response->stream_chunk_offset = rs485_read_stream_chunking.stream_chunk_offset;
 		response->stream_total_length = rs485_read_stream_chunking.stream_total_length;
 
-		if(data->length <= sizeof(response->stream_chunk_data)) {
-			// Requested data fits in a single chunk.
-			for(uint8_t i = 0; i < data->length; i++) {
+		if(response->stream_total_length <= sizeof(response->stream_chunk_data)) {
+			// Available data fits in a single chunk.
+			for(uint8_t i = 0; i < response->stream_total_length; i++) {
 				ringbuffer_get(&rs485.ringbuffer_rx, (uint8_t *)&response->stream_chunk_data[i]);
 			}
 
