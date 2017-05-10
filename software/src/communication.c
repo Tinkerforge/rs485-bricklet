@@ -210,9 +210,6 @@ static bool send_stream_chunks(uint8_t function_code, void *cb) {
 			memcpy(&temp1, &rs485.modbus_rtu.request.rx_frame[2], 2);
 			_cb->starting_address = NTOHS(temp1);
 
-			memcpy(&temp1, &rs485.modbus_rtu.request.rx_frame[4], 2);
-			_cb->count = NTOHS(temp1);
-
 			/*
 			 * While streaming with bool array type, override the callback's stream
 			 * total length with the bool array version of the stream total length.
@@ -262,9 +259,6 @@ static bool send_stream_chunks(uint8_t function_code, void *cb) {
 
 			memcpy(&temp1, &rs485.modbus_rtu.request.rx_frame[2], 2);
 			_cb->starting_address = NTOHS(temp1);
-
-			memcpy(&temp1, &rs485.modbus_rtu.request.rx_frame[4], 2);
-			_cb->count = NTOHS(temp1);
 
 			bootloader_spitfp_send_ack_and_message(&bootloader_status,
 			                                       (uint8_t *)_cb,
@@ -2734,6 +2728,7 @@ bool handle_modbus_master_write_single_register_response_callback(void) {
 bool handle_modbus_slave_write_multiple_coils_request_low_level_callback(void) {
 	// This callback is processed only in slave mode.
 
+	uint16_t count = 0;
 	uint16_t chunks = 0;
 	uint16_t quantity_of_coils = 0;
 	ModbusSlaveWriteMultipleCoilsRequestLowLevel_Callback cb;
@@ -2747,12 +2742,12 @@ bool handle_modbus_slave_write_multiple_coils_request_low_level_callback(void) {
 		return false;
 	}
 
-	memcpy(&cb.count, &rs485.modbus_rtu.request.rx_frame[4], 2);
+	memcpy(&count, &rs485.modbus_rtu.request.rx_frame[4], 2);
 
 	// Fix endianness (BE->LE).
-	cb.count = NTOHS(cb.count);
+	count = NTOHS(count);
 
-	if(cb.count < 1 || cb.count > 1968) {
+	if(count < 1 || count > 1968) {
 		rs485.modbus_common_error_counters.illegal_data_value++;
 
 		modbus_report_exception(&rs485, rs485.modbus_rtu.request.rx_frame[1], (uint8_t)MODBUS_EC_ILLEGAL_DATA_VALUE);
@@ -2894,6 +2889,7 @@ bool handle_modbus_master_write_multiple_coils_response_callback(void) {
 bool handle_modbus_slave_write_multiple_registers_request_low_level_callback(void) {
 	// This callback is processed only in slave mode.
 
+	uint16_t count = 0;
 	uint16_t chunks = 0;
 	ModbusSlaveWriteMultipleRegistersRequestLowLevel_Callback cb;
 
@@ -2906,12 +2902,12 @@ bool handle_modbus_slave_write_multiple_registers_request_low_level_callback(voi
 		return false;
 	}
 
-	memcpy(&cb.count, &rs485.modbus_rtu.request.rx_frame[4], 2);
+	memcpy(&count, &rs485.modbus_rtu.request.rx_frame[4], 2);
 
 	// Fix endianness (BE->LE).
-	cb.count = NTOHS(cb.count);
+	count = NTOHS(count);
 
-	if(cb.count < 1 || cb.count > 123) {
+	if(count < 1 || count > 123) {
 		rs485.modbus_common_error_counters.illegal_data_value++;
 
 		modbus_report_exception(&rs485, rs485.modbus_rtu.request.rx_frame[1], (uint8_t)MODBUS_EC_ILLEGAL_DATA_VALUE);
