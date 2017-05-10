@@ -911,18 +911,18 @@ modbus_master_read_coils(const ModbusMasterReadCoils *data,
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
+	if(data->starting_address < 1 || data->starting_address > 65536) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
 	modbus_init_new_request(&rs485,
 	                        MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE,
 	                        ((sizeof(ModbusMasterReadCoils) - sizeof(TFPMessageHeader)) + 3));
 
 	response->request_id = rs485.modbus_rtu.request.id;
 
-	starting_address = data->starting_address;
+	starting_address = data->starting_address - 1;
 	count = data->count;
-
-	if(starting_address > 0) {
-		starting_address--;
-	}
 
 	// Fix endianness (LE->BE).
 	starting_address = HTONS(starting_address);
@@ -1085,18 +1085,18 @@ modbus_master_read_holding_registers(const ModbusMasterReadHoldingRegisters *dat
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
+	if(data->starting_address < 1 || data->starting_address > 65536) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
 	modbus_init_new_request(&rs485,
 	                        MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE,
 	                        ((sizeof(ModbusMasterReadHoldingRegisters) - sizeof(TFPMessageHeader)) + 3));
 
 	response->request_id = rs485.modbus_rtu.request.id;
 
-	starting_address = data->starting_address;
+	starting_address = data->starting_address - 1;
 	count = data->count;
-
-	if(starting_address > 0) {
-		starting_address--;
-	}
 
 	// Fix endianness (LE->BE).
 	starting_address = HTONS(starting_address);
@@ -1173,18 +1173,18 @@ modbus_master_write_single_coil(const ModbusMasterWriteSingleCoil *data,
 		return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 	}
 
+	if(data->coil_address < 1 || data->coil_address > 65536) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
 	modbus_init_new_request(&rs485,
 	                        MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE,
 	                        ((sizeof(ModbusMasterWriteSingleCoil) - sizeof(TFPMessageHeader)) + 3 + 1));
 
 	response->request_id = rs485.modbus_rtu.request.id;
 
-	coil_address = data->coil_address;
+	coil_address = data->coil_address - 1;
 	coil_value = data->coil_value ? 0xFF00 : 0x0000;
-
-	if(coil_address > 0) {
-		coil_address--;
-	}
 
 	// Fix endianness (LE->BE).
 	coil_address = HTONS(coil_address);
@@ -1261,18 +1261,18 @@ modbus_master_write_single_register(const ModbusMasterWriteSingleRegister *data,
 		return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 	}
 
+	if(data->register_address < 1 || data->register_address > 65536) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
 	modbus_init_new_request(&rs485,
 	                        MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE,
 	                        ((sizeof(ModbusMasterWriteSingleRegister) - sizeof(TFPMessageHeader)) + 3));
 
 	response->request_id = rs485.modbus_rtu.request.id;
 
-	register_address = data->register_address;
+	register_address = data->register_address - 1;
 	register_value = data->register_value;
-
-	if(register_address > 0) {
-		register_address--;
-	}
 
 	// Fix endianness (LE->BE).
 	register_address = HTONS(register_address);
@@ -1358,18 +1358,18 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
+	if(data->starting_address < 1 || data->starting_address > 65536) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
 	// The first chunk.
 	if(stream_chunk_offset_bytes == 0) {
 		uint8_t fc = MODBUS_FC_WRITE_MULTIPLE_COILS;
 		uint16_t starting_address;
 		uint16_t count;
 
-		starting_address = data->starting_address;
+		starting_address = data->starting_address -1;
 		count = data->stream_total_length;
-
-		if(starting_address > 0) {
-			starting_address--;
-		}
 
 		// Fix endianness (LE->BE).
 		starting_address = HTONS(starting_address);
@@ -1513,6 +1513,10 @@ modbus_master_write_multiple_registers_low_level(const ModbusMasterWriteMultiple
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
+	if(data->starting_address < 1 || data->starting_address > 65536) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
 	// The first chunk.
 	if(data->stream_chunk_offset == 0) {
 		uint8_t fc = MODBUS_FC_WRITE_MULTIPLE_REGISTERS;
@@ -1520,12 +1524,8 @@ modbus_master_write_multiple_registers_low_level(const ModbusMasterWriteMultiple
 		uint16_t count;
 		uint8_t byte_count;
 
-		starting_address = data->starting_address;
+		starting_address = data->starting_address - 1;
 		count = data->stream_total_length;
-
-		if(starting_address > 0) {
-			starting_address--;
-		}
 
 		// Fix endianness (LE->BE).
 		starting_address = HTONS(starting_address);
@@ -1778,18 +1778,18 @@ modbus_master_read_discrete_inputs(const ModbusMasterReadDiscreteInputs *data,
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
+	if(data->starting_address < 1 || data->starting_address > 65536) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
 	modbus_init_new_request(&rs485,
 	                        MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE,
 	                        ((sizeof(ModbusMasterReadDiscreteInputs) - sizeof(TFPMessageHeader)) + 3));
 
 	response->request_id = rs485.modbus_rtu.request.id;
 
-	starting_address = data->starting_address;
+	starting_address = data->starting_address - 1;
 	count = data->count;
-
-	if(starting_address > 0) {
-		starting_address--;
-	}
 
 	// Fix endianness (LE->BE).
 	starting_address = HTONS(starting_address);
@@ -1946,6 +1946,10 @@ modbus_master_read_input_registers(const ModbusMasterReadInputRegisters *data,
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
+	if(data->starting_address < 1 || data->starting_address > 65536) {
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
+
 	if(rs485.mode != MODE_MODBUS_MASTER_RTU ||
 	   rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_READY ||
 	   rs485.modbus_rtu.state_wire != MODBUS_RTU_WIRE_STATE_IDLE) {
@@ -1958,12 +1962,8 @@ modbus_master_read_input_registers(const ModbusMasterReadInputRegisters *data,
 
 	response->request_id = rs485.modbus_rtu.request.id;
 
-	starting_address = data->starting_address;
+	starting_address = data->starting_address - 1;
 	count = data->count;
-
-	if(starting_address > 0) {
-		starting_address--;
-	}
 
 	// Fix endianness (LE->BE).
 	starting_address = HTONS(starting_address);
@@ -2151,6 +2151,7 @@ bool handle_modbus_slave_read_coils_request_callback(void) {
 
 		// Fix endianness (BE->LE).
 		cb.starting_address = NTOHS(cb.starting_address);
+		cb.starting_address++;
 
 		bootloader_spitfp_send_ack_and_message(&bootloader_status,
 		                                       (uint8_t *)&cb,
@@ -2346,6 +2347,7 @@ bool handle_modbus_slave_read_holding_registers_request_callback(void) {
 
 		// Fix endianness (BE->LE).
 		cb.starting_address = NTOHS(cb.starting_address);
+		cb.starting_address++;
 
 		bootloader_spitfp_send_ack_and_message(&bootloader_status,
 		                                       (uint8_t *)&cb,
@@ -2762,6 +2764,7 @@ bool handle_modbus_slave_write_multiple_coils_request_low_level_callback(void) {
 
 	// Fix endianness (BE->LE).
 	cb.starting_address = NTOHS(cb.starting_address);
+	cb.starting_address++;
 	quantity_of_coils = NTOHS(quantity_of_coils);
 
 	cb.request_id = rs485.modbus_rtu.request.id;
@@ -2921,6 +2924,7 @@ bool handle_modbus_slave_write_multiple_registers_request_low_level_callback(voi
 
 	// Fix endianness (BE->LE).
 	cb.starting_address = NTOHS(cb.starting_address);
+	cb.starting_address++;
 
 	cb.request_id = rs485.modbus_rtu.request.id;
 
@@ -3095,6 +3099,7 @@ bool handle_modbus_slave_read_discrete_inputs_request_callback(void) {
 
 		// Fix endianness (BE->LE).
 		cb.starting_address = NTOHS(cb.starting_address);
+		cb.starting_address++;
 
 		bootloader_spitfp_send_ack_and_message(&bootloader_status,
 		                                       (uint8_t *)&cb,
@@ -3291,6 +3296,7 @@ bool handle_modbus_slave_read_input_registers_request_callback(void) {
 
 		// Fix endianness (BE->LE).
 		cb.starting_address = NTOHS(cb.starting_address);
+		cb.starting_address++;
 
 		bootloader_spitfp_send_ack_and_message(&bootloader_status,
 		                                       (uint8_t *)&cb,

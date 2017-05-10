@@ -338,7 +338,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
-	uint16_t starting_address;
+	uint32_t starting_address;
 	uint16_t count;
 } __attribute__((__packed__)) ModbusMasterReadCoils;
 
@@ -350,7 +350,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-	uint16_t starting_address;
+	uint32_t starting_address;
 	uint16_t count;
 } __attribute__((__packed__)) ModbusSlaveReadCoilsRequest_Callback;
 
@@ -374,7 +374,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
-	uint16_t starting_address;
+	uint32_t starting_address;
 	uint16_t count;
 } __attribute__((__packed__)) ModbusMasterReadHoldingRegisters;
 
@@ -386,7 +386,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-	uint16_t starting_address;
+	uint32_t starting_address;
 	uint16_t count;
 } __attribute__((__packed__)) ModbusSlaveReadHoldingRegistersRequest_Callback;
 
@@ -402,7 +402,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
-	uint16_t coil_address;
+	uint32_t coil_address;
 	bool coil_value;
 } __attribute__((__packed__)) ModbusMasterWriteSingleCoil;
 
@@ -419,7 +419,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-	uint16_t coil_address;
+	uint32_t coil_address;
 	bool coil_value;
 } __attribute__((__packed__)) ModbusSlaveWriteSingleCoilRequest_Callback;
 
@@ -432,7 +432,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
-	uint16_t register_address;
+	uint32_t register_address;
 	uint16_t register_value;
 } __attribute__((__packed__)) ModbusMasterWriteSingleRegister;
 
@@ -449,7 +449,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-	uint16_t register_address;
+	uint32_t register_address;
 	uint16_t register_value;
 } __attribute__((__packed__)) ModbusSlaveWriteSingleRegisterRequest_Callback;
 
@@ -467,10 +467,10 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
-	uint16_t starting_address;
+	uint32_t starting_address;
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
-	uint8_t stream_chunk_data[57];
+	uint8_t stream_chunk_data[55];
 } __attribute__((__packed__)) ModbusMasterWriteMultipleCoilsLowLevel;
 
 typedef struct {
@@ -481,10 +481,10 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-	uint16_t starting_address;
+	uint32_t starting_address;
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
-	uint8_t stream_chunk_data[57];
+	uint8_t stream_chunk_data[55];
 } __attribute__((__packed__)) ModbusSlaveWriteMultipleCoilsRequestLowLevel_Callback;
 
 typedef struct {
@@ -501,10 +501,10 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
-	uint16_t starting_address;
+	uint32_t starting_address;
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
-	uint16_t stream_chunk_data[28];
+	uint16_t stream_chunk_data[27];
 } __attribute__((__packed__)) ModbusMasterWriteMultipleRegistersLowLevel;
 
 typedef struct {
@@ -515,10 +515,10 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-	uint16_t starting_address;
+	uint32_t starting_address;
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
-	uint16_t stream_chunk_data[28];
+	uint16_t stream_chunk_data[27];
 } __attribute__((__packed__)) ModbusSlaveWriteMultipleRegistersRequestLowLevel_Callback;
 
 typedef struct {
@@ -538,7 +538,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
-	uint16_t starting_address;
+	uint32_t starting_address;
 	uint16_t count;
 } __attribute__((__packed__)) ModbusMasterReadDiscreteInputs;
 
@@ -550,7 +550,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-	uint16_t starting_address;
+	uint32_t starting_address;
 	uint16_t count;
 } __attribute__((__packed__)) ModbusSlaveReadDiscreteInputsRequest_Callback;
 
@@ -574,7 +574,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t slave_address;
-	uint16_t starting_address;
+	uint32_t starting_address;
 	uint16_t count;
 } __attribute__((__packed__)) ModbusMasterReadInputRegisters;
 
@@ -586,7 +586,7 @@ typedef struct {
 typedef struct {
 	TFPMessageHeader header;
 	uint8_t request_id;
-	uint16_t starting_address;
+	uint32_t starting_address;
 	uint16_t count;
 } __attribute__((__packed__)) ModbusSlaveReadInputRegistersRequest_Callback;
 
