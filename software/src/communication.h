@@ -121,7 +121,7 @@ typedef struct {
 	TFPMessageHeader header;
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
-	uint8_t stream_chunk_data[59];
+	uint8_t stream_chunk_data[60];
 } __attribute__((__packed__)) WriteLowLevel;
 
 typedef struct {
@@ -470,7 +470,7 @@ typedef struct {
 	uint16_t starting_address;
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
-	uint8_t stream_chunk_data[54];
+	uint8_t stream_chunk_data[57];
 } __attribute__((__packed__)) ModbusMasterWriteMultipleCoilsLowLevel;
 
 typedef struct {
@@ -484,7 +484,7 @@ typedef struct {
 	uint16_t starting_address;
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
-	uint8_t stream_chunk_data[55];
+	uint8_t stream_chunk_data[57];
 } __attribute__((__packed__)) ModbusSlaveWriteMultipleCoilsRequestLowLevel_Callback;
 
 typedef struct {
@@ -504,7 +504,7 @@ typedef struct {
 	uint16_t starting_address;
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
-	uint16_t stream_chunk_data[27];
+	uint16_t stream_chunk_data[28];
 } __attribute__((__packed__)) ModbusMasterWriteMultipleRegistersLowLevel;
 
 typedef struct {
@@ -518,7 +518,7 @@ typedef struct {
 	uint16_t starting_address;
 	uint16_t stream_total_length;
 	uint16_t stream_chunk_offset;
-	uint16_t stream_chunk_data[27];
+	uint16_t stream_chunk_data[28];
 } __attribute__((__packed__)) ModbusSlaveWriteMultipleRegistersRequestLowLevel_Callback;
 
 typedef struct {
