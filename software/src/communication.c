@@ -158,18 +158,15 @@ static bool send_stream_chunks(uint8_t function_code, void *cb) {
 		if(rs485.modbus_rtu.request.stream_chunking->chunk_current < rs485.modbus_rtu.request.stream_chunking->chunk_total) {
 			_cb->stream_total_length = rs485.modbus_rtu.request.stream_chunking->stream_total;
 			_cb->stream_chunk_offset = rs485.modbus_rtu.request.stream_chunking->chunk_current * (sizeof(_cb->stream_chunk_data) / 2);
+			uint16_t *_data = (uint16_t *)&rs485.modbus_rtu.request.rx_frame[(_cb->stream_chunk_offset * 2) + 3];
 
 			if((_cb->stream_chunk_offset == 0) ||
 			   ((_cb->stream_total_length - _cb->stream_chunk_offset) > (sizeof(_cb->stream_chunk_data) / 2))) {
-				uint16_t *_data = (uint16_t *)&rs485.modbus_rtu.request.rx_frame[(_cb->stream_chunk_offset * 2) + 3];
-
 				for(uint16_t i = 0; i < (sizeof(_cb->stream_chunk_data) / 2); i++) {
 					_cb->stream_chunk_data[i] = NTOHS(_data[i]);
 				}
 			}
 			else {
-				uint16_t *_data = (uint16_t *)&rs485.modbus_rtu.request.rx_frame[(_cb->stream_chunk_offset * 2) + 3];
-
 				for(uint16_t i = 0; i < _cb->stream_total_length - _cb->stream_chunk_offset; i++) {
 					_cb->stream_chunk_data[i] = NTOHS(_data[i]);
 				}
@@ -247,17 +244,18 @@ static bool send_stream_chunks(uint8_t function_code, void *cb) {
 		if(rs485.modbus_rtu.request.stream_chunking->chunk_current < rs485.modbus_rtu.request.stream_chunking->chunk_total) {
 			_cb->stream_total_length = rs485.modbus_rtu.request.stream_chunking->stream_total;
 			_cb->stream_chunk_offset = rs485.modbus_rtu.request.stream_chunking->chunk_current * (sizeof(_cb->stream_chunk_data) / 2);
+			uint16_t *_data = (uint16_t *)&rs485.modbus_rtu.request.rx_frame[(_cb->stream_chunk_offset * 2) + 7];
 
 			if((_cb->stream_chunk_offset == 0) ||
 			   ((_cb->stream_total_length - _cb->stream_chunk_offset) > (sizeof(_cb->stream_chunk_data) / 2))) {
-				memcpy(&_cb->stream_chunk_data,
-				       &rs485.modbus_rtu.request.rx_frame[(_cb->stream_chunk_offset * 2) + 7],
-				       sizeof(_cb->stream_chunk_data));
+				for(uint16_t i = 0; i < sizeof(_cb->stream_chunk_data) / 2; i++) {
+					_cb->stream_chunk_data[i] = NTOHS(_data[i]);
+				}
 			}
 			else {
-				memcpy(&_cb->stream_chunk_data,
-				       &rs485.modbus_rtu.request.rx_frame[(_cb->stream_chunk_offset * 2) + 7],
-				       (_cb->stream_total_length - _cb->stream_chunk_offset) * 2);
+				for(uint16_t i = 0; i < (_cb->stream_total_length - _cb->stream_chunk_offset); i++) {
+					_cb->stream_chunk_data[i] = NTOHS(_data[i]);
+				}
 			}
 
 			_cb->request_id = rs485.modbus_rtu.request.id;
@@ -332,18 +330,15 @@ static bool send_stream_chunks(uint8_t function_code, void *cb) {
 		if(rs485.modbus_rtu.request.stream_chunking->chunk_current < rs485.modbus_rtu.request.stream_chunking->chunk_total) {
 			_cb->stream_total_length = rs485.modbus_rtu.request.stream_chunking->stream_total;
 			_cb->stream_chunk_offset = rs485.modbus_rtu.request.stream_chunking->chunk_current * (sizeof(_cb->stream_chunk_data) / 2);
+			uint16_t *_data = (uint16_t *)&rs485.modbus_rtu.request.rx_frame[(_cb->stream_chunk_offset * 2) + 3];
 
 			if((_cb->stream_chunk_offset == 0) ||
 			   ((_cb->stream_total_length - _cb->stream_chunk_offset) > (sizeof(_cb->stream_chunk_data) / 2))) {
-				uint16_t *_data = (uint16_t *)&rs485.modbus_rtu.request.rx_frame[(_cb->stream_chunk_offset * 2) + 3];
-
 				for(uint16_t i = 0; i < (sizeof(_cb->stream_chunk_data) / 2); i++) {
 					_cb->stream_chunk_data[i] = NTOHS(_data[i]);
 				}
 			}
 			else {
-				uint16_t *_data = (uint16_t *)&rs485.modbus_rtu.request.rx_frame[(_cb->stream_chunk_offset * 2) + 3];
-
 				for(uint16_t i = 0; i < _cb->stream_total_length - _cb->stream_chunk_offset; i++) {
 					_cb->stream_chunk_data[i] = NTOHS(_data[i]);
 				}
