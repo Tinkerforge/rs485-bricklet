@@ -47,11 +47,25 @@ RS485ReadStreamChunking rs485_read_stream_chunking = {
 	.stream_total_length = 0,
 };
 
+RS485ReadStreamChunking rs485_read_cb_stream_chunking = {
+	.in_progress = false,
+	.stream_sent = 0,
+	.stream_chunk_offset = 0,
+	.stream_total_length = 0,
+};
+
 static void reset_rs485_read_stream(void) {
 	rs485_read_stream_chunking.in_progress = false;
 	rs485_read_stream_chunking.stream_sent = 0;
 	rs485_read_stream_chunking.stream_chunk_offset = 0;
 	rs485_read_stream_chunking.stream_total_length = 0;
+}
+
+static void reset_rs485_read_cb_stream(void) {
+	rs485_read_cb_stream_chunking.in_progress = false;
+	rs485_read_cb_stream_chunking.stream_sent = 0;
+	rs485_read_cb_stream_chunking.stream_chunk_offset = 0;
+	rs485_read_cb_stream_chunking.stream_total_length = 0;
 }
 
 static bool modbus_slave_check_current_request(const uint8_t request_id) {
@@ -445,7 +459,7 @@ BootloaderHandleMessageResponse write_low_level(const WriteLowLevel *data, Write
 
 BootloaderHandleMessageResponse read_low_level(const ReadLowLevel *data,
                                                ReadLowLevel_Response *response) {
-	uint32_t rb_available = 0;
+	uint16_t rb_available = 0;
 	response->header.length = sizeof(ReadLowLevel_Response);
 
 	response->stream_total_length = 0;
@@ -1988,71 +2002,80 @@ modbus_master_read_input_registers(const ModbusMasterReadInputRegisters *data,
 }
 
 bool handle_read_low_level_callback(void) {
-	static bool is_buffered = false;
+	static uint16_t used = 0;
 	static ReadLowLevel_Callback cb;
-
-	static uint32_t last_used = 0;
-	static uint32_t last_time = 0;
+	static uint16_t count_rb_read = 0;
 
 	memset(&cb, 0, sizeof(cb));
 
+	// This function operates only in raw RS485 mode.
 	if(rs485.mode != MODE_RS485 || !rs485.read_callback_enabled) {
+		reset_rs485_read_cb_stream();
+
 		return false;
 	}
 
-	if(!is_buffered) {
-		const uint32_t used         = ringbuffer_get_used(&rs485.ringbuffer_rx);
-		const uint32_t ms_per_2byte = (2*8000/rs485.baudrate) + 1;
-		const bool     time_elapsed = system_timer_is_time_elapsed_ms(last_time, ms_per_2byte);
-		const bool     no_change    = (last_used == used);
+	used = ringbuffer_get_used(&rs485.ringbuffer_rx);
 
-		last_used = used;
-
-		// We update the time if the buffer is empty or the time has elapsed
-		// the buffer fill level changed
-		if(used == 0 || time_elapsed || !no_change) {
-			last_time = system_timer_get_ms();
-		}
-		// We send a read callback if there is data in the buffer and it hasn't changed
-		// for at least two bytes worth of time or if there are sizeof(cb.stream_chunk_data) or more bytes in the buffer
-		if((used > 0 && no_change && time_elapsed) || used >= sizeof(cb.stream_chunk_data)) {
-			tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(ReadLowLevel_Callback), FID_CALLBACK_READ_LOW_LEVEL);
-			// Read bytes available in ringbuffer
-			uint8_t read = 0;
-			cb.stream_chunk_offset = 0;
-
-			if(used >= sizeof(cb.stream_chunk_data)) {
-				for(; read < sizeof(cb.stream_chunk_data); read++) {
-					ringbuffer_get(&rs485.ringbuffer_rx, (uint8_t *)&cb.stream_chunk_data[read]);
-				}
-
-				cb.stream_total_length = sizeof(cb.stream_chunk_data);
-			}
-			else {
-				for(; read < used; read++) {
-					ringbuffer_get(&rs485.ringbuffer_rx, (uint8_t *)&cb.stream_chunk_data[read]);
-				}
-
-				cb.stream_total_length = read;
-			}
-
-			is_buffered = true;
-		}
-		else {
-			is_buffered = false;
-
+	if(used > 0 || rs485_read_cb_stream_chunking.in_progress) {
+		if(!bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
 			return false;
 		}
-	}
 
-	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
-		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t *)&cb, sizeof(ReadLowLevel_Callback));
-		is_buffered = false;
+		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(ReadLowLevel_Callback), FID_CALLBACK_READ_LOW_LEVEL);
 
-		return true;
-	}
-	else {
-		is_buffered = true;
+		if(!rs485_read_cb_stream_chunking.in_progress) {
+			// Start of new stream.
+			reset_rs485_read_cb_stream();
+
+			cb.stream_chunk_offset = 0;
+			cb.stream_total_length = used;
+			rs485_read_cb_stream_chunking.in_progress = true;
+			rs485_read_cb_stream_chunking.stream_total_length = used;
+
+			if(cb.stream_total_length <= sizeof(cb.stream_chunk_data)) {
+				// Available data fits in a single chunk.
+				reset_rs485_read_cb_stream();
+				count_rb_read = cb.stream_total_length;
+			}
+			else {
+				// Available data requires more than one chunk.
+				count_rb_read = sizeof(cb.stream_chunk_data);
+			}
+		}
+		else {
+			// Handle a stream which is already in progress.
+			cb.stream_chunk_offset = rs485_read_cb_stream_chunking.stream_sent;
+			cb.stream_total_length = rs485_read_cb_stream_chunking.stream_total_length;
+
+			if((rs485_read_cb_stream_chunking.stream_total_length - rs485_read_cb_stream_chunking.stream_sent) >= \
+				sizeof(cb.stream_chunk_data)) {
+					count_rb_read = sizeof(cb.stream_chunk_data);
+			}
+			else {
+				count_rb_read = rs485_read_cb_stream_chunking.stream_total_length - rs485_read_cb_stream_chunking.stream_sent;
+			}
+
+			if(rs485_read_cb_stream_chunking.stream_total_length == rs485_read_cb_stream_chunking.stream_sent + count_rb_read) {
+				// Last chunk of the stream.
+				reset_rs485_read_cb_stream();
+			}
+		}
+
+		if(count_rb_read > 0) {
+			for(uint8_t i = 0; i < count_rb_read; i++) {
+				ringbuffer_get(&rs485.ringbuffer_rx, (uint8_t *)&cb.stream_chunk_data[i]);
+			}
+
+			rs485_read_cb_stream_chunking.stream_sent += count_rb_read;
+
+			bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t *)&cb, sizeof(ReadLowLevel_Callback));
+
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	return false;
