@@ -2523,6 +2523,8 @@ bool handle_modbus_slave_write_single_coil_request_callback(void) {
 
 	// Fix endianness (BE->LE).
 	cb.coil_address = NTOHS(cb.coil_address);
+	cb.coil_address++;
+
 	coil_value = NTOHS(coil_value);
 
 	if(coil_value != 0x0000 && coil_value != 0xFF00) {
@@ -2651,6 +2653,8 @@ bool handle_modbus_slave_write_single_register_request_callback(void) {
 
 	// Fix endianness (BE->LE).
 	cb.register_address = NTOHS(cb.register_address);
+	cb.register_address++;
+
 	cb.register_value = NTOHS(cb.register_value);
 
 	 // Read data from rx_frame, form a TFP callback packet and send.
