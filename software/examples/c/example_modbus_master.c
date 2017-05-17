@@ -7,18 +7,6 @@
 #define PORT 4223
 #define UID "XYZ" // Change XYZ to the UID of your RS232 Bricklet
 
-#define EC_TIMEOUT -1
-#define EC_SUCCESS 0
-#define EC_ILLEGAL_FUNCTION 1
-#define EC_ILLEGAL_DATA_ADDRESS 2
-#define EC_ILLEGAL_DATA_VALUE 3
-#define EC_SLAVE_DEVICE_FAILURE 4
-#define EC_ACKNOWLEDGE 5
-#define EC_SLAVE_DEVICE_BUSY 6
-#define EC_MEMORY_PARITY_ERROR 8
-#define EC_GATEWAY_PATH_UNAVAILABLE 10
-#define EC_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND 11
-
 RS485 rs485;
 int function_return = 0;
 uint8_t ret_request_id = 0;
@@ -35,22 +23,22 @@ void cb_modbus_master_write_single_register_response(uint8_t request_id,
     }
 
     switch(exception_code) {
-      case EC_TIMEOUT:
+      case RS485_EXCEPTION_CODE_TIMEOUT:
         fprintf(stdout, "Request timed out\n");
 
         break;
 
-      case EC_SUCCESS:
+      case RS485_EXCEPTION_CODE_SUCCESS:
         fprintf(stdout, "Request successful\n");
 
         break;
 
-      case EC_ILLEGAL_FUNCTION:
+      case RS485_EXCEPTION_CODE_ILLEGAL_FUNCTION:
         fprintf(stdout, "Illegal function\n");
 
         break;
 
-      case EC_ILLEGAL_DATA_ADDRESS:
+      case RS485_EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS:
         fprintf(stdout, "Illegal data address\n");
 
         // Second request with valid register address
@@ -69,37 +57,37 @@ void cb_modbus_master_write_single_register_response(uint8_t request_id,
 
         break;
 
-      case EC_ILLEGAL_DATA_VALUE:
+      case RS485_EXCEPTION_CODE_ILLEGAL_DATA_VALUE:
         fprintf(stdout, "Illegal data value\n");
 
         break;
 
-      case EC_SLAVE_DEVICE_FAILURE:
+      case RS485_EXCEPTION_CODE_SLAVE_DEVICE_FAILURE:
         fprintf(stdout, "Slave device failure\n");
 
         break;
 
-      case EC_ACKNOWLEDGE:
+      case RS485_EXCEPTION_CODE_ACKNOWLEDGE:
         fprintf(stdout, "Acknowledge\n");
 
         break;
 
-      case EC_SLAVE_DEVICE_BUSY:
+      case RS485_EXCEPTION_CODE_SLAVE_DEVICE_BUSY:
         fprintf(stdout, "Device busy\n");
 
         break;
 
-      case EC_MEMORY_PARITY_ERROR:
+      case RS485_EXCEPTION_CODE_MEMORY_PARITY_ERROR:
         fprintf(stdout, "Memory parity error\n");
 
         break;
 
-      case EC_GATEWAY_PATH_UNAVAILABLE:
+      case RS485_EXCEPTION_CODE_GATEWAY_PATH_UNAVAILABLE:
         fprintf(stdout, "gateway path unavailable\n");
 
         break;
 
-      case EC_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND:
+      case RS485_EXCEPTION_CODE_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND:
         fprintf(stdout, "Gateway target device failed to respond\n");
 
         break;

@@ -7,18 +7,6 @@
 #define PORT 4223
 #define UID "XYZ" // Change XYZ to the UID of your RS232 Bricklet
 
-#define EC_TIMEOUT -1
-#define EC_SUCCESS 0
-#define EC_ILLEGAL_FUNCTION 1
-#define EC_ILLEGAL_DATA_ADDRESS 2
-#define EC_ILLEGAL_DATA_VALUE 3
-#define EC_SLAVE_DEVICE_FAILURE 4
-#define EC_ACKNOWLEDGE 5
-#define EC_SLAVE_DEVICE_BUSY 6
-#define EC_MEMORY_PARITY_ERROR 8
-#define EC_GATEWAY_PATH_UNAVAILABLE 10
-#define EC_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND 11
-
 RS485 rs485;
 uint16_t single_register_value = 0;
 uint32_t valid_reg_address_upto = 4;
@@ -35,7 +23,7 @@ void cb_modbus_slave_write_single_register_request(uint8_t request_id,
     // Here we assume valid writable register addresses are 1, 2, 3 and 4
     if(register_address > valid_reg_address_upto) {
       fprintf(stdout, "Requested invalid register address\n");
-      rs485_modbus_slave_report_exception(&rs485, request_id, EC_ILLEGAL_DATA_ADDRESS);
+      rs485_modbus_slave_report_exception(&rs485, request_id, RS485_EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS);
     }
     else {
       fprintf(stdout, "Request OK\n");
