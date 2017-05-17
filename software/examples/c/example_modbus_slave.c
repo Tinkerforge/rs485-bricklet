@@ -56,7 +56,7 @@ int main(void) {
      */
     rs485_set_modbus_configuration(&rs485, 1, 1000);
 
-    // Register write single register callback
+    // Register write single register request callback
     rs485_register_callback(&rs485,
                             RS485_CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST,
                             (void *)cb_modbus_slave_write_single_register_request,

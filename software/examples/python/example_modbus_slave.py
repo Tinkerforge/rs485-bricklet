@@ -34,8 +34,8 @@ if __name__ == "__main__":
 
     # Modbus specific configuration
     #
-    # Slave address = 1
-    # Request timeout = 1000ms (Unused in slave mode)
+    # Slave address = 1 (Unused in slave mode)
+    # Request timeout = 1000ms (Unused in master mode)
     rs485.set_modbus_configuration(1, 1000)
 
     # Register write single register request callback

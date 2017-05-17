@@ -46,12 +46,12 @@ int main(void) {
     /*
      * Modbus specific configuration
      *
-     * Slave mode address = 1 (Unused in master mode)
-     * Master mode request timeout = 1000ms
+     * Slave mode address = 1 (Unused only in slave mode)
+     * Master mode request timeout = 1000ms (Unused only in master mode)
      */
     rs485_set_modbus_configuration(&rs485, 1, 1000);
 
-    // Register write single register callback
+    // Register write single register response callback
     rs485_register_callback(&rs485,
                             RS485_CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE,
                             (void *)cb_modbus_master_write_single_register_response,
