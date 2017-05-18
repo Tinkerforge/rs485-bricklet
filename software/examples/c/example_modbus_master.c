@@ -46,8 +46,8 @@ int main(void) {
     /*
      * Modbus specific configuration
      *
-     * Slave mode address = 1 (Unused only in slave mode)
-     * Master mode request timeout = 1000ms (Unused only in master mode)
+     * Slave mode address = 1 (Unused in master mode)
+     * Master mode request timeout = 1000ms (Unused in slave mode)
      */
     rs485_set_modbus_configuration(&rs485, 1, 1000);
 

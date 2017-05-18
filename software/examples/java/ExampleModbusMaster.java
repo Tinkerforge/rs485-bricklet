@@ -28,8 +28,8 @@ public class ExampleModbusMaster {
     /*
      * Modbus specific configuration
      *
-     * Slave mode address = 1 (Unused only in slave mode)
-     * Master mode request timeout = 1000ms (Unused only in master mode)
+     * Slave mode address = 1 (Unused in master mode)
+     * Master mode request timeout = 1000ms (Unused in slave mode)
      */
     rs485.setModbusConfiguration((short)1, 1000);
 

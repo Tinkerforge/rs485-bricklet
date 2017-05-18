@@ -44,8 +44,8 @@ class ExampleModbusSlave
     /*
      * Modbus specific configuration
      *
-     * Slave mode address = 1 (Unused in slave mode)
-     * Master mode request timeout = 1000ms (Unused in master mode)
+     * Slave mode address = 1 (Unused in master mode)
+     * Master mode request timeout = 1000ms (Unused in slave mode)
      */
     rs485.SetModbusConfiguration(1, 1000);
 
