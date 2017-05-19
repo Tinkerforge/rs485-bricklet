@@ -54,7 +54,7 @@ void __attribute__((optimize("-O3"))) rs485_tff_irq_handler(void) {
 	}
 }
 
-void __attribute__((optimize("-O3"))) rs485_rx_irq_handler(void) {
+void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs485_rx_irq_handler(void) {
 	while(!XMC_USIC_CH_RXFIFO_IsEmpty(RS485_USIC)) {
 		/*
 		 * Instead of ringbuffer_add() we add the byte to the buffer
@@ -103,7 +103,7 @@ void __attribute__((optimize("-O3"))) rs485_rxa_irq_handler(void) {
 	rs485_rx_irq_handler();
 }
 
-void __attribute__((optimize("-O3"))) rs485_tx_irq_handler(void) {
+void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs485_tx_irq_handler(void) {
 	uint8_t data;
 
 	RS485_HALF_DUPLEX_TX_ENABLE();
