@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <head>
+        <title>Tinkerforge | JavaScript Example</title>
+    </head>
+    <body>
+        <div style="text-align:center;">
+            <h1>RS485 Bricklet Master Example</h1>
+            <p>
+                <input value="localhost" id="host" type="text" size="20">:
+                <input value="4280" id="port" type="text" size="5">,
+                <input value="uid" id="uid" type="text" size="5">
+                <input value="Start Example" id="start" type="button" onclick="startExample();">
+            </p>
+            <p>
+                <textarea readonly id="text" cols="80" rows="24" style="resize:none;"
+                          >Press "Start Example" to begin ...</textarea>
+            </p>
+        <div>
+        <script src="./Tinkerforge.js" type='text/javascript'></script>
+        <script type='text/javascript'>
+            var ipcon;
+            var textArea = document.getElementById("text");
+            function startExample() {
+                textArea.value = "";
+                var HOST = document.getElementById("host").value;
+                var PORT = parseInt(document.getElementById("port").value);
+                var UID = document.getElementById("uid").value;
+                if(ipcon !== undefined) {
+                    ipcon.disconnect();
+                }
+                ipcon = new Tinkerforge.IPConnection(); // Create IP connection
+                var rs485 = new Tinkerforge.BrickletRS485(UID, ipcon); // Create device object
+                ipcon.connect(HOST, PORT,
+                    function(error) {
+                        textArea.value += 'Error: ' + error + '\n';
+                    }
+                ); // Connect to brickd
+                // Don't use device before ipcon is connected
+
+                ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
+                    function (connectReason) {
+                      // Set operating mode of the Bricklet
+                      rs485.setMode(Tinkerforge.BrickletRS485.MODE_MODBUS_MASTER_RTU);
+
+                      /*
+                       * Modbus specific configuration
+                       *
+                       * Slave address = 1 (Unused in master mode)
+                       * Request timeout = 1000ms (Unused in slave mode)
+                       * rs485.set_modbus_configuration(1, 1000)
+                       */
+                      rs485.setModbusConfiguration(1, 1000);
+
+                      // Register write single register response callback
+                      rs485.on(Tinkerforge.BrickletRS485.CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE,
+                        function (requestID, exceptionCode) {
+                          if (requestID != expectedRequestID) {
+                              textArea.value += 'Unexpected request ID\n';
+
+                              return;
+                          }
+
+                          textArea.value += 'Request ID = ' + requestID + '\n';
+                          textArea.value += 'Exception Code = ' + exceptionCode + '\n';
+                        }
+                      );
+
+                      // Request single register write
+                      rs485.modbusMasterWriteSingleRegister(1, 42, 65535, function(requestID) {
+                                                                              expectedRequestID = requestID;
+                                                                          });
+                    }
+                );
+
+                // Register read callback
+                rs485.on(Tinkerforge.BrickletRS485.CALLBACK_READ,
+                    // Callback function for read callback
+                    function (message, len) {
+                        var str = charArrayToString(message, len);
+                        textArea.value += 'Message (Length: ' + len + '): "' + str + '"\n';
+                    }
+                );
+            }
+        </script>
+    </body>
+</html>
