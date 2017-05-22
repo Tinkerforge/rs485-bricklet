@@ -177,7 +177,7 @@ void rs485_init_hardware(RS485 *rs485) {
 	XMC_USIC_CH_TXFIFO_Configure(RS485_USIC, 32, XMC_USIC_CH_FIFO_SIZE_32WORDS, 16);
 
 	// Configure receive FIFO
-	XMC_USIC_CH_RXFIFO_Configure(RS485_USIC, 0, XMC_USIC_CH_FIFO_SIZE_32WORDS, 0);
+	XMC_USIC_CH_RXFIFO_Configure(RS485_USIC, 0, XMC_USIC_CH_FIFO_SIZE_32WORDS, 16);
 
 	// UART protocol events
 	XMC_USIC_CH_SetInterruptNodePointer(RS485_USIC, XMC_USIC_CH_INTERRUPT_NODE_POINTER_PROTOCOL, RS485_SERVICE_REQUEST_TFF);
@@ -318,6 +318,50 @@ void rs485_apply_configuration(RS485 *rs485) {
 void rs485_tick(RS485 *rs485) {
 	static uint32_t last_rx_count = 0;
 	static uint32_t last_tx_count = 0;
+
+	// We try to read the RX buffer in every tick:
+	// 1. We may have data in the buffer (just by coincidence).
+	//    In this case we can save the interrupt call overhead.
+	// 2. The interrupt is only triggered if more then 16 bytes
+	//    are in the RX buffer, so we always read the end of
+	//    a big message or messages <16 bytes here.
+	NVIC_DisableIRQ((IRQn_Type)RS485_IRQ_RX);
+	NVIC_DisableIRQ((IRQn_Type)RS485_IRQ_RXA);
+	bool new_data = false;
+	while(!XMC_USIC_CH_RXFIFO_IsEmpty(RS485_USIC)) {
+		new_data = true;
+		// Instead of ringbuffer_add() we add the byte to the buffer
+		// by hand.
+		//
+		// We need to save the low watermark calculation overhead.
+
+		uint16_t new_end = *rs485_ringbuffer_rx_end + 1;
+
+		if(new_end >= *rs485_ringbuffer_rx_size) {
+			new_end = 0;
+		}
+
+		if(new_end == *rs485_ringbuffer_rx_start) {
+			rs485->error_count_overrun++;
+
+			if(rs485->red_led_state.config == LED_FLICKER_CONFIG_EXTERNAL) {
+				XMC_GPIO_SetOutputLow(RS485_LED_RED_PIN);
+			}
+
+			// In the case of an overrun we read the byte and throw it away.
+			volatile uint8_t __attribute__((unused)) _  = RS485_USIC->OUTR;
+		} else {
+			rs485_ringbuffer_rx_buffer[*rs485_ringbuffer_rx_end] = RS485_USIC->OUTR;
+			*rs485_ringbuffer_rx_end = new_end;
+		}
+	}
+
+	if(new_data) {
+		TIMER_RESET();
+	}
+	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_RXA);
+	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_RX);
+
 
 	if(rs485->mode == MODE_MODBUS_SLAVE_RTU || rs485->mode == MODE_MODBUS_MASTER_RTU) {
 		modbus_update_rtu_wire_state_machine(rs485);
