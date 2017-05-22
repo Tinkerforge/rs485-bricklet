@@ -54,22 +54,27 @@ void __attribute__((optimize("-O3"))) rs485_tff_irq_handler(void) {
 	}
 }
 
+// Set const pointer to rx ringbuffer variables.
+// With this the compiler can properly optimize the access!
+uint8_t  *const rs485_ringbuffer_rx_buffer = &(rs485.buffer[0]); // rx part of buffer always starts from 0, we can't do the same trick for tx!!!
+uint16_t *const rs485_ringbuffer_rx_end    = &(rs485.ringbuffer_rx.end);
+uint16_t *const rs485_ringbuffer_rx_start  = &(rs485.ringbuffer_rx.start);
+uint16_t *const rs485_ringbuffer_rx_size   = &(rs485.ringbuffer_rx.size);
+
 void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs485_rx_irq_handler(void) {
 	while(!XMC_USIC_CH_RXFIFO_IsEmpty(RS485_USIC)) {
-		/*
-		 * Instead of ringbuffer_add() we add the byte to the buffer
-		 * by hand.
-		 *
-		 * We need to save the low watermark calculation overhead.
-		 */
+		// Instead of ringbuffer_add() we add the byte to the buffer
+		// by hand.
+		//
+		// We need to save the low watermark calculation overhead.
 
-		uint16_t new_end = rs485.ringbuffer_rx.end + 1;
+		uint16_t new_end = *rs485_ringbuffer_rx_end + 1;
 
-		if(new_end >= rs485.ringbuffer_rx.size) {
+		if(new_end >= *rs485_ringbuffer_rx_size) {
 			new_end = 0;
 		}
 
-		if(new_end == rs485.ringbuffer_rx.start) {
+		if(new_end == *rs485_ringbuffer_rx_start) {
 			rs485.error_count_overrun++;
 
 			if(rs485.red_led_state.config == LED_FLICKER_CONFIG_EXTERNAL) {
@@ -78,10 +83,9 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs
 
 			// In the case of an overrun we read the byte and throw it away.
 			volatile uint8_t __attribute__((unused)) _  = RS485_USIC->OUTR;
-		}
-		else {
-			rs485.ringbuffer_rx.buffer[rs485.ringbuffer_rx.end] = RS485_USIC->OUTR;
-			rs485.ringbuffer_rx.end = new_end;
+		} else {
+			rs485_ringbuffer_rx_buffer[*rs485_ringbuffer_rx_end] = RS485_USIC->OUTR;
+			*rs485_ringbuffer_rx_end = new_end;
 		}
 	}
 
