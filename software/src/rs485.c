@@ -102,13 +102,11 @@ void __attribute__((optimize("-O3"))) rs485_rxa_irq_handler(void) {
 }
 
 void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs485_tx_irq_handler(void) {
-	uint8_t data;
-
 	RS485_HALF_DUPLEX_TX_ENABLE();
 
 	while(!XMC_USIC_CH_TXFIFO_IsFull(RS485_USIC)) {
 		// TX FIFO is not full, more data can be loaded on the FIFO from the ring buffer.
-
+		uint8_t data;
 		if(!ringbuffer_get(&rs485.ringbuffer_tx, &data)) {
 			// No more data to TX from ringbuffer, disable TX interrupt.
 			XMC_USIC_CH_TXFIFO_DisableEvent(RS485_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
