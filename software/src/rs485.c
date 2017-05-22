@@ -90,10 +90,8 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs
 
 
 void __attribute__((optimize("-O3"))) rs485_rxa_irq_handler(void) {
-	/*
-	 * We get alternate rx interrupt if there is a parity error. In this case we
-	 * still read the byte and give it to the user.
-	 */
+	// We get alternate rx interrupt if there is a parity error. In this case we
+	// still read the byte and give it to the user.
 	rs485.error_count_parity++;
 
 	if(rs485.red_led_state.config == LED_FLICKER_CONFIG_EXTERNAL) {
