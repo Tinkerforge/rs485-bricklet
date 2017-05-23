@@ -7,14 +7,11 @@
 #define PORT 4223
 #define UID "XYZ" // Change XYZ to the UID of your RS232 Bricklet
 
-RS485 rs485;
-uint8_t expected_request_id = 0;
-
 // Callback function for write single register response callback
 void cb_modbus_master_write_single_register_response(uint8_t request_id,
                                                      int8_t exception_code,
-                                                     void *user_data) {
-    if(request_id != expected_request_id) {
+                                                     void *expected_request_id) {
+    if(request_id != *((uint8_t *)expected_request_id)) {
       printf("Unexpected request ID\n");
 
       return;
@@ -30,7 +27,10 @@ int main(void) {
     ipcon_create(&ipcon);
 
     // Create device object
+    RS485 rs485;
     rs485_create(&rs485, UID, &ipcon);
+
+    uint8_t expected_request_id = 0;
 
     // Connect to brickd
     if(ipcon_connect(&ipcon, HOST, PORT) < 0) {
@@ -55,7 +55,7 @@ int main(void) {
     rs485_register_callback(&rs485,
                             RS485_CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE,
                             (void *)cb_modbus_master_write_single_register_response,
-                            NULL);
+                            (void *)&expected_request_id);
 
     // Request single register write
     rs485_modbus_master_write_single_register(&rs485, 1, 42, 65535, &expected_request_id);

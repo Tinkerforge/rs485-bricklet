@@ -7,13 +7,12 @@
 #define PORT 4223
 #define UID "XYZ" // Change XYZ to the UID of your RS232 Bricklet
 
-RS485 rs485;
-
 // Callback function for write single register request callback
 void cb_modbus_slave_write_single_register_request(uint8_t request_id,
                                                    uint32_t register_address,
                                                    uint16_t register_value,
-                                                   void *user_data) {
+                                                   void *rs485) {
+
     printf("Request ID = %d\n", request_id);
     printf("Register Address = %d\n", register_address);
     printf("Register Value = %d\n", register_value);
@@ -21,11 +20,11 @@ void cb_modbus_slave_write_single_register_request(uint8_t request_id,
     // Here we assume valid writable register address is 42
     if(register_address != 42) {
       printf("Requested invalid register address\n");
-      rs485_modbus_slave_report_exception(&rs485, request_id, RS485_EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS);
+      rs485_modbus_slave_report_exception((RS485 *)rs485, request_id, RS485_EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS);
     }
     else {
       printf("Request OK\n");
-      rs485_modbus_slave_answer_write_single_register_request(&rs485, request_id);
+      rs485_modbus_slave_answer_write_single_register_request((RS485 *)rs485, request_id);
     }
 }
 
@@ -35,6 +34,7 @@ int main(void) {
     ipcon_create(&ipcon);
 
     // Create device object
+    RS485 rs485;
     rs485_create(&rs485, UID, &ipcon);
 
     // Connect to brickd
@@ -60,7 +60,7 @@ int main(void) {
     rs485_register_callback(&rs485,
                             RS485_CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST,
                             (void *)cb_modbus_slave_write_single_register_request,
-                            NULL);
+                            (void *)&rs485);
 
     printf("Press key to exit\n");
     getchar();

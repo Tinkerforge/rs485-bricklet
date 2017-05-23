@@ -12,14 +12,13 @@
 
 // Callback function for read callback
 void cb_read(char *message, uint16_t message_length, void *user_data) {
-	char buffer[message_length + 1]; // +1 for the NUL-terminator
-
 	// Assume that the message consists of ASCII characters and
-	// convert it from an array of chars to a NUL-terminated string
-	memcpy(&buffer, message, message_length);
-	buffer[message_length] = '\0';
+	// convert it from an array of chars to a NULL-terminated string
+	char *buffer = strndup(message, message_length);
 
 	printf("Message (Length: %d): \"%s\"\n", message_length, buffer);
+
+	free(buffer);
 }
 
 int main(void) {
@@ -48,10 +47,10 @@ int main(void) {
 	rs485_enable_read_callback(&rs485);
 
 	// Write "test" string
-	char buffer[60] = "test";
 	uint16_t written;
+	char buffer[4] = "test";
 
-	rs485_write(&rs485, buffer, 4, &written);
+	rs485_write(&rs485, buffer, sizeof(buffer), &written);
 
 	printf("Press key to exit\n");
 	getchar();
