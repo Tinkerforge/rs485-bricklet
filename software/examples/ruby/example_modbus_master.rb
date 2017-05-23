@@ -40,7 +40,7 @@ rs485.register_callback(BrickletRS485::CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGIS
 end
 
 # Request single register write
-expected_request_id = rs485.modbus_master_write_single_register 1, 42+1, 65535
+expected_request_id = rs485.modbus_master_write_single_register 1, 42, 65535
 
 puts "Press key to exit"
 
