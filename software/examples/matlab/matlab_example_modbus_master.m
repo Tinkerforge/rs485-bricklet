@@ -39,7 +39,7 @@ function cb_modbus_master_write_single_register_response(e)
     global expected_request_id;
 
     if e.requestID ~= expected_request_id
-        fprintf('Unexpected request ID');
+        fprintf('Unexpected request ID\n');
 
         return;
     end
