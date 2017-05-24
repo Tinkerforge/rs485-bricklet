@@ -37,9 +37,7 @@ public class ExampleLoopback {
 
     // Write "test" string
     String buffer = "test";
-
-    // Set operating mode of the Bricklet
-    rs485.write(buffer.split(''), buffer.split('').length);
+    rs485.write(buffer.split(''));
 
     System.out.println("Press key to exit");
 
