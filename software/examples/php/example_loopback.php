@@ -6,8 +6,8 @@ require_once('Tinkerforge/BrickletRS485.php');
 use Tinkerforge\IPConnection;
 use Tinkerforge\BrickletRS485;
 
-// For this example connect the RX+/- pins to TX+/- pins on the same bricklet to
-// receive the sent message
+// For this example connect the RX+/- pins to TX+/- pins on the same bricklet
+// and configure the Bricklet to be in full-duplex mode
 
 const HOST = 'localhost';
 const PORT = 4223;

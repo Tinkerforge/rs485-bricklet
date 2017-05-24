@@ -1,8 +1,8 @@
 #!/bin/sh
 # Connects to localhost:4223 by default, use --host and --port to change this
 
-# For this example connect the RX+/- pins to TX+/- pins on the same bricklet to
-# receive the sent message
+# For this example connect the RX+/- pins to TX+/- pins on the same bricklet
+# and configure the Bricklet to be in full-duplex mode
 
 uid=MST # Change XYZ to the UID of your RS485 Bricklet
 

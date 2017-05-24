@@ -13,6 +13,9 @@ UID = 'XYZ' # Change XYZ to the UID of your RS485 Bricklet
 ipcon = IPConnection.new # Create IP connection
 rs485 = BrickletRS485.new UID, ipcon # Create device object
 
+# For this example connect the RX+/- pins to TX+/- pins on the same bricklet
+# and configure the Bricklet to be in full-duplex mode
+
 ipcon.connect HOST, PORT # Connect to brickd
 # Don't use device before ipcon is connected
 
