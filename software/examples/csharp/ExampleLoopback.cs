@@ -13,7 +13,7 @@ class ExampleLoopback
   // Callback function for read callback
   static void ReadCB(BrickletRS485 sender, char[] message)
   {
-    Console.WriteLine("Message (Length: {0}): \"{1}\"\n", message.length, new string(message));
+    Console.WriteLine("Message (Length: {0}): \"{1}\"\n", message.Length, new string(message));
   }
 
   static void Main()
@@ -31,8 +31,7 @@ class ExampleLoopback
     rs485.EnableReadCallback();
 
     // Write "test" string
-    string buffer = "test";
-    rs485.write(buffer.ToCharArray());
+    rs485.Write("test".ToCharArray());
 
     Console.WriteLine("Press enter to exit");
     Console.ReadLine();
