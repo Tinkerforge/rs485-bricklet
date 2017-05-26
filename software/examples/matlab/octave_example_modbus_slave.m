@@ -32,9 +32,9 @@ end
 function cb_modbus_slave_write_single_register_request(e)
     global rs485;
 
-    fprintf("Request ID = %g\n", e.requestID);
-    fprintf("Register Address = %g\n", e.registerAddress);
-    fprintf("Register Value = %g\n", e.registerValue);
+    fprintf("Request ID = %d\n", e.requestID);
+    fprintf("Register Address = %d\n", e.registerAddress);
+    fprintf("Register Value = %d\n", e.registerValue);
 
     % Here we assume valid writable register address is 42
     if e.registerAddress ~= 42

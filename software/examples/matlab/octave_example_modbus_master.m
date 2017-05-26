@@ -41,6 +41,6 @@ function cb_modbus_master_write_single_register_response(e)
         return;
     end
 
-    fprintf("Request ID = %g\n", e.requestID);
-    fprintf("Exception Code = %g\n", e.exceptionCode);
+    fprintf("Request ID = %d\n", e.requestID);
+    fprintf("Exception Code = %d\n", e.exceptionCode);
 end
