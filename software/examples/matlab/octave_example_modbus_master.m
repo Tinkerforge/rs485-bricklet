@@ -6,9 +6,8 @@ function octave_example_modbus_master()
     PORT = 4223;
     UID = "XYZ"; % Change XYZ to the UID of your RS485 Bricklet
 
-    % For newer version of Octave instead of "java_new" use "javaObject"
-    ipcon = java_new("com.tinkerforge.IPConnection"); % Create IP connection
-    rs485 = java_new("com.tinkerforge.BrickletRS485", UID, ipcon); % Create device object;
+    ipcon = javaObject("com.tinkerforge.IPConnection"); % Create IP connection
+    rs485 = javaObject("com.tinkerforge.BrickletRS485", UID, ipcon); % Create device object;
 
     ipcon.connect(HOST, PORT); % Connect to brickd
     % Don't use device before ipcon is connected
