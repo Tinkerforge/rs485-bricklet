@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "ip_connection.h"
 #include "bricklet_rs485.h"
@@ -7,13 +8,13 @@
 #define PORT 4223
 #define UID "XYZ" // Change XYZ to the UID of your RS485 Bricklet
 
-// For this example connect the RX+/- pins to TX+/- pins on the same bricklet
+// For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
 // and configure the Bricklet to be in full-duplex mode
 
 // Callback function for read callback
 void cb_read(char *message, uint16_t message_length, void *user_data) {
 	// Assume that the message consists of ASCII characters and
-	// convert it from an array of chars to a NULL-terminated string
+	// convert it from an array of chars to a NUL-terminated string
 	char *buffer = strndup(message, message_length);
 
 	printf("Message (Length: %d): \"%s\"\n", message_length, buffer);
