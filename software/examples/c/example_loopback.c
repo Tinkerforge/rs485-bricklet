@@ -1,7 +1,5 @@
-#define _GNU_SOURCE // for strndup
-
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 
 #include "ip_connection.h"
 #include "bricklet_rs485.h"
@@ -15,14 +13,17 @@
 
 // Callback function for read callback
 void cb_read(char *message, uint16_t message_length, void *user_data) {
-	(void)user_data;
+	char *buffer;
+
+	(void)user_data; // avoid unused parameter warning
 
 	// Assume that the message consists of ASCII characters and
 	// convert it from an array of chars to a NUL-terminated string
-	char *buffer = strndup(message, message_length);
+	buffer = (char *)malloc(message_length + 1); // +1 for the NUL-terminator
+	memcpy(buffer, message, message_length);
+	buffer[message_length] = '\0';
 
 	printf("Message (Length: %d): \"%s\"\n", message_length, buffer);
-
 	free(buffer);
 }
 
@@ -53,8 +54,7 @@ int main(void) {
 
 	// Write "test" string
 	uint16_t written;
-	char buffer[4] = "test";
-
+	char buffer[4] = {'t', 'e', 's', 't'};
 	rs485_write(&rs485, buffer, sizeof(buffer), &written);
 
 	printf("Press key to exit\n");
