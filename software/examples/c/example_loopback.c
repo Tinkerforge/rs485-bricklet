@@ -1,3 +1,5 @@
+#define _GNU_SOURCE // for strndup
+
 #include <stdio.h>
 #include <string.h>
 
@@ -13,6 +15,8 @@
 
 // Callback function for read callback
 void cb_read(char *message, uint16_t message_length, void *user_data) {
+	(void)user_data;
+
 	// Assume that the message consists of ASCII characters and
 	// convert it from an array of chars to a NUL-terminated string
 	char *buffer = strndup(message, message_length);
