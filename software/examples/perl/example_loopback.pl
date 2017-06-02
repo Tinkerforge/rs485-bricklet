@@ -23,7 +23,7 @@ sub cb_read
 }
 
 $ipcon->connect(&HOST, &PORT); # Connect to brickd
-# Don't use device before ipcon is connecte
+# Don't use device before ipcon is connected
 
 # Enable read callback
 $rs485->enable_read_callback();

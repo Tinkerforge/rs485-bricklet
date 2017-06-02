@@ -1,8 +1,8 @@
 #!/bin/sh
 # Connects to localhost:4223 by default, use --host and --port to change this
 
-uid=XYZ # Change XYZ to the UID of your RS232 Bricklet
 
+uid=XYZ # Change XYZ to the UID of your RS485 Bricklet
 export _tmp=$(mktemp)
 
 # Register write single register response callback
@@ -18,9 +18,8 @@ tinkerforge dispatch rs485-bricklet $uid modbus-master-write-single-register-res
 
              rm -rf $_tmp" &
 
-# Set operating mode of the Bricklet
+# Set operating mode
 tinkerforge call rs485-bricklet $uid set-mode mode-modbus-master-rtu
-
 # Modbus specific configuration
 #
 # Slave address = 1 (Unused in master mode)

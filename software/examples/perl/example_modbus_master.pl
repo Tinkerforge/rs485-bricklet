@@ -30,9 +30,9 @@ sub cb_modbus_master_write_single_register_response
 }
 
 $ipcon->connect(&HOST, &PORT); # Connect to brickd
-# Don't use device before ipcon is connecte
+# Don't use device before ipcon is connected
 
-# Set operating mode of the Bricklet
+# Set operating mode
 $rs485->set_mode($rs485->MODE_MODBUS_MASTER_RTU);
 
 # Modbus specific configuration

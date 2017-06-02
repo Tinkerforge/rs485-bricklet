@@ -18,7 +18,7 @@ ipcon.connect(HOST, PORT,
 
 ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
     function (connectReason) {
-        // Set operating mode of the Bricklet
+        // Set operating mode
         rs485.setMode(Tinkerforge.BrickletRS485.MODE_MODBUS_SLAVE_RTU);
 
         /*
@@ -53,7 +53,6 @@ ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
 
 console.log('Press key to exit');
 process.stdin.on('data',
-
     function (data) {
         ipcon.disconnect();
         process.exit(0);

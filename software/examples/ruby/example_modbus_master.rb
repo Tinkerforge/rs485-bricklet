@@ -18,6 +18,7 @@ expected_request_id = 0
 ipcon.connect HOST, PORT # Connect to brickd
 # Don't use device before ipcon is connected
 
+# Set operating mode
 # Modbus specific configuration
 #
 # Slave address = 1 (Unused in master mode)
@@ -42,7 +43,6 @@ end
 # Request single register write
 expected_request_id = rs485.modbus_master_write_single_register 1, 42, 65535
 
-puts "Press key to exit"
-
+puts 'Press key to exit'
 $stdin.gets
 ipcon.disconnect

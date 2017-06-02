@@ -4,7 +4,7 @@
 # For this example connect the RX+/- pins to TX+/- pins on the same bricklet
 # and configure the Bricklet to be in full-duplex mode
 
-uid=MST # Change XYZ to the UID of your RS485 Bricklet
+uid=XYZ # Change XYZ to the UID of your RS485 Bricklet
 
 # Handle incoming read callback
 tinkerforge dispatch rs485-bricklet $uid read &

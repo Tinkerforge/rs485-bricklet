@@ -29,8 +29,8 @@ if __name__ == "__main__":
     ipcon.connect(HOST, PORT) # Connect to brickd
     # Don't use device before ipcon is connected
 
-    # Set operating mode of the Bricklet
-    rs485.set_mode(BrickletRS485.MODE_MODBUS_SLAVE_RTU)
+    # Set operating mode
+    rs485.set_mode(rs485.MODE_MODBUS_SLAVE_RTU)
 
     # Modbus specific configuration
     #

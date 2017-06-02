@@ -32,7 +32,7 @@ $rs485 = new BrickletRS485(UID, $ipcon); // Create device object
 $ipcon->connect(HOST, PORT); // Connect to brickd
 // Don't use device before ipcon is connected
 
-// Set operating mode of the Bricklet
+// Set operating mode
 $rs485->setMode(BrickletRS485::MODE_MODBUS_MASTER_RTU);
 
 /*

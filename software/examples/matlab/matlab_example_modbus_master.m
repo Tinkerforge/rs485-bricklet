@@ -15,8 +15,8 @@ function matlab_example_modbus_master()
     ipcon.connect(HOST, PORT); % Connect to brickd
     % Don't use device before ipcon is connected
 
-    % Set operating mode of the Bricklet
-    rs485.setMode(com.tinkerforge.BrickletRS485.MODE_MODBUS_MASTER_RTU);
+    % Set operating mode
+    rs485.setMode(BrickletRS485.MODE_MODBUS_MASTER_RTU);
 
     % Modbus specific configuration
     %

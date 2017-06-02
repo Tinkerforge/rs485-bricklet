@@ -1,57 +1,57 @@
 using System;
 using Tinkerforge;
 
-class ExampleModbusMaster
+class Example
 {
-  private static string HOST = "localhost";
-  private static int PORT = 4223;
-  private static string UID = "XYZ"; // Change XYZ to the UID of your RS485 Bricklet
+	private static string HOST = "localhost";
+	private static int PORT = 4223;
+	private static string UID = "XYZ"; // Change XYZ to the UID of your RS485 Bricklet
 
-  private static byte expectedRequestID = 0;
+	private static byte expectedRequestID = 0;
 
-  // Callback function for write single register response callback
-  static void WriteSingleRegisterResponseCB(BrickletRS485 sender,
-                                            byte requestID,
-                                            short exceptionCode)
-  {
-    if(requestID != expectedRequestID)
-    {
-      Console.WriteLine("Unexpected request ID");
+	// Callback function for write single register response callback
+	static void WriteSingleRegisterResponseCB(BrickletRS485 sender,
+	                                          byte requestID,
+	                                          short exceptionCode)
+	{
+		if(requestID != expectedRequestID)
+		{
+			Console.WriteLine("Unexpected request ID");
 
-      return;
-    }
+			return;
+		}
 
-    Console.WriteLine("Request ID: " + requestID);
-    Console.WriteLine("Exception Code: " + exceptionCode);
-  }
+		Console.WriteLine("Request ID: " + requestID);
+		Console.WriteLine("Exception Code: " + exceptionCode);
+	}
 
-  static void Main()
-  {
-    IPConnection ipcon = new IPConnection(); // Create IP connection
-    BrickletRS485 rs485 = new BrickletRS485(UID, ipcon); // Create device object
+	static void Main()
+	{
+		IPConnection ipcon = new IPConnection(); // Create IP connection
+		BrickletRS485 rs485 = new BrickletRS485(UID, ipcon); // Create device object
 
-    ipcon.Connect(HOST, PORT); // Connect to brickd
-    // Don't use device before ipcon is connected
+		ipcon.Connect(HOST, PORT); // Connect to brickd
+		// Don't use device before ipcon is connected
 
-    // Set operating mode of the Bricklet
-    rs485.SetMode(BrickletRS485.MODE_MODBUS_MASTER_RTU);
+		// Set operating mode
+		rs485.SetMode(BrickletRS485.MODE_MODBUS_MASTER_RTU);
 
-    /*
-     * Modbus specific configuration
-     *
-     * Slave mode address = 1 (Unused in master mode)
-     * Master mode request timeout = 1000ms (Unused in slave mode)
-     */
-    rs485.SetModbusConfiguration(1, 1000);
+		/*
+		 * Modbus specific configuration
+		 *
+		 * Slave mode address = 1 (Unused in master mode)
+		 * Master mode request timeout = 1000ms (Unused in slave mode)
+		 */
+		rs485.SetModbusConfiguration(1, 1000);
 
-    // Register write single register response callback
-    rs485.ModbusMasterWriteSingleRegisterResponseCallback += WriteSingleRegisterResponseCB;
+		// Register write single register response callback
+		rs485.ModbusMasterWriteSingleRegisterResponseCallback += WriteSingleRegisterResponseCB;
 
-    // Request single register write
-    expectedRequestID = rs485.ModbusMasterWriteSingleRegister(1, 42, 65535);
+		// Request single register write
+		expectedRequestID = rs485.ModbusMasterWriteSingleRegister(1, 42, 65535);
 
-    Console.WriteLine("Press enter to exit");
-    Console.ReadLine();
-    ipcon.Disconnect();
-  }
+		Console.WriteLine("Press enter to exit");
+		Console.ReadLine();
+		ipcon.Disconnect();
+	}
 }

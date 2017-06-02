@@ -7,12 +7,12 @@ function octave_example_modbus_master()
     UID = "XYZ"; % Change XYZ to the UID of your RS485 Bricklet
 
     ipcon = javaObject("com.tinkerforge.IPConnection"); % Create IP connection
-    rs485 = javaObject("com.tinkerforge.BrickletRS485", UID, ipcon); % Create device object;
+    rs485 = javaObject("com.tinkerforge.BrickletRS485", UID, ipcon); % Create device object
 
     ipcon.connect(HOST, PORT); % Connect to brickd
     % Don't use device before ipcon is connected
 
-    % Set operating mode of the Bricklet
+    % Set operating mode
     rs485.setMode(rs485.MODE_MODBUS_MASTER_RTU);
 
     % Modbus specific configuration

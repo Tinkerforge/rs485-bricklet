@@ -26,12 +26,11 @@ rs485.register_callback(BrickletRS485::CALLBACK_READ) \
 end
 
 # Enable read callback
-rs485.enable_read_callback()
+rs485.enable_read_callback
 
 # Write "test" string
 rs485.write('test'.split(''))
 
-puts "Press key to exit"
-
+puts 'Press key to exit'
 $stdin.gets
 ipcon.disconnect

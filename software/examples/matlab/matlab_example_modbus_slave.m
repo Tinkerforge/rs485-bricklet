@@ -15,8 +15,8 @@ function matlab_example_modbus_slave()
     ipcon.connect(HOST, PORT); % Connect to brickd
     % Don't use device before ipcon is connected
 
-    % Set operating mode of the Bricklet
-    rs485.setMode(com.tinkerforge.BrickletRS485.MODE_MODBUS_SLAVE_RTU);
+    % Set operating mode
+    rs485.setMode(BrickletRS485.MODE_MODBUS_SLAVE_RTU);
 
     % Modbus specific configuration
     %

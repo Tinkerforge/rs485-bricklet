@@ -41,7 +41,7 @@
 
                 ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
                     function (connectReason) {
-                        // Set operating mode of the Bricklet
+                        // Set operating mode
                         rs485.setMode(Tinkerforge.BrickletRS485.MODE_MODBUS_SLAVE_RTU);
 
                         /*

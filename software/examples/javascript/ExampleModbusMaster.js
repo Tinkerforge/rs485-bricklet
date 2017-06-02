@@ -18,7 +18,7 @@ ipcon.connect(HOST, PORT,
 
 ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
     function (connectReason) {
-        // Set operating mode of the Bricklet
+        // Set operating mode
         rs485.setMode(Tinkerforge.BrickletRS485.MODE_MODBUS_MASTER_RTU);
 
         /*
@@ -32,28 +32,29 @@ ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
 
         // Register write single register response callback
         rs485.on(Tinkerforge.BrickletRS485.CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE,
-          function (requestID, exceptionCode) {
-            if (requestID != expectedRequestID) {
-                console.log('Unexpected request ID');
+            function (requestID, exceptionCode) {
+                if (requestID != expectedRequestID) {
+                    console.log('Unexpected request ID');
 
-                return;
+                    return;
+                }
+
+                console.log('Request ID = ' + requestID);
+                console.log('Exception Code = ' + exceptionCode);
             }
-
-            console.log('Request ID = ' + requestID);
-            console.log('Exception Code = ' + exceptionCode);
-          }
         );
 
         // Request single register write
-        rs485.modbusMasterWriteSingleRegister(1, 42, 65535, function(requestID) {
-                                                                expectedRequestID = requestID;
-                                                            });
+        rs485.modbusMasterWriteSingleRegister(1, 42, 65535,
+            function(requestID) {
+                expectedRequestID = requestID;
+            }
+        );
     }
 );
 
 console.log('Press key to exit');
 process.stdin.on('data',
-
     function (data) {
         ipcon.disconnect();
         process.exit(0);

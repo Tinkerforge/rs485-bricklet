@@ -16,6 +16,7 @@ rs485 = BrickletRS485.new UID, ipcon # Create device object
 ipcon.connect HOST, PORT # Connect to brickd
 # Don't use device before ipcon is connected
 
+# Set operating mode
 # Modbus specific configuration
 #
 # Slave address = 1 (Unused in master mode)
@@ -41,7 +42,6 @@ rs485.register_callback(BrickletRS485::CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGIST
     end
 end
 
-puts "Press key to exit"
-
+puts 'Press key to exit'
 $stdin.gets
 ipcon.disconnect

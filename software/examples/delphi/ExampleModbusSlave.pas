@@ -7,7 +7,7 @@ uses
   SysUtils, IPConnection, BrickletRS485;
 
 type
-  TExampleModbusSlave = class
+  TExample = class
   private
     ipcon: TIPConnection;
     rs485: TBrickletRS485;
@@ -25,13 +25,13 @@ const
   UID = 'XYZ'; { Change XYZ to the UID of your RS485 Bricklet }
 
 var
-  e: TExampleModbusSlave;
+  e: TExample;
 
 { Callback function for write single register request callback }
-procedure TExampleModbusSlave.ModbusSlaveWriteSingleRegisterRequestCB(sender: TBrickletRS485;
-                                                                      const requestID: byte;
-                                                                      const registerAddress: longword;
-                                                                      const registerValue: word);
+procedure TExample.ModbusSlaveWriteSingleRegisterRequestCB(sender: TBrickletRS485;
+                                                           const requestID: byte;
+                                                           const registerAddress: longword;
+                                                           const registerValue: word);
 begin
   WriteLn(Format('Request ID = %d', [requestID]));
   WriteLn(Format('Register Address = %d', [registerAddress]));
@@ -50,7 +50,7 @@ begin
     end
 end;
 
-procedure TExampleModbusSlave.Execute;
+procedure TExample.Execute;
 begin
   { Create IP connection }
   ipcon := TIPConnection.Create;
@@ -62,7 +62,7 @@ begin
   ipcon.Connect(HOST, PORT);
   { Don't use device before ipcon is connected }
 
-  { Set operating mode of the Bricklet }
+  { Set operating mode }
   rs485.SetMode(BRICKLET_RS485_MODE_MODBUS_SLAVE_RTU);
 
   {
@@ -82,7 +82,7 @@ begin
 end;
 
 begin
-  e := TExampleModbusSlave.Create;
+  e := TExample.Create;
   e.Execute;
   e.Destroy;
 end.
