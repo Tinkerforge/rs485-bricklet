@@ -27,27 +27,23 @@ const
 var
   e: TExample;
 
-{ Callback function for write single register request callback }
+{ Callback procedure for Modbus slave write single register request callback }
 procedure TExample.ModbusSlaveWriteSingleRegisterRequestCB(sender: TBrickletRS485;
                                                            const requestID: byte;
                                                            const registerAddress: longword;
                                                            const registerValue: word);
 begin
-  WriteLn(Format('Request ID = %d', [requestID]));
-  WriteLn(Format('Register Address = %d', [registerAddress]));
-  WriteLn(Format('Register Value = %d', [registerValue]));
+  WriteLn(Format('Request ID: %d', [requestID]));
+  WriteLn(Format('Register Address: %d', [registerAddress]));
+  WriteLn(Format('Register Value: %d', [registerValue]));
 
-  { Here we assume valid writable register address is 42 }
-  if (registerAddress <> 42) then
-    begin
-      WriteLn('Requested invalid register address');
-      sender.ModbusSlaveReportException(requestID, BRICKLET_RS485_EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS);
-    end
-  else
-    begin
-      WriteLn('Request OK');
-      sender.ModbusSlaveAnswerWriteSingleRegisterRequest(requestID);
-    end
+  if (registerAddress <> 42) then begin
+    WriteLn('Error: Invalid register address');
+    sender.ModbusSlaveReportException(requestID, BRICKLET_RS485_EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS);
+  end
+  else begin
+    sender.ModbusSlaveAnswerWriteSingleRegisterRequest(requestID);
+  end
 end;
 
 procedure TExample.Execute;
@@ -62,18 +58,16 @@ begin
   ipcon.Connect(HOST, PORT);
   { Don't use device before ipcon is connected }
 
-  { Set operating mode }
+  { Set operating mode to Modbus RTU slave }
   rs485.SetMode(BRICKLET_RS485_MODE_MODBUS_SLAVE_RTU);
 
-  {
-    Modbus specific configuration
+  { Modbus specific configuration:
+    - slave address = 17
+    - master request timeout = 0ms (unused in slave mode) }
+  rs485.SetModbusConfiguration(17, 0);
 
-    Slave address = 1 (Unused in master mode)
-    Request timeout = 1000ms (Unused in slave mode)
-  }
-  rs485.SetModbusConfiguration(1, 1000);
-
-  { Register write single register request callback }
+  { Register Modbus slave write single register request callback
+    to procedure ModbusSlaveWriteSingleRegisterRequestCB }
   rs485.OnModbusSlaveWriteSingleRegisterRequest := {$ifdef FPC}@{$endif}ModbusSlaveWriteSingleRegisterRequestCB;
 
   WriteLn('Press key to exit');

@@ -27,19 +27,17 @@ var
   e: TExample;
   expectedRequestID: byte;
 
-{ Callback function for write single register response callback }
+{ Callback procedure for Modbus master write single register response callback }
 procedure TExample.ModbusMasterWriteSingleRegisterResponseCB(sender: TBrickletRS485;
                                                              const requestID: byte;
                                                              const exceptionCode: shortint);
 begin
-  if (requestID <> expectedRequestID) then
-  begin
-    WriteLn('Unexpected request ID');
-    Exit;
-  end;
+  WriteLn(Format('Request ID: %d', [requestID]));
+  WriteLn(Format('Exception Code: %d', [exceptionCode]));
 
-  WriteLn(Format('Request ID = %d', [requestID]));
-  WriteLn(Format('Exception Code = %d', [exceptionCode]));
+  if (requestID <> expectedRequestID) then begin
+    WriteLn('Error: Unexpected request ID');
+  end;
 end;
 
 procedure TExample.Execute;
@@ -54,22 +52,20 @@ begin
   ipcon.Connect(HOST, PORT);
   { Don't use device before ipcon is connected }
 
-  { Set operating mode }
+  { Set operating mode to Modbus RTU master }
   rs485.SetMode(BRICKLET_RS485_MODE_MODBUS_MASTER_RTU);
 
-  {
-    Modbus specific configuration
-
-    Slave address = 1 (Unused in master mode)
-    Request timeout = 1000ms (Unused in slave mode)
-  }
+  { Modbus specific configuration:
+    - slave address = 1 (unused in master mode)
+    - master request timeout = 1000ms }
   rs485.SetModbusConfiguration(1, 1000);
 
-  { Register write single register response callback }
+  { Register Modbus master write single register response callback
+    to procedure ModbusMasterWriteSingleRegisterResponseCB }
   rs485.OnModbusMasterWriteSingleRegisterResponse := {$ifdef FPC}@{$endif}ModbusMasterWriteSingleRegisterResponseCB;
 
-  { Request single register write }
-  expectedRequestID := rs485.ModbusMasterWriteSingleRegister(1, 42, 65535);
+  { Write 65535 to register 42 of slave 17 }
+  expectedRequestID := rs485.ModbusMasterWriteSingleRegister(17, 42, 65535);
 
   WriteLn('Press key to exit');
   ReadLn;

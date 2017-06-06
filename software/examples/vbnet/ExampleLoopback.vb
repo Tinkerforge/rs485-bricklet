@@ -1,16 +1,19 @@
 Imports System
 Imports Tinkerforge
 
+' For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
+' and configure the DIP switch on the Bricklet to full-duplex mode
+
 Module ExampleLoopback
     Const HOST As String = "localhost"
     Const PORT As Integer = 4223
     Const UID As String = "XYZ" ' Change XYZ to the UID of your RS485 Bricklet
 
-    ' Callback function for read callback
-    sub ReadCB(ByVal sender As BrickletRS485,
-               ByVal message As Char())
-        Dim messageString As String = New String(message)
-        Console.WriteLine("Message (Length: {0}): {1}", message.Length, messageString)
+    ' Callback subroutine for read callback
+    sub ReadCB(ByVal sender As BrickletRS485, ByVal message As Char())
+        ' Assume that the message consists of ASCII characters and
+        ' convert it from an array of chars to a string
+        Console.WriteLine("Message: \"" + New String(message) + "\"")
     End Sub
 
     Sub Main()
@@ -20,7 +23,7 @@ Module ExampleLoopback
         ipcon.Connect(HOST, PORT) ' Connect to brickd
         ' Don't use device before ipcon is connected
 
-        ' Register read callback
+        ' Register read callback to subroutine ReadCB
         AddHandler rs485.ReadCallback, AddressOf ReadCB
 
         ' Enable read callback

@@ -12,35 +12,33 @@ function octave_example_modbus_master()
     ipcon.connect(HOST, PORT); % Connect to brickd
     % Don't use device before ipcon is connected
 
-    % Set operating mode
+    % Set operating mode to Modbus RTU master
     rs485.setMode(rs485.MODE_MODBUS_MASTER_RTU);
 
-    % Modbus specific configuration
-    %
-    % Slave address = 1 (Unused in master mode)
-    % Request timeout = 1000ms (Unused in slave mode)
+    % Modbus specific configuration:
+    % - slave address = 1 (unused in master mode)
+    % - master request timeout = 1000ms
     rs485.setModbusConfiguration(1, 1000);
 
-    % Register write single register response callback
+    % Register Modbus master write single register response callback to
+    % function cb_modbus_master_write_single_register_response
     rs485.addModbusMasterWriteSingleRegisterResponseCallback(@cb_modbus_master_write_single_register_response);
 
-    % Request single register write
-    expected_request_id = rs485.modbusMasterWriteSingleRegister(1, 42, 65535);
+    % Write 65535 to register 42 of slave 17
+    expected_request_id = rs485.modbusMasterWriteSingleRegister(17, 42, 65535);
 
     input("Press key to exit\n", "s");
     ipcon.disconnect();
 end
 
-% Callback function for write single register response callback
+% Callback function for Modbus master write single register response callback
 function cb_modbus_master_write_single_register_response(e)
     global expected_request_id;
 
+    fprintf("Request ID: %d\n", e.requestID);
+    fprintf("Exception Code: %d\n", e.exceptionCode);
+
     if e.requestID ~= expected_request_id
-        fprintf("Unexpected request ID\n");
-
-        return;
+        fprintf("Error: Unexpected request ID\n");
     end
-
-    fprintf("Request ID = %d\n", e.requestID);
-    fprintf("Exception Code = %d\n", e.exceptionCode);
 end

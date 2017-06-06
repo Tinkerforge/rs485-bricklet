@@ -1,8 +1,5 @@
-import java.util.Arrays;
 import com.tinkerforge.IPConnection;
 import com.tinkerforge.BrickletRS485;
-import com.tinkerforge.TimeoutException;
-import com.tinkerforge.NotConnectedException;
 
 public class ExampleModbusMaster {
 	private static final String HOST = "localhost";
@@ -22,33 +19,29 @@ public class ExampleModbusMaster {
 		ipcon.connect(HOST, PORT); // Connect to brickd
 		// Don't use device before ipcon is connected
 
-		// Set operating mode
+		// Set operating mode to Modbus RTU master
 		rs485.setMode(BrickletRS485.MODE_MODBUS_MASTER_RTU);
 
-		/*
-		* Modbus specific configuration
-		*
-		* Slave mode address = 1 (Unused in master mode)
-		* Master mode request timeout = 1000ms (Unused in slave mode)
-		*/
-		rs485.setModbusConfiguration((short)1, 1000);
+		// Modbus specific configuration:
+		// - slave address = 1 (unused in master mode)
+		// - master request timeout = 1000ms
+		rs485.setModbusConfiguration(1, 1000);
 
 		// Add Modbus master write single register response listener
 		rs485.addModbusMasterWriteSingleRegisterResponseListener(new BrickletRS485.ModbusMasterWriteSingleRegisterResponseListener() {
-			public void modbusMasterWriteSingleRegisterResponse(int requestID, int exceptionCode) {
-				if(requestID != expectedRequestID) {
-				System.out.println("Unexpected request ID");
-
-				return;
-				}
-
+			public void modbusMasterWriteSingleRegisterResponse(int requestID,
+			                                                    int exceptionCode) {
 				System.out.println("Request ID: " + requestID);
 				System.out.println("Exception Code: " + exceptionCode);
+
+				if (requestID != expectedRequestID) {
+					System.out.println("Error: Unexpected request ID");
+				}
 			}
 		});
 
-		// Request single register write
-		expectedRequestID = rs485.modbusMasterWriteSingleRegister(1, 42, 65535);
+		// Write 65535 to register 42 of slave 17
+		expectedRequestID = rs485.modbusMasterWriteSingleRegister(17, 42, 65535);
 
 		System.out.println("Press key to exit"); System.in.read();
 		ipcon.disconnect();

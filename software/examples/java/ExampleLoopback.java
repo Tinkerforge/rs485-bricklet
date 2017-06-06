@@ -1,11 +1,8 @@
-import java.util.Arrays;
 import com.tinkerforge.IPConnection;
 import com.tinkerforge.BrickletRS485;
-import com.tinkerforge.TimeoutException;
-import com.tinkerforge.NotConnectedException;
 
-// For this example connect the RX+/- pins to TX+/- pins on the same bricklet
-// and configure the Bricklet to be in full-duplex mode
+// For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
+// and configure the DIP switch on the Bricklet to full-duplex mode
 
 public class ExampleLoopback {
 	private static final String HOST = "localhost";
@@ -26,7 +23,9 @@ public class ExampleLoopback {
 		// Add read listener
 		rs485.addReadListener(new BrickletRS485.ReadListener() {
 			public void read(char[] message) {
-				System.out.println(String.format("Message (Length: %d): \"%s\"", message.length, String.valueOf(message)));
+				// Assume that the message consists of ASCII characters and
+				// convert it from an array of chars to a string
+				System.out.println("Message: \"" + String.valueOf(message) + "\"");
 			}
 		});
 
@@ -34,8 +33,7 @@ public class ExampleLoopback {
 		rs485.enableReadCallback();
 
 		// Write "test" string
-		String buffer = "test";
-		rs485.write(buffer.split(''));
+		rs485.write("test".toCharArray());
 
 		System.out.println("Press key to exit"); System.in.read();
 		ipcon.disconnect();

@@ -41,36 +41,32 @@
 
                 ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
                     function (connectReason) {
-                        // Set operating mode
+                        // Set operating mode to Modbus RTU slave
                         rs485.setMode(Tinkerforge.BrickletRS485.MODE_MODBUS_SLAVE_RTU);
 
-                        /*
-                         * Modbus specific configuration
-                         *
-                         * Slave address = 1 (Unused in master mode)
-                         * Request timeout = 1000ms (Unused in slave mode)
-                         * rs485.set_modbus_configuration(1, 1000)
-                         */
-                        rs485.setModbusConfiguration(1, 1000);
+                        // Modbus specific configuration:
+                        // - slave address = 17
+                        // - master request timeout = 0ms (unused in slave mode)
+                        rs485.setModbusConfiguration(17, 0);
+                    }
+                );
 
-                        // Register write single register response callback
-                        rs485.on(Tinkerforge.BrickletRS485.CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST,
-                            function (requestID, registerAddress, registerValue) {
-                                textArea.value += 'Request ID = ' + requestID + '\n';
-                                textArea.value += 'Register Address = ' + registerAddress + '\n';
-                                textArea.value += 'Register Value = ' + registerValue + '\n';
+                // Register Modbus slave write single register request callback
+                rs485.on(Tinkerforge.BrickletRS485.CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST,
+                    // Callback function for Modbus slave write single register request callback
+                    function (requestID, registerAddress, registerValue) {
+                        textArea.value += 'Request ID: ' + requestID + '\n';
+                        textArea.value += 'Register Address: ' + registerAddress + '\n';
+                        textArea.value += 'Register Value: ' + registerValue + '\n';
 
-                                // Here we assume valid writable register address is 42
-                                if (registerAddress != 42) {
-                                    textArea.value += 'Requested invalid register address\n';
-                                    rs485.modbusSlaveReportException(requestID, Tinkerforge.BrickletRS485.EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS);
-                                }
-                                else {
-                                    textArea.value += 'Request OK\n';
-                                    rs485.modbusSlaveAnswerWriteSingleRegisterRequest(requestID);
-                                }
-                            }
-                        );
+                        if (registerAddress != 42) {
+                            textArea.value += 'Error: Invalid register address\n';
+                            rs485.modbusSlaveReportException(requestID, Tinkerforge.BrickletRS485.EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS);
+                        } else {
+                            rs485.modbusSlaveAnswerWriteSingleRegisterRequest(requestID);
+                        }
+
+                        textArea.scrollTop = textArea.scrollHeight;
                     }
                 );
             }

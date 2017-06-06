@@ -2,10 +2,9 @@ function matlab_example_loopback()
     import com.tinkerforge.IPConnection;
     import com.tinkerforge.BrickletRS485;
     import java.lang.String;
-    import java.util.Arrays;
 
-    % For this example connect the RX+/- pins to TX+/- pins on the same bricklet
-    % and configure the Bricklet to be in full-duplex mode
+    % For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
+    % and configure the DIP switch on the Bricklet to full-duplex mode
 
     HOST = 'localhost';
     PORT = 4223;
@@ -24,7 +23,7 @@ function matlab_example_loopback()
     rs485.enableReadCallback();
 
     % Write "test" string
-    rs485.write(Arrays.copyOf(String('test').toCharArray(), 4));
+    rs485.write(String('test').toCharArray());
 
     input('Press key to exit\n', 's');
     ipcon.disconnect();
@@ -32,5 +31,5 @@ end
 
 % Callback function for read callback
 function cb_read(e)
-    fprintf('Message (Length: %g): "%s"\n', e.message.length, e.message);
+    fprintf('Message: "%s"\n', e.message);
 end

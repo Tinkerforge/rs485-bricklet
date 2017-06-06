@@ -1,8 +1,8 @@
 using System;
 using Tinkerforge;
 
-// For this example connect the RX+/- pins to TX+/- pins on the same bricklet
-// and configure the Bricklet to be in full-duplex mode
+// For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
+// and configure the DIP switch on the Bricklet to full-duplex mode
 
 class Example
 {
@@ -13,6 +13,8 @@ class Example
 	// Callback function for read callback
 	static void ReadCB(BrickletRS485 sender, char[] message)
 	{
+		// Assume that the message consists of ASCII characters and
+		// convert it from an array of chars to a string
 		Console.WriteLine("Message: \"" + new string(message) + "\"");
 	}
 

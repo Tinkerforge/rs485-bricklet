@@ -1,15 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
+// and configure the DIP switch on the Bricklet to full-duplex mode
+
 #include "ip_connection.h"
 #include "bricklet_rs485.h"
 
 #define HOST "localhost"
 #define PORT 4223
 #define UID "XYZ" // Change XYZ to the UID of your RS485 Bricklet
-
-// For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
-// and configure the Bricklet to be in full-duplex mode
 
 // Callback function for read callback
 void cb_read(char *message, uint16_t message_length, void *user_data) {
@@ -23,7 +23,7 @@ void cb_read(char *message, uint16_t message_length, void *user_data) {
 	memcpy(buffer, message, message_length);
 	buffer[message_length] = '\0';
 
-	printf("Message (Length: %d): \"%s\"\n", message_length, buffer);
+	printf("Message: \"%s\"\n", buffer);
 	free(buffer);
 }
 
@@ -53,8 +53,8 @@ int main(void) {
 	rs485_enable_read_callback(&rs485);
 
 	// Write "test" string
+	char buffer[] = {'t', 'e', 's', 't'};
 	uint16_t written;
-	char buffer[4] = {'t', 'e', 's', 't'};
 	rs485_write(&rs485, buffer, sizeof(buffer), &written);
 
 	printf("Press key to exit\n");

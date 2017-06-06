@@ -1,15 +1,13 @@
 program ExampleLoopback;
 
+{ For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
+  and configure the DIP switch on the Bricklet to full-duplex mode }
+
 {$ifdef MSWINDOWS}{$apptype CONSOLE}{$endif}
 {$ifdef FPC}{$mode OBJFPC}{$H+}{$endif}
 
 uses
   SysUtils, IPConnection, BrickletRS485;
-
-  {
-    For this example connect the RX+/- pins to TX+/- pins on the same bricklet
-    and configure the Bricklet to be in full-duplex mode
-  }
 
 type
   TExample = class
@@ -17,7 +15,7 @@ type
     ipcon: TIPConnection;
     rs485: TBrickletRS485;
   public
-    procedure ReadCB(sender: TBrickletRS485; const message: array of byte);
+    procedure ReadCB(sender: TBrickletRS485; const msg: array of byte);
     procedure Execute;
   end;
 
@@ -28,13 +26,15 @@ const
 
 var
   e: TExample;
-  bufferString: string;
-  bufferBytes: array of byte;
 
-{ Callback function for read callback }
-procedure TExample.ReadCB(sender: TBrickletRS485; const message: array of byte);
+{ Callback procedure for read callback }
+procedure TExample.ReadCB(sender: TBrickletRS485; const msg: array of byte);
+var str: string;
 begin
-  WriteLn(Format('Message (Length: %d): "%s"', [length(message), StrPas(message)]);
+  { Assume that the message consists of ASCII characters and
+    convert it from an array of chars to a string }
+  SetString(str, PAnsiChar(@msg[0]), Length(msg));
+  WriteLn(Format('Message: "%s"', [str]));
 end;
 
 procedure TExample.Execute;
@@ -49,16 +49,14 @@ begin
   ipcon.Connect(HOST, PORT);
   { Don't use device before ipcon is connected }
 
+  { Register read callback to procedure ReadCB }
+  rs485.OnRead := {$ifdef FPC}@{$endif}ReadCB;
+
   { Enable read callback }
   rs485.EnableReadCallback;
 
-  { Register read callback to function ReadCB }
-  rs485.OnRead := {$ifdef FPC}@{$endif}ReadCB;
-
   { Write "test" string}
-  bufferString := "test";
-  Move(bufferString[1], bufferBytes^, Length(bufferString));
-  rs485.Write(bufferBytes);
+  rs485.Write('test');
 
   WriteLn('Press key to exit');
   ReadLn;

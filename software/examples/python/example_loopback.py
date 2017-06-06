@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
+# and configure the DIP switch on the Bricklet to full-duplex mode
+
 HOST = "localhost"
 PORT = 4223
 UID = "XYZ" # Change XYZ to the UID of your RS485 Bricklet
@@ -8,12 +11,9 @@ UID = "XYZ" # Change XYZ to the UID of your RS485 Bricklet
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_rs485 import BrickletRS485
 
-# For this example connect the RX+/- pins to TX+/- pins on the same bricklet
-# and configure the Bricklet to be in full-duplex mode
-
 # Callback function for read callback
 def cb_read(message):
-    print('Message (Length: ' + str(len(message)) + '):' + ''.join(message))
+    print('Message: "' + ''.join(message) + '"')
 
 if __name__ == "__main__":
     ipcon = IPConnection() # Create IP connection

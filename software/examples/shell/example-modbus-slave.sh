@@ -21,14 +21,13 @@ tinkerforge dispatch rs485-bricklet $uid modbus-slave-write-single-register-requ
                tinkerforge call rs485-bricklet $uid modbus-slave-answer-write-single-register-request {request-id}
              fi" &
 
-# Set operating mode
+# Set operating mode to Modbus RTU slave
 tinkerforge call rs485-bricklet $uid set-mode mode-modbus-slave-rtu
 
-# Modbus specific configuration
-#
-# Slave address = 1 (Unused in master mode)
-# Request timeout = 1000ms (Unused in slave mode)
-tinkerforge call rs485-bricklet $uid set-modbus-configuration 1 1000
+# Modbus specific configuration:
+# - slave address = 17
+# - master request timeout = 0ms (unused in slave mode)
+tinkerforge call rs485-bricklet $uid set-modbus-configuration 17 0
 
 echo "Press key to exit"; read dummy
 

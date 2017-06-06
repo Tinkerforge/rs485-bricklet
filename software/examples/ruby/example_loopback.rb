@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 # -*- ruby encoding: utf-8 -*-
 
+# For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
+# and configure the DIP switch on the Bricklet to full-duplex mode
+
 require 'tinkerforge/ip_connection'
 require 'tinkerforge/bricklet_rs485'
 
@@ -13,16 +16,12 @@ UID = 'XYZ' # Change XYZ to the UID of your RS485 Bricklet
 ipcon = IPConnection.new # Create IP connection
 rs485 = BrickletRS485.new UID, ipcon # Create device object
 
-# For this example connect the RX+/- pins to TX+/- pins on the same bricklet
-# and configure the Bricklet to be in full-duplex mode
-
 ipcon.connect HOST, PORT # Connect to brickd
 # Don't use device before ipcon is connected
 
 # Register read callback
-rs485.register_callback(BrickletRS485::CALLBACK_READ) \
-  do |message|
-    puts "Message (Length: #{message.length}): #{message.join('')}"
+rs485.register_callback(BrickletRS485::CALLBACK_READ) do |message|
+  puts "Message: #{message.join('')}"
 end
 
 # Enable read callback

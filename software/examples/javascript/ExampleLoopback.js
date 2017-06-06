@@ -1,14 +1,14 @@
 var Tinkerforge = require('tinkerforge');
 
+// For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
+// and configure the DIP switch on the Bricklet to full-duplex mode
+
 var HOST = 'localhost';
 var PORT = 4223;
 var UID = 'XYZ'; // Change XYZ to the UID of your RS485 Bricklet
 
 var ipcon = new Tinkerforge.IPConnection(); // Create IP connection
 var rs485 = new Tinkerforge.BrickletRS485(UID, ipcon); // Create device object
-
-// For this example connect the RX+/- pins to TX+/- pins on the same bricklet
-// and configure the Bricklet to be in full-duplex mode
 
 ipcon.connect(HOST, PORT,
     function (error) {
@@ -19,18 +19,21 @@ ipcon.connect(HOST, PORT,
 
 ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
     function (connectReason) {
-        // Register read callback
-        rs485.on(Tinkerforge.BrickletRS485.CALLBACK_READ,
-            function (message) {
-                console.log('Message (Length: ' + message.length + '): ' + message.join(''));
-            }
-        );
-
         // Enable read callback
         rs485.enableReadCallback();
 
         // Write "test" string
         rs485.write('test'.split(''));
+    }
+);
+
+// Register read callback
+rs485.on(Tinkerforge.BrickletRS485.CALLBACK_READ,
+    // Callback function for read callback
+    function (message) {
+        // Assume that the message consists of ASCII characters and
+        // convert it from an array of chars to a string
+        console.log('Message: "' + message.join('') + '"');
     }
 );
 

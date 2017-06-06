@@ -3,7 +3,6 @@ function matlab_example_modbus_slave()
 
     import com.tinkerforge.IPConnection;
     import com.tinkerforge.BrickletRS485;
-    import java.lang.String;
 
     HOST = 'localhost';
     PORT = 4223;
@@ -15,36 +14,35 @@ function matlab_example_modbus_slave()
     ipcon.connect(HOST, PORT); % Connect to brickd
     % Don't use device before ipcon is connected
 
-    % Set operating mode
+    % Set operating mode to Modbus RTU slave
     rs485.setMode(BrickletRS485.MODE_MODBUS_SLAVE_RTU);
 
-    % Modbus specific configuration
-    %
-    % Slave address = 1 (Unused in master mode)
-    % Request timeout = 1000ms (Unused in slave mode)
-    rs485.setModbusConfiguration(1, 1000);
+    % Modbus specific configuration:
+    % - slave address = 17
+    % - master request timeout = 0ms (unused in slave mode)
+    rs485.setModbusConfiguration(17, 0);
 
-    % Register write single register request callback
-    set(rs485, 'ModbusSlaveWriteSingleRegisterRequestCallback', @(h, e) cb_modbus_slave_write_single_register_request(e));
+    % Register Modbus slave write single register request callback to
+    % function cb_modbus_slave_write_single_register_request
+    set(rs485, 'ModbusSlaveWriteSingleRegisterRequestCallback',
+        @(h, e) cb_modbus_slave_write_single_register_request(e));
 
     input('Press key to exit\n', 's');
     ipcon.disconnect();
 end
 
-% Callback function for Modbus master write single request callback
+% Callback function for Modbus slave write single register request callback
 function cb_modbus_slave_write_single_register_request(e)
-  global rs485;
+    global rs485;
 
-  fprintf('Request ID = %g\n', e.requestID);
-  fprintf('Register Address = %g\n', e.registerAddress);
-  fprintf('Register Value = %g\n', e.registerValue);
+    fprintf('Request ID: %i\n', e.requestID);
+    fprintf('Register Address: %i\n', e.registerAddress);
+    fprintf('Register Value: %i\n', e.registerValue);
 
-  % Here we assume valid writable register address is 42
-  if e.registerAddress ~= 42
-      fprintf('Requested invalid register address\n');
-      rs485.modbusSlaveReportException(e.requestID, com.tinkerforge.BrickletRS485.EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS);
-  else
-      fprintf('Request OK\n');
-      rs485.modbusSlaveAnswerWriteSingleRegisterRequest(e.requestID);
-  end
+    if e.registerAddress ~= 42
+        fprintf('Error: Invalid register address\n');
+        rs485.modbusSlaveReportException(e.requestID, com.tinkerforge.BrickletRS485.EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS);
+    else
+        rs485.modbusSlaveAnswerWriteSingleRegisterRequest(e.requestID);
+    end
 end

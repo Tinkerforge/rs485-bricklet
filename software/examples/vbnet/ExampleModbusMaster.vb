@@ -8,18 +8,16 @@ Module ExampleModbusMaster
 
     Dim expectedRequestID As Byte = 0
 
-    ' Callback function for read callback
-    sub WriteSingleRegisterResponseCB(ByVal sender As BrickletRS485,
-                                      ByVal requestID As Byte,
-                                      ByVal exceptionCode As Short)
-        if(requestID <> expectedRequestID) Then
-            Console.WriteLine("Unexpected request ID")
+    ' Callback subroutine for Modbus master write single register response callback
+    Sub ModbusMasterWriteSingleRegisterResponseCB(ByVal sender As BrickletRS485, _
+                                                  ByVal requestID As Byte, _
+                                                  ByVal exceptionCode As Short)
+        Console.WriteLine("Request ID: " + requestID.ToString())
+        Console.WriteLine("Exception Code: " + exceptionCode.ToString())
 
-            return
+        If requestID <> expectedRequestID Then
+            Console.WriteLine("Error: Unexpected request ID")
         End If
-
-        Console.WriteLine("Request ID = {0}", requestID)
-        Console.WriteLine("Exception Code = {0}", exceptionCode)
     End Sub
 
     Sub Main()
@@ -29,21 +27,21 @@ Module ExampleModbusMaster
         ipcon.Connect(HOST, PORT) ' Connect to brickd
         ' Don't use device before ipcon is connected
 
-        ' Set operating mode
+        ' Set operating mode to Modbus RTU master
         rs485.SetMode(BrickletRS485.MODE_MODBUS_MASTER_RTU)
 
-        ' Modbus specific configuration
-        '
-        ' Slave mode address = 1 (Used only in slave mode)
-        ' Master mode request timeout = 1000ms (Used only in master mode)
+        ' Modbus specific configuration:
+        ' - slave address = 1 (unused in master mode)
+        ' - master request timeout = 1000ms
         rs485.SetModbusConfiguration(1, 1000)
 
-        ' Register write single register response callback
-        AddHandler rs485.ModbusMasterWriteSingleRegisterResponseCallback,
-        AddressOf WriteSingleRegisterResponseCB
+        ' Register Modbus master write single register response callback to
+        ' subroutine ModbusMasterWriteSingleRegisterResponseCB
+        AddHandler rs485.ModbusMasterWriteSingleRegisterResponseCallback, _
+                   AddressOf ModbusMasterWriteSingleRegisterResponseCB
 
-        expectedRequestID = rs485.ModbusMasterWriteSingleregister(1, 42, 65535)
-
+        ' Write 65535 to register 42 of slave 17
+        expectedRequestID = rs485.ModbusMasterWriteSingleRegister(17, 42, 65535)
 
         Console.WriteLine("Press key to exit")
         Console.ReadLine()

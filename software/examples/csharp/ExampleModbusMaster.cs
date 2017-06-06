@@ -9,20 +9,18 @@ class Example
 
 	private static byte expectedRequestID = 0;
 
-	// Callback function for write single register response callback
-	static void WriteSingleRegisterResponseCB(BrickletRS485 sender,
-	                                          byte requestID,
-	                                          short exceptionCode)
+	// Callback function for Modbus master write single register response callback
+	static void ModbusMasterWriteSingleRegisterResponseCB(BrickletRS485 sender,
+	                                                      byte requestID,
+	                                                      short exceptionCode)
 	{
-		if(requestID != expectedRequestID)
-		{
-			Console.WriteLine("Unexpected request ID");
-
-			return;
-		}
-
 		Console.WriteLine("Request ID: " + requestID);
 		Console.WriteLine("Exception Code: " + exceptionCode);
+
+		if (requestID != expectedRequestID)
+		{
+			Console.WriteLine("Error: Unexpected request ID");
+		}
 	}
 
 	static void Main()
@@ -33,22 +31,20 @@ class Example
 		ipcon.Connect(HOST, PORT); // Connect to brickd
 		// Don't use device before ipcon is connected
 
-		// Set operating mode
+		// Set operating mode to Modbus RTU master
 		rs485.SetMode(BrickletRS485.MODE_MODBUS_MASTER_RTU);
 
-		/*
-		 * Modbus specific configuration
-		 *
-		 * Slave mode address = 1 (Unused in master mode)
-		 * Master mode request timeout = 1000ms (Unused in slave mode)
-		 */
+		// Modbus specific configuration:
+		// - slave address = 1 (unused in master mode)
+		// - master request timeout = 1000ms
 		rs485.SetModbusConfiguration(1, 1000);
 
-		// Register write single register response callback
-		rs485.ModbusMasterWriteSingleRegisterResponseCallback += WriteSingleRegisterResponseCB;
+		// Register Modbus master write single register response callback
+		// to function ModbusMasterWriteSingleRegisterResponseCB
+		rs485.ModbusMasterWriteSingleRegisterResponseCallback += ModbusMasterWriteSingleRegisterResponseCB;
 
-		// Request single register write
-		expectedRequestID = rs485.ModbusMasterWriteSingleRegister(1, 42, 65535);
+		// Write 65535 to register 42 of slave 17
+		expectedRequestID = rs485.ModbusMasterWriteSingleRegister(17, 42, 65535);
 
 		Console.WriteLine("Press enter to exit");
 		Console.ReadLine();
