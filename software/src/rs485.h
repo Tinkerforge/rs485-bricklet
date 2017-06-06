@@ -43,8 +43,8 @@
 
 typedef enum {
 	MODE_RS485 = 0,
-	MODE_MODBUS_SLAVE_RTU = 1,
-	MODE_MODBUS_MASTER_RTU = 2,
+	MODE_MODBUS_MASTER_RTU = 1,
+	MODE_MODBUS_SLAVE_RTU = 2
 } RS485Mode;
 
 typedef enum {
