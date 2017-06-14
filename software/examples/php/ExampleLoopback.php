@@ -32,7 +32,7 @@ $rs485->registerCallback(BrickletRS485::CALLBACK_READ, 'cb_read');
 $rs485->enableReadCallback();
 
 # Write "test" string
-$rs485->write(explode('', 'test'));
+$rs485->write(str_split('test'));
 
 echo "Press ctrl+c to exit\n";
 $ipcon->dispatchCallbacks(-1); // Dispatch callbacks forever
