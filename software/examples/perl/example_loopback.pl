@@ -32,7 +32,8 @@ $rs485->register_callback($rs485->CALLBACK_READ, 'cb_read');
 $rs485->enable_read_callback();
 
 # Write "test" string
-$rs485->write(split('', 'test'));
+my @message = split('', 'test');
+$rs485->write(\@message);
 
 print "Press key to exit\n";
 <STDIN>;
