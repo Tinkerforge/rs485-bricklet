@@ -12,8 +12,8 @@ Module ExampleModbusMaster
     Sub ModbusMasterWriteSingleRegisterResponseCB(ByVal sender As BrickletRS485, _
                                                   ByVal requestID As Byte, _
                                                   ByVal exceptionCode As Short)
-        Console.WriteLine("Request ID: " + requestID.ToString())
-        Console.WriteLine("Exception Code: " + exceptionCode.ToString())
+        Console.WriteLine("Request ID: {0}", requestID)
+        Console.WriteLine("Exception Code: {0}", exceptionCode)
 
         If requestID <> expectedRequestID Then
             Console.WriteLine("Error: Unexpected request ID")

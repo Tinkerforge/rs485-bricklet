@@ -11,11 +11,11 @@ Module ExampleModbusSlave
                                                 ByVal requestID As Byte, _
                                                 ByVal registerAddress As Long, _
                                                 ByVal registerValue As Integer)
-        Console.WriteLine("Request ID: " + requestID.ToString())
-        Console.WriteLine("Register Address: " + registerAddress.ToString())
-        Console.WriteLine("Register Value: " + registerValue.ToString())
+        Console.WriteLine("Request ID: {0}", requestID)
+        Console.WriteLine("Register Address: {0}", registerAddress)
+        Console.WriteLine("Register Value: {0}", registerValue)
 
-        If registersAddress <> 42 Then
+        If registerAddress <> 42 Then
             Console.WriteLine("Error: Invalid register address")
             sender.modbusSlaveReportException(requestID, BrickletRS485.EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS)
         Else

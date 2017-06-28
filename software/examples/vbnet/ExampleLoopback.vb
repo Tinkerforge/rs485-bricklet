@@ -13,7 +13,7 @@ Module ExampleLoopback
     sub ReadCB(ByVal sender As BrickletRS485, ByVal message As Char())
         ' Assume that the message consists of ASCII characters and
         ' convert it from an array of chars to a string
-        Console.WriteLine("Message: \"" + New String(message) + "\"")
+        Console.WriteLine("Message: ""{0}""", New String(message))
     End Sub
 
     Sub Main()
