@@ -8,7 +8,7 @@ use constant HOST => 'localhost';
 use constant PORT => 4223;
 use constant UID => 'XYZ'; # Change XYZ to the UID of your RS485 Bricklet
 
-my $expected_request_id :shared = 0;
+our $expected_request_id :shared = 0;
 
 # Callback subroutine for Modbus master write single register response callback
 sub cb_modbus_master_write_single_register_response
