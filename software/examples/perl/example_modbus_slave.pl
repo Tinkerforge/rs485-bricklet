@@ -2,14 +2,13 @@
 
 use Tinkerforge::IPConnection;
 use Tinkerforge::BrickletRS485;
-use threads::shared;
 
 use constant HOST => 'localhost';
 use constant PORT => 4223;
 use constant UID => 'XYZ'; # Change XYZ to the UID of your RS485 Bricklet
 
 my $ipcon = Tinkerforge::IPConnection->new(); # Create IP connection
-my $rs485 :shared = Tinkerforge::BrickletRS485->new(&UID, $ipcon); # Create device object
+our $rs485 = Tinkerforge::BrickletRS485->new(&UID, $ipcon); # Create device object
 
 # Callback subroutine for Modbus slave write single register request callback
 sub cb_modbus_slave_write_single_register_request

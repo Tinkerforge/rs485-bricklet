@@ -5,14 +5,10 @@
 
 use Tinkerforge::IPConnection;
 use Tinkerforge::BrickletRS485;
-use threads::shared;
 
 use constant HOST => 'localhost';
 use constant PORT => 4223;
 use constant UID => 'XYZ'; # Change XYZ to the UID of your RS485 Bricklet
-
-my $ipcon = Tinkerforge::IPConnection->new(); # Create IP connection
-my $rs485 = Tinkerforge::BrickletRS485->new(&UID, $ipcon); # Create device object
 
 # Callback subroutine for read callback
 sub cb_read
@@ -21,6 +17,9 @@ sub cb_read
 
     print "Message: \"" . join('', @{$message}) . "\"\n";
 }
+
+my $ipcon = Tinkerforge::IPConnection->new(); # Create IP connection
+my $rs485 = Tinkerforge::BrickletRS485->new(&UID, $ipcon); # Create device object
 
 $ipcon->connect(&HOST, &PORT); # Connect to brickd
 # Don't use device before ipcon is connected

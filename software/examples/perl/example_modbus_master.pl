@@ -44,7 +44,7 @@ $rs485->register_callback($rs485->CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGISTER_R
                           'cb_modbus_master_write_single_register_response');
 
 # Write 65535 to register 42 of slave 17
-$expected_request_id = $rs485->modbus_master_write_single_register(1, 42, 65535);
+$expected_request_id = $rs485->modbus_master_write_single_register(17, 42, 65535);
 
 print "Press key to exit\n";
 <STDIN>;
