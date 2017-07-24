@@ -6,6 +6,9 @@
 
 uid=XYZ # Change XYZ to the UID of your RS485 Bricklet
 
+# Enable full-duplex mode
+tinkerforge call rs485-bricklet $uid set-rs485-configuration 115200 parity-none stopbits-1 wordlength-8 duplex-full
+
 # Handle incoming read callbacks
 tinkerforge dispatch rs485-bricklet $uid read &
 

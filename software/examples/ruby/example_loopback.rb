@@ -19,6 +19,11 @@ rs485 = BrickletRS485.new UID, ipcon # Create device object
 ipcon.connect HOST, PORT # Connect to brickd
 # Don't use device before ipcon is connected
 
+# Enable full-duplex mode
+rs485.set_rs485_configuration 115200, BrickletRS485::PARITY_NONE, \
+                              BrickletRS485::STOPBITS_1, BrickletRS485::WORDLENGTH_8, \
+                              BrickletRS485::DUPLEX_FULL
+
 # Register read callback
 rs485.register_callback(BrickletRS485::CALLBACK_READ) do |message|
   puts "Message: #{message.join('')}"

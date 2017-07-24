@@ -49,13 +49,18 @@ begin
   ipcon.Connect(HOST, PORT);
   { Don't use device before ipcon is connected }
 
+  { Enable full-duplex mode }
+  rs485.SetRS485Configuration(115200, BRICKLET_RS485_PARITY_NONE,
+                              BRICKLET_RS485_STOPBITS_1, BRICKLET_RS485_WORDLENGTH_8,
+                              BRICKLET_RS485_DUPLEX_FULL);
+
   { Register read callback to procedure ReadCB }
   rs485.OnRead := {$ifdef FPC}@{$endif}ReadCB;
 
   { Enable read callback }
   rs485.EnableReadCallback;
 
-  { Write "test" string}
+  { Write "test" string }
   rs485.Write('test');
 
   WriteLn('Press key to exit');

@@ -43,6 +43,10 @@ int main(void) {
 	}
 	// Don't use device before ipcon is connected
 
+	// Enable full-duplex mode
+	rs485_set_rs485_configuration(&rs485, 115200, RS485_PARITY_NONE, RS485_STOPBITS_1,
+	                              RS485_WORDLENGTH_8, RS485_DUPLEX_FULL);
+
 	// Register read callback to function cb_read
 	rs485_register_callback(&rs485,
 	                        RS485_CALLBACK_READ,

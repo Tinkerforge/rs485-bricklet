@@ -19,6 +19,12 @@ ipcon.connect(HOST, PORT,
 
 ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
     function (connectReason) {
+        // Enable full-duplex mode
+        rs485.setRS485Configuration(115200, Tinkerforge.BrickletRS485.PARITY_NONE,
+                                    Tinkerforge.BrickletRS485.STOPBITS_1,
+                                    Tinkerforge.BrickletRS485.WORDLENGTH_8,
+                                    Tinkerforge.BrickletRS485.DUPLEX_FULL);
+
         // Enable read callback
         rs485.enableReadCallback();
 

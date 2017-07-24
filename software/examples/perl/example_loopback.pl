@@ -24,6 +24,10 @@ my $rs485 = Tinkerforge::BrickletRS485->new(&UID, $ipcon); # Create device objec
 $ipcon->connect(&HOST, &PORT); # Connect to brickd
 # Don't use device before ipcon is connected
 
+# Enable full-duplex mode
+$rs485->set_rs485_configuration(115200, $rs485->PARITY_NONE, $rs485->STOPBITS_1,
+                                $rs485->WORDLENGTH_8, $rs485->DUPLEX_FULL);
+
 # Register read callback to subroutine cb_read
 $rs485->register_callback($rs485->CALLBACK_READ, 'cb_read');
 
