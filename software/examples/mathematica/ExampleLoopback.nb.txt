@@ -1,0 +1,38 @@
+Needs["NETLink`"]
+LoadNETAssembly["Tinkerforge",NotebookDirectory[]<>"../../.."]
+
+(*For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
+  and configure the DIP switch on the Bricklet to full-duplex mode*)
+
+host="localhost"
+port=4223
+uid="XYZ"(*Change XYZ to the UID of your RS485 Bricklet*)
+
+(*Create IPConnection and device object*)
+ipcon=NETNew["Tinkerforge.IPConnection"]
+rs485=NETNew["Tinkerforge.BrickletRS485",uid,ipcon]
+ipcon@Connect[host,port]
+
+(*Enable full-duplex mode*)
+rs485@SetRS485Configuration[115200,BrickletRS485`PARITYUNONE,
+                            BrickletRS485`STOPBITSU1,BrickletRS485`WORDLENGTHU8,
+                            BrickletRS485`DUPLEXUFULL]
+
+(*Callback function for read callback*)
+ReadCB[sender_,message_]:=
+ Print["Message: "<>FromCharacterCode[message]]
+AddEventHandler[rs485@ReadCallback,ReadCB]
+
+(*Enable read callback*)
+rs485@EnableReadCallback[]
+
+(*Write "test" string*)
+(*FIXME: This call crashes Mono with a SIGSEGV, no clue why*)
+rs485@Write[ToCharacterCode["test"]]
+
+Input["Click OK to exit"]
+
+(*Clean up*)
+ipcon@Disconnect[]
+ReleaseNETObject[rs485]
+ReleaseNETObject[ipcon]

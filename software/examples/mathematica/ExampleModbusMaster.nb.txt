@@ -1,0 +1,41 @@
+Needs["NETLink`"]
+LoadNETAssembly["Tinkerforge",NotebookDirectory[]<>"../../.."]
+
+host="localhost"
+port=4223
+uid="XYZ"(*Change XYZ to the UID of your RS485 Bricklet*)
+
+(*Create IPConnection and device object*)
+ipcon=NETNew["Tinkerforge.IPConnection"]
+rs485=NETNew["Tinkerforge.BrickletRS485",uid,ipcon]
+ipcon@Connect[host,port]
+
+(*Set operating mode to Modbus RTU master*)
+rs485@SetMode[BrickletRS485`MODEUMODBUSUMASTERURTU]
+
+(*Modbus specific configuration:*)
+(*- slave address = 1 (unused in master mode)*)
+(*- master request timeout = 1000ms*)
+rs485@SetModbusConfiguration[1,1000]
+
+expectedRequestID=0
+
+(*Callback function for Modbus master write single register response callback*)
+ModbusMasterWriteSingleRegisterResponseCB[sender_,requestID_,exceptionCode_]:=
+ Module[{},
+  Print["Request ID: "<>ToString[requestID]];
+  Print["Exception Code: "<>ToString[exceptionCode]];
+  If[requestID!=expectedRequestID,Print["Error: Unexpected request ID"]]
+ ]
+
+AddEventHandler[rs485@ModbusMasterWriteSingleRegisterResponseCallback,ModbusMasterWriteSingleRegisterResponseCB]
+
+(*Write 65535 to register 42 of slave 17*)
+expectedRequestID=rs485@ModbusMasterWriteSingleRegister[17,42,65535]
+
+Input["Click OK to exit"]
+
+(*Clean up*)
+ipcon@Disconnect[]
+ReleaseNETObject[rs485]
+ReleaseNETObject[ipcon]

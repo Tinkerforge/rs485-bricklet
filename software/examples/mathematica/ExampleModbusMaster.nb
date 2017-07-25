@@ -1,0 +1,167 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[      5594,        158]
+NotebookOptionsPosition[      5319,        144]
+NotebookOutlinePosition[      5658,        159]
+CellTagsIndexPosition[      5615,        156]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{"Needs", "[", "\"\<NETLink`\>\"", "]"}], "\n", 
+ RowBox[{"LoadNETAssembly", "[", 
+  RowBox[{"\"\<Tinkerforge\>\"", ",", 
+   RowBox[{
+    RowBox[{"NotebookDirectory", "[", "]"}], "<>", "\"\<../../..\>\""}]}], 
+  "]"}]}], "Input",
+ CellChangeTimes->{{3.709959983126384*^9, 3.7099599831305017`*^9}, {
+   3.709960214836233*^9, 3.709960215587393*^9}, 3.709960335274776*^9}],
+
+Cell[BoxData[{
+ RowBox[{"host", "=", "\"\<localhost\>\""}], "\n", 
+ RowBox[{"port", "=", "4223"}], "\n", 
+ RowBox[{
+  RowBox[{"uid", "=", "\"\<XYZ\>\""}], 
+  RowBox[{"(*", 
+   RowBox[{
+   "Change", " ", "XYZ", " ", "to", " ", "the", " ", "UID", " ", "of", " ", 
+    "your", " ", "RS485", " ", "Bricklet"}], "*)"}], "\[IndentingNewLine]", 
+  "\n", 
+  RowBox[{"(*", 
+   RowBox[{
+   "Create", " ", "IPConnection", " ", "and", " ", "device", " ", "object"}], 
+   "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{"ipcon", "=", 
+  RowBox[{"NETNew", "[", "\"\<Tinkerforge.IPConnection\>\"", "]"}]}], "\n", 
+ RowBox[{"rs485", "=", 
+  RowBox[{"NETNew", "[", 
+   RowBox[{"\"\<Tinkerforge.BrickletRS485\>\"", ",", "uid", ",", "ipcon"}], 
+   "]"}]}], "\n", 
+ RowBox[{
+  RowBox[{"ipcon", "@", 
+   RowBox[{"Connect", "[", 
+    RowBox[{"host", ",", "port"}], "]"}]}], "\[IndentingNewLine]", "\n", 
+  RowBox[{"(*", 
+   RowBox[{
+   "Set", " ", "operating", " ", "mode", " ", "to", " ", "Modbus", " ", "RTU",
+     " ", "master"}], "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"rs485", "@", 
+   RowBox[{"SetMode", "[", "BrickletRS485`MODEUMODBUSUMASTERURTU", "]"}]}], 
+  "\n", "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{"Modbus", " ", "specific", " ", 
+    RowBox[{"configuration", ":"}]}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", " ", "slave"}], " ", "address"}], " ", "=", " ", 
+    RowBox[{"1", " ", 
+     RowBox[{"(", 
+      RowBox[{"unused", " ", "in", " ", "master", " ", "mode"}], ")"}]}]}], 
+   "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", " ", "master"}], " ", "request", " ", "timeout"}], " ", "=",
+     " ", 
+    RowBox[{"1000", "ms"}]}], "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"rs485", "@", 
+   RowBox[{"SetModbusConfiguration", "[", 
+    RowBox[{"1", ",", "1000"}], "]"}]}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"expectedRequestID", "=", "0"}], "\[IndentingNewLine]", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "Callback", " ", "function", " ", "for", " ", "Modbus", " ", "master", " ",
+     "write", " ", "single", " ", "register", " ", "response", " ", 
+    "callback"}], "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"ModbusMasterWriteSingleRegisterResponseCB", "[", 
+    RowBox[{"sender_", ",", "requestID_", ",", "exceptionCode_"}], "]"}], ":=",
+    "\[IndentingNewLine]", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"Print", "[", 
+       RowBox[{"\"\<Request ID: \>\"", "<>", 
+        RowBox[{"ToString", "[", "requestID", "]"}]}], "]"}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", 
+       RowBox[{"\"\<Exception Code: \>\"", "<>", 
+        RowBox[{"ToString", "[", "exceptionCode", "]"}]}], "]"}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{"requestID", "!=", "expectedRequestID"}], ",", 
+        RowBox[{"Print", "[", "\"\<Error: Unexpected request ID\>\"", "]"}]}],
+        "]"}]}]}], "\[IndentingNewLine]", "]"}]}], 
+  "\n"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"AddEventHandler", "[", 
+   RowBox[{
+    RowBox[{"rs485", "@", "ModbusMasterWriteSingleRegisterResponseCallback"}],
+     ",", "ModbusMasterWriteSingleRegisterResponseCB"}], "]"}], "\n", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "Write", " ", "65535", " ", "to", " ", "register", " ", "42", " ", "of", 
+    " ", "slave", " ", "17"}], "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"expectedRequestID", "=", 
+   RowBox[{"rs485", "@", 
+    RowBox[{"ModbusMasterWriteSingleRegister", "[", 
+     RowBox[{"17", ",", "42", ",", "65535"}], "]"}]}]}], 
+  "\n"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Input", "[", "\"\<Click OK to exit\>\"", "]"}], "\n", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{"Clean", " ", "up"}], "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{"ipcon", "@", 
+  RowBox[{"Disconnect", "[", "]"}]}], "\n", 
+ RowBox[{"ReleaseNETObject", "[", "rs485", "]"}], "\n", 
+ RowBox[{"ReleaseNETObject", "[", "ipcon", "]"}]}], "Input",
+ CellChangeTimes->{{3.7099599912097282`*^9, 3.709960042087924*^9}, {
+  3.709960115023898*^9, 3.709960175704568*^9}, {3.709960294310544*^9, 
+  3.709960318467064*^9}}]
+},
+WindowSize->{1353, 953},
+WindowMargins->{{Automatic, 263}, {Automatic, 24}},
+FrontEndVersion->"9.0 for Linux x86 (64-bit) (November 20, 2012)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[557, 20, 392, 8, 55, "Input"],
+Cell[952, 30, 4363, 112, 847, "Input"]
+}
+]
+*)
+
+(* End of internal cache information *)

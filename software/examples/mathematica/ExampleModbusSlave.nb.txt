@@ -1,0 +1,42 @@
+Needs["NETLink`"]
+LoadNETAssembly["Tinkerforge",NotebookDirectory[]<>"../../.."]
+
+host="localhost"
+port=4223
+uid="XYZ"(*Change XYZ to the UID of your RS485 Bricklet*)
+
+(*Create IPConnection and device object*)
+ipcon=NETNew["Tinkerforge.IPConnection"]
+rs485=NETNew["Tinkerforge.BrickletRS485",uid,ipcon]
+ipcon@Connect[host,port]
+
+(*Set operating mode to Modbus RTU slave*)
+rs485@SetMode[BrickletRS485`MODEUMODBUSUSLAVEURTU]
+
+(*Modbus specific configuration:*)
+(*- slave address = 17*)
+(*- master request timeout = 0ms (unused in slave mode)*)
+rs485@SetModbusConfiguration[17,0]
+
+(*Callback function for Modbus slave write single register request callback*)
+ModbusSlaveWriteSingleRegisterRequestCB[sender_,requestID_,registerAddress_,registerValue_]:=
+ Module[{},
+  Print["Request ID: "<>ToString[requestID]];
+  Print["Register Address: "<>ToString[registerAddress]];
+  Print["Register Value: "<>ToString[registerValue]];
+  
+  If[registerAddress!=42,
+   Print["Error: Invalid register address"];
+   sender@ModbusSlaveReportException[requestID,BrickletRS485`EXCEPTIONUCODEUILLEGALUDATAUADDRESS],
+   sender@ModbusSlaveAnswerWriteSingleRegisterRequest[requestID]
+  ]
+ ]
+
+AddEventHandler[rs485@ModbusSlaveWriteSingleRegisterRequestCallback,ModbusSlaveWriteSingleRegisterRequestCB]
+
+Input["Click OK to exit"]
+
+(*Clean up*)
+ipcon@Disconnect[]
+ReleaseNETObject[rs485]
+ReleaseNETObject[ipcon]

@@ -1,0 +1,170 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[      5782,        161]
+NotebookOptionsPosition[      5507,        147]
+NotebookOutlinePosition[      5846,        162]
+CellTagsIndexPosition[      5803,        159]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{"Needs", "[", "\"\<NETLink`\>\"", "]"}], "\n", 
+ RowBox[{"LoadNETAssembly", "[", 
+  RowBox[{"\"\<Tinkerforge\>\"", ",", 
+   RowBox[{
+    RowBox[{"NotebookDirectory", "[", "]"}], "<>", "\"\<../../..\>\""}]}], 
+  "]"}]}], "Input",
+ CellChangeTimes->{{3.709961952293509*^9, 3.709961952294629*^9}, {
+   3.709962068426401*^9, 3.709962069225469*^9}, 3.709962199741873*^9}],
+
+Cell[BoxData[{
+ RowBox[{"host", "=", "\"\<localhost\>\""}], "\n", 
+ RowBox[{"port", "=", "4223"}], "\n", 
+ RowBox[{
+  RowBox[{"uid", "=", "\"\<XYZ\>\""}], 
+  RowBox[{"(*", 
+   RowBox[{
+   "Change", " ", "XYZ", " ", "to", " ", "the", " ", "UID", " ", "of", " ", 
+    "your", " ", "RS485", " ", "Bricklet"}], "*)"}], "\n", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "Create", " ", "IPConnection", " ", "and", " ", "device", " ", "object"}], 
+   "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{"ipcon", "=", 
+  RowBox[{"NETNew", "[", "\"\<Tinkerforge.IPConnection\>\"", "]"}]}], "\n", 
+ RowBox[{"rs485", "=", 
+  RowBox[{"NETNew", "[", 
+   RowBox[{"\"\<Tinkerforge.BrickletRS485\>\"", ",", "uid", ",", "ipcon"}], 
+   "]"}]}], "\n", 
+ RowBox[{
+  RowBox[{"ipcon", "@", 
+   RowBox[{"Connect", "[", 
+    RowBox[{"host", ",", "port"}], "]"}]}], "\n", "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "Set", " ", "operating", " ", "mode", " ", "to", " ", "Modbus", " ", "RTU",
+     " ", "slave"}], "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"rs485", "@", 
+   RowBox[{"SetMode", "[", "BrickletRS485`MODEUMODBUSUSLAVEURTU", "]"}]}], 
+  "\[IndentingNewLine]", "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{"Modbus", " ", "specific", " ", 
+    RowBox[{"configuration", ":"}]}], "*)"}], "\n", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", " ", "slave"}], " ", "address"}], " ", "=", " ", "17"}], 
+   "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"-", " ", "master"}], " ", "request", " ", "timeout"}], " ", "=",
+     " ", 
+    RowBox[{"0", "ms", " ", 
+     RowBox[{"(", 
+      RowBox[{"unused", " ", "in", " ", "slave", " ", "mode"}], ")"}]}]}], 
+   "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"rs485", "@", 
+   RowBox[{"SetModbusConfiguration", "[", 
+    RowBox[{"17", ",", "0"}], "]"}]}], "\n", "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "Callback", " ", "function", " ", "for", " ", "Modbus", " ", "slave", " ", 
+    "write", " ", "single", " ", "register", " ", "request", " ", 
+    "callback"}], "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"ModbusSlaveWriteSingleRegisterRequestCB", "[", 
+    RowBox[{
+    "sender_", ",", "requestID_", ",", "registerAddress_", ",", 
+     "registerValue_"}], "]"}], ":=", "\[IndentingNewLine]", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"Print", "[", 
+       RowBox[{"\"\<Request ID: \>\"", "<>", 
+        RowBox[{"ToString", "[", "requestID", "]"}]}], "]"}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", 
+       RowBox[{"\"\<Register Address: \>\"", "<>", 
+        RowBox[{"ToString", "[", "registerAddress", "]"}]}], "]"}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", 
+       RowBox[{"\"\<Register Value: \>\"", "<>", 
+        RowBox[{"ToString", "[", "registerValue", "]"}]}], "]"}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{"registerAddress", "\[NotEqual]", "42"}], ",", 
+        RowBox[{
+         RowBox[{
+         "Print", "[", "\"\<Error: Invalid register address\>\"", "]"}], ";", 
+         "\[IndentingNewLine]", 
+         RowBox[{"sender", "@", 
+          RowBox[{"ModbusSlaveReportException", "[", 
+           RowBox[{
+           "requestID", ",", 
+            "BrickletRS485`EXCEPTIONUCODEUILLEGALUDATAUADDRESS"}], "]"}]}]}], 
+        ",", 
+        RowBox[{"sender", "@", 
+         RowBox[{
+         "ModbusSlaveAnswerWriteSingleRegisterRequest", "[", "requestID", 
+          "]"}]}]}], "\[IndentingNewLine]", "]"}]}]}], "\[IndentingNewLine]", 
+    "]"}]}], "\n"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"AddEventHandler", "[", 
+   RowBox[{
+    RowBox[{"rs485", "@", "ModbusSlaveWriteSingleRegisterRequestCallback"}], 
+    ",", "ModbusSlaveWriteSingleRegisterRequestCB"}], "]"}], 
+  "\n"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Input", "[", "\"\<Click OK to exit\>\"", "]"}], "\n", 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{"Clean", " ", "up"}], "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{"ipcon", "@", 
+  RowBox[{"Disconnect", "[", "]"}]}], "\n", 
+ RowBox[{"ReleaseNETObject", "[", "rs485", "]"}], "\n", 
+ RowBox[{"ReleaseNETObject", "[", "ipcon", "]"}]}], "Input",
+ CellChangeTimes->{{3.7099619595770273`*^9, 3.709961970818471*^9}, {
+  3.7099620245893097`*^9, 3.7099620419937973`*^9}, {3.709962078280527*^9, 
+  3.709962084675606*^9}, {3.709962182095415*^9, 3.709962211573926*^9}}]
+},
+WindowSize->{1466, 865},
+WindowMargins->{{Automatic, 154}, {70, Automatic}},
+FrontEndVersion->"9.0 for Linux x86 (64-bit) (November 20, 2012)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[557, 20, 390, 8, 55, "Input"],
+Cell[950, 30, 4553, 115, 825, "Input"]
+}
+]
+*)
+
+(* End of internal cache information *)

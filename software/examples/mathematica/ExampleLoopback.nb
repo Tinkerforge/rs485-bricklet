@@ -1,0 +1,152 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 9.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[      5180,        143]
+NotebookOptionsPosition[      4905,        129]
+NotebookOutlinePosition[      5244,        144]
+CellTagsIndexPosition[      5201,        141]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{"Needs", "[", "\"\<NETLink`\>\"", "]"}], "\n", 
+ RowBox[{"LoadNETAssembly", "[", 
+  RowBox[{"\"\<Tinkerforge\>\"", ",", 
+   RowBox[{
+    RowBox[{"NotebookDirectory", "[", "]"}], "<>", "\"\<../../..\>\""}]}], 
+  "]"}]}], "Input",
+ CellChangeTimes->{{3.709958706910809*^9, 3.7099587069114647`*^9}, {
+   3.709958872379715*^9, 3.709958873131147*^9}, {3.7099589566469593`*^9, 
+   3.7099589580155582`*^9}, 3.709959518721395*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{
+    "For", " ", "this", " ", "example", " ", "connect", " ", "the", " ", 
+     "RX"}], "+", 
+    RowBox[{
+     RowBox[{"/", 
+      RowBox[{"-", "pins"}]}], " ", "to", " ", "TX"}], "+", 
+    RowBox[{
+     RowBox[{"/", 
+      RowBox[{"-", "pins"}]}], " ", "on", " ", "the", " ", "same", " ", 
+     "Bricklet", " ", "and", " ", "configure", " ", "the", " ", "DIP", " ", 
+     "switch", " ", "on", " ", "the", " ", "Bricklet", " ", "to", " ", 
+     "full"}], "-", 
+    RowBox[{"duplex", " ", "mode"}]}], "*)"}], "\[IndentingNewLine]", 
+  "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"host", "=", "\"\<localhost\>\""}], "\n", 
+   RowBox[{"port", "=", "4223"}], "\n", 
+   RowBox[{"uid", "=", "\"\<XYZ\>\""}], 
+   RowBox[{"(*", 
+    RowBox[{
+    "Change", " ", "XYZ", " ", "to", " ", "the", " ", "UID", " ", "of", " ", 
+     "your", " ", "RS485", " ", "Bricklet"}], "*)"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{
+    "Create", " ", "IPConnection", " ", "and", " ", "device", " ", "object"}],
+     "*)"}], "\n", 
+   RowBox[{"ipcon", "=", 
+    RowBox[{"NETNew", "[", "\"\<Tinkerforge.IPConnection\>\"", "]"}]}], "\n", 
+   
+   RowBox[{"rs485", "=", 
+    RowBox[{"NETNew", "[", 
+     RowBox[{"\"\<Tinkerforge.BrickletRS485\>\"", ",", "uid", ",", "ipcon"}], 
+     "]"}]}], "\n", 
+   RowBox[{"ipcon", "@", 
+    RowBox[{"Connect", "[", 
+     RowBox[{"host", ",", "port"}], "]"}]}], "\[IndentingNewLine]", "\n", 
+   RowBox[{"(*", 
+    RowBox[{
+     RowBox[{"Enable", " ", "full"}], "-", 
+     RowBox[{"duplex", " ", "mode"}]}], "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"rs485", "@", 
+    RowBox[{"SetRS485Configuration", "[", 
+     RowBox[{
+     "115200", ",", "BrickletRS485`PARITYUNONE", ",", 
+      "BrickletRS485`STOPBITSU1", ",", "BrickletRS485`WORDLENGTHU8", ",", 
+      "BrickletRS485`DUPLEXUFULL"}], "]"}]}], "\n", "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{
+    "Callback", " ", "function", " ", "for", " ", "read", " ", "callback"}], 
+    "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"ReadCB", "[", 
+     RowBox[{"sender_", ",", "message_"}], "]"}], ":=", 
+    RowBox[{"Print", "[", 
+     RowBox[{"\"\<Message: \>\"", "<>", 
+      RowBox[{"FromCharacterCode", "[", "message", "]"}]}], "]"}]}], "\n", 
+   RowBox[{"AddEventHandler", "[", 
+    RowBox[{
+     RowBox[{"rs485", "@", "ReadCallback"}], ",", "ReadCB"}], "]"}], "\n", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"Enable", " ", "read", " ", "callback"}], "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"rs485", "@", 
+    RowBox[{"EnableReadCallback", "[", "]"}]}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"Write", " ", "\"\<test\>\"", " ", "string"}], "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{
+     RowBox[{"FIXME", ":", 
+      RowBox[{
+      "This", " ", "call", " ", "crashes", " ", "Mono", " ", "with", " ", "a",
+        " ", "SIGSEGV"}]}], ",", 
+     RowBox[{"no", " ", "clue", " ", "why"}]}], "*)"}], "\n", 
+   RowBox[{"rs485", "@", 
+    RowBox[{"Write", "[", 
+     RowBox[{"ToCharacterCode", "[", "\"\<test\>\"", "]"}], "]"}]}], 
+   "\[IndentingNewLine]", "\n", 
+   RowBox[{"Input", "[", "\"\<Click OK to exit\>\"", "]"}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"Clean", " ", "up"}], "*)"}], "\n", 
+   RowBox[{"ipcon", "@", 
+    RowBox[{"Disconnect", "[", "]"}]}], "\n", 
+   RowBox[{"ReleaseNETObject", "[", "rs485", "]"}], "\n", 
+   RowBox[{"ReleaseNETObject", "[", "ipcon", "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.70995871489093*^9, 3.709958714892015*^9}, {
+   3.7099588098842487`*^9, 3.709958854395515*^9}, 3.709958986655073*^9, {
+   3.7099591103746347`*^9, 3.70995911381423*^9}, {3.709959179532177*^9, 
+   3.709959184161621*^9}, {3.709959945207491*^9, 3.709959946191092*^9}}]
+},
+WindowSize->{1475, 866},
+WindowMargins->{{Automatic, 140}, {71, Automatic}},
+FrontEndVersion->"9.0 for Linux x86 (64-bit) (November 20, 2012)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[557, 20, 446, 9, 55, "Input"],
+Cell[1006, 31, 3895, 96, 693, "Input"]
+}
+]
+*)
+
+(* End of internal cache information *)
