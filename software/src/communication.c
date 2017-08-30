@@ -223,6 +223,7 @@ static bool send_stream_chunks(uint8_t function_code, void *cb) {
 
 			memcpy(&temp1, &rs485.modbus_rtu.request.rx_frame[2], 2);
 			_cb->starting_address = NTOHS(temp1);
+			_cb->starting_address++;
 
 			/*
 			 * While streaming with bool array type, override the callback's stream
@@ -273,6 +274,7 @@ static bool send_stream_chunks(uint8_t function_code, void *cb) {
 
 			memcpy(&temp1, &rs485.modbus_rtu.request.rx_frame[2], 2);
 			_cb->starting_address = NTOHS(temp1);
+			_cb->starting_address++;
 
 			bootloader_spitfp_send_ack_and_message(&bootloader_status,
 			                                       (uint8_t *)_cb,
@@ -1382,7 +1384,7 @@ modbus_master_write_multiple_coils_low_level(const ModbusMasterWriteMultipleCoil
 		uint16_t starting_address;
 		uint16_t count;
 
-		starting_address = data->starting_address -1;
+		starting_address = data->starting_address - 1;
 		count = data->stream_total_length;
 
 		// Fix endianness (LE->BE).
@@ -2791,7 +2793,6 @@ bool handle_modbus_slave_write_multiple_coils_request_low_level_callback(void) {
 
 	// Fix endianness (BE->LE).
 	cb.starting_address = NTOHS(cb.starting_address);
-	cb.starting_address++;
 	quantity_of_coils = NTOHS(quantity_of_coils);
 
 	cb.request_id = rs485.modbus_rtu.request.id;
@@ -2807,6 +2808,8 @@ bool handle_modbus_slave_write_multiple_coils_request_low_level_callback(void) {
 
 	if(cb.stream_total_length <= sizeof(cb.stream_chunk_data)) {
 		// Fits in one packet.
+		cb.starting_address++;
+
 		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
 			memcpy(&cb.stream_chunk_data, &rs485.modbus_rtu.request.rx_frame[7], cb.stream_total_length);
 
@@ -2951,8 +2954,6 @@ bool handle_modbus_slave_write_multiple_registers_request_low_level_callback(voi
 
 	// Fix endianness (BE->LE).
 	cb.starting_address = NTOHS(cb.starting_address);
-	cb.starting_address++;
-
 	cb.request_id = rs485.modbus_rtu.request.id;
 
 	// Data to be handled.
@@ -2966,6 +2967,8 @@ bool handle_modbus_slave_write_multiple_registers_request_low_level_callback(voi
 
 	if(rs485.modbus_rtu.request.rx_frame[6] <= sizeof(cb.stream_chunk_data)) {
 		// Fits in one packet.
+		cb.starting_address++;
+
 		if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
 			for(uint16_t i = 0; i < rs485.modbus_rtu.request.rx_frame[6] / 2; i++) {
 				uint16_t value = 0;
