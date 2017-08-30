@@ -1,5 +1,5 @@
 2015-07-26: 2.0.0 (63f8107)
 - Initial version
 
-2017-08-30: 2.1.0 (f89b346)
+2017-08-30: 2.0.1 (d9f4f5e)
 - Fix bug, starting address was not being adjusted for multi-chunk streams
