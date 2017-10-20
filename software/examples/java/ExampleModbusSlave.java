@@ -40,7 +40,7 @@ public class ExampleModbusSlave {
 					System.out.println("Error: Invalid register address");
 
 					try {
-						rs485.modbusSlaveReportException(requestID, rs485.EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS);
+						rs485.modbusSlaveReportException(requestID, BrickletRS485.EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS);
 					} catch(TinkerforgeException e) {
 					}
 				} else {
