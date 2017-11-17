@@ -15,7 +15,7 @@ type
     ipcon: TIPConnection;
     rs485: TBrickletRS485;
   public
-    procedure ReadCB(sender: TBrickletRS485; const msg: array of byte);
+    procedure ReadCB(sender: TBrickletRS485; const msg: TArrayOfChar);
     procedure Execute;
   end;
 
@@ -28,7 +28,7 @@ var
   e: TExample;
 
 { Callback procedure for read callback }
-procedure TExample.ReadCB(sender: TBrickletRS485; const msg: array of byte);
+procedure TExample.ReadCB(sender: TBrickletRS485; const msg: TArrayOfChar);
 var str: string;
 begin
   { Assume that the message consists of ASCII characters and
@@ -61,7 +61,7 @@ begin
   rs485.EnableReadCallback;
 
   { Write "test" string }
-  rs485.Write('test');
+  rs485.Write(('t', 'e', 's', 't'));
 
   WriteLn('Press key to exit');
   ReadLn;
