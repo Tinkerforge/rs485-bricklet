@@ -60,8 +60,8 @@ begin
     - master request timeout = 1000ms }
   rs485.SetModbusConfiguration(1, 1000);
 
-  { Register Modbus master write single register response callback
-    to procedure ModbusMasterWriteSingleRegisterResponseCB }
+  { Register Modbus master write single register response callback to procedure
+    ModbusMasterWriteSingleRegisterResponseCB }
   rs485.OnModbusMasterWriteSingleRegisterResponse := {$ifdef FPC}@{$endif}ModbusMasterWriteSingleRegisterResponseCB;
 
   { Write 65535 to register 42 of slave 17 }

@@ -38,8 +38,8 @@ Module ExampleModbusSlave
         ' - master request timeout = 0ms (unused in slave mode)
         rs485.SetModbusConfiguration(17, 0)
 
-        ' Register Modbus slave write single register request callback to
-        ' subroutine ModbusSlaveWriteSingleRegisterRequestCB
+        ' Register Modbus slave write single register request callback to subroutine
+        ' ModbusSlaveWriteSingleRegisterRequestCB
         AddHandler rs485.ModbusSlaveWriteSingleRegisterRequestCallback, _
                    AddressOf ModbusSlaveWriteSingleRegisterRequestCB
 

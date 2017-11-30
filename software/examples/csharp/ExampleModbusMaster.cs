@@ -39,8 +39,8 @@ class Example
 		// - master request timeout = 1000ms
 		rs485.SetModbusConfiguration(1, 1000);
 
-		// Register Modbus master write single register response callback
-		// to function ModbusMasterWriteSingleRegisterResponseCB
+		// Register Modbus master write single register response callback to function
+		// ModbusMasterWriteSingleRegisterResponseCB
 		rs485.ModbusMasterWriteSingleRegisterResponseCallback += ModbusMasterWriteSingleRegisterResponseCB;
 
 		// Write 65535 to register 42 of slave 17

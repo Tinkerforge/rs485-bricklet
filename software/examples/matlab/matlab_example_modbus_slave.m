@@ -22,8 +22,8 @@ function matlab_example_modbus_slave()
     % - master request timeout = 0ms (unused in slave mode)
     rs485.setModbusConfiguration(17, 0);
 
-    % Register Modbus slave write single register request callback to
-    % function cb_modbus_slave_write_single_register_request
+    % Register Modbus slave write single register request callback to function
+    % cb_modbus_slave_write_single_register_request
     set(rs485, 'ModbusSlaveWriteSingleRegisterRequestCallback',
         @(h, e) cb_modbus_slave_write_single_register_request(e));
 

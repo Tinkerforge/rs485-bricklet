@@ -44,8 +44,8 @@ class Example
 		// - master request timeout = 0ms (unused in slave mode)
 		rs485.SetModbusConfiguration(17, 0);
 
-		// Register Modbus slave write single register request callback
-		// to function ModbusSlaveWriteSingleRegisterRequestCB
+		// Register Modbus slave write single register request callback to function
+		// ModbusSlaveWriteSingleRegisterRequestCB
 		rs485.ModbusSlaveWriteSingleRegisterRequestCallback += ModbusSlaveWriteSingleRegisterRequestCB;
 
 		Console.WriteLine("Press enter to exit");

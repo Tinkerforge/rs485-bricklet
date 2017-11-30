@@ -20,8 +20,8 @@ function octave_example_modbus_master()
     % - master request timeout = 1000ms
     rs485.setModbusConfiguration(1, 1000);
 
-    % Register Modbus master write single register response callback to
-    % function cb_modbus_master_write_single_register_response
+    % Register Modbus master write single register response callback to function
+    % cb_modbus_master_write_single_register_response
     rs485.addModbusMasterWriteSingleRegisterResponseCallback(@cb_modbus_master_write_single_register_response);
 
     % Write 65535 to register 42 of slave 17

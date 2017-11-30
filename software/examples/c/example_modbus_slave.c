@@ -50,8 +50,8 @@ int main(void) {
 	// - master request timeout = 0ms (unused in slave mode)
 	rs485_set_modbus_configuration(&rs485, 17, 0);
 
-	// Register Modbus slave write single register request callback
-	// to function cb_modbus_slave_write_single_register_request
+	// Register Modbus slave write single register request callback to function
+	// cb_modbus_slave_write_single_register_request
 	rs485_register_callback(&rs485,
 	                        RS485_CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST,
 	                        (void *)cb_modbus_slave_write_single_register_request,

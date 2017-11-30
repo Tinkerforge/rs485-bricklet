@@ -66,8 +66,8 @@ begin
     - master request timeout = 0ms (unused in slave mode) }
   rs485.SetModbusConfiguration(17, 0);
 
-  { Register Modbus slave write single register request callback
-    to procedure ModbusSlaveWriteSingleRegisterRequestCB }
+  { Register Modbus slave write single register request callback to procedure
+    ModbusSlaveWriteSingleRegisterRequestCB }
   rs485.OnModbusSlaveWriteSingleRegisterRequest := {$ifdef FPC}@{$endif}ModbusSlaveWriteSingleRegisterRequestCB;
 
   WriteLn('Press key to exit');

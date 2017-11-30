@@ -45,8 +45,8 @@ int main(void) {
 	// - master request timeout = 1000ms
 	rs485_set_modbus_configuration(&rs485, 1, 1000);
 
-	// Register Modbus master write single register response callback
-	// to function cb_modbus_master_write_single_register_response
+	// Register Modbus master write single register response callback to function
+	// cb_modbus_master_write_single_register_response
 	uint8_t expected_request_id = 0;
 	rs485_register_callback(&rs485,
 	                        RS485_CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE,

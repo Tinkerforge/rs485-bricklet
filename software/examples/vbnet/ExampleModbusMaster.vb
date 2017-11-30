@@ -35,8 +35,8 @@ Module ExampleModbusMaster
         ' - master request timeout = 1000ms
         rs485.SetModbusConfiguration(1, 1000)
 
-        ' Register Modbus master write single register response callback to
-        ' subroutine ModbusMasterWriteSingleRegisterResponseCB
+        ' Register Modbus master write single register response callback to subroutine
+        ' ModbusMasterWriteSingleRegisterResponseCB
         AddHandler rs485.ModbusMasterWriteSingleRegisterResponseCallback, _
                    AddressOf ModbusMasterWriteSingleRegisterResponseCB
 

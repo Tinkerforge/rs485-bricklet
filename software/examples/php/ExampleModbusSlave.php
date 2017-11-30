@@ -42,8 +42,8 @@ $rs485->setMode(BrickletRS485::MODE_MODBUS_SLAVE_RTU);
 // - master request timeout = 0ms (unused in slave mode)
 $rs485->setModbusConfiguration(17, 0);
 
-// Register Modbus slave write single register request callback to
-// function cb_modbusSlaveWriteSingleRegisterRequest
+// Register Modbus slave write single register request callback to function
+// cb_modbusSlaveWriteSingleRegisterRequest
 $rs485->registerCallback(BrickletRS485::CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST,
                          'cb_modbusSlaveWriteSingleRegisterRequest', $rs485);
 

@@ -41,8 +41,8 @@ $rs485->set_mode($rs485->MODE_MODBUS_SLAVE_RTU);
 # - master request timeout = 0ms (unused in slave mode)
 $rs485->set_modbus_configuration(17, 0);
 
-# Register Modbus slave write single register request callback to
-# subroutine cb_modbus_slave_write_single_register_request
+# Register Modbus slave write single register request callback to subroutine
+# cb_modbus_slave_write_single_register_request
 $rs485->register_callback($rs485->CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST,
                           'cb_modbus_slave_write_single_register_request');
 
