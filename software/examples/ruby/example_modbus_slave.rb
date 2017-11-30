@@ -25,8 +25,9 @@ rs485.set_mode BrickletRS485::MODE_MODBUS_SLAVE_RTU
 rs485.set_modbus_configuration 17, 0
 
 # Register Modbus slave write single register request callback
-rs485.register_callback(BrickletRS485::CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST) \
-do |request_id, register_address, register_value|
+rs485.register_callback(BrickletRS485::CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST) do |request_id,
+                                                                                                register_address,
+                                                                                                register_value|
   puts "Request ID: #{request_id}"
   puts "Register Address: #{register_address}"
   puts "Register Value: #{register_value}"

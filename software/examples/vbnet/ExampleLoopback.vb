@@ -10,7 +10,7 @@ Module ExampleLoopback
     Const UID As String = "XYZ" ' Change XYZ to the UID of your RS485 Bricklet
 
     ' Callback subroutine for read callback
-    sub ReadCB(ByVal sender As BrickletRS485, ByVal message As Char())
+    Sub ReadCB(ByVal sender As BrickletRS485, ByVal message As Char())
         ' Assume that the message consists of ASCII characters and
         ' convert it from an array of chars to a string
         Console.WriteLine("Message: ""{0}""", New String(message))

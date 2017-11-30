@@ -1,8 +1,8 @@
 Needs["NETLink`"]
 LoadNETAssembly["Tinkerforge",NotebookDirectory[]<>"../../.."]
 
-(*For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
-  and configure the DIP switch on the Bricklet to full-duplex mode*)
+(*For this example connect the RX+/- pins to TX+/- pins on the same Bricklet*)
+(*and configure the DIP switch on the Bricklet to full-duplex mode*)
 
 host="localhost"
 port=4223
@@ -14,9 +14,8 @@ rs485=NETNew["Tinkerforge.BrickletRS485",uid,ipcon]
 ipcon@Connect[host,port]
 
 (*Enable full-duplex mode*)
-rs485@SetRS485Configuration[115200,BrickletRS485`PARITYUNONE,
-                            BrickletRS485`STOPBITSU1,BrickletRS485`WORDLENGTHU8,
-                            BrickletRS485`DUPLEXUFULL]
+rs485@SetRS485Configuration[115200,BrickletRS485`PARITYUNONE,BrickletRS485`STOPBITSU1,
+                            BrickletRS485`WORDLENGTHU8,BrickletRS485`DUPLEXUFULL]
 
 (*Callback function for read callback*)
 ReadCB[sender_,message_]:=

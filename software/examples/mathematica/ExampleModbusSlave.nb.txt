@@ -19,7 +19,8 @@ rs485@SetMode[BrickletRS485`MODEUMODBUSUSLAVEURTU]
 rs485@SetModbusConfiguration[17,0]
 
 (*Callback function for Modbus slave write single register request callback*)
-ModbusSlaveWriteSingleRegisterRequestCB[sender_,requestID_,registerAddress_,registerValue_]:=
+ModbusSlaveWriteSingleRegisterRequestCB[sender_,requestID_,registerAddress_,
+                                        registerValue_]:=
  Module[{},
   Print["Request ID: "<>ToString[requestID]];
   Print["Register Address: "<>ToString[registerAddress]];

@@ -9,7 +9,8 @@ from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_rs485 import BrickletRS485
 
 # Callback function for Modbus slave write single register request callback
-def cb_modbus_slave_write_single_register_request(request_id, register_address, register_value):
+def cb_modbus_slave_write_single_register_request(request_id, register_address,
+                                                  register_value):
     print("Request ID: " + str(request_id))
     print("Register Address: " + str(register_address))
     print("Register Value: " + str(register_value))

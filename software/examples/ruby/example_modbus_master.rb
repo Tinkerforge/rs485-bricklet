@@ -27,8 +27,8 @@ rs485.set_mode BrickletRS485::MODE_MODBUS_MASTER_RTU
 rs485.set_modbus_configuration 1, 1000
 
 # Register Modbus master write single register response callback
-rs485.register_callback(BrickletRS485::CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE) \
-do |request_id, exception_code|
+rs485.register_callback(BrickletRS485::CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE) do |request_id,
+                                                                                                  exception_code|
   puts "Request ID: #{request_id}"
   puts "Exception Code: #{exception_code}"
   puts ''
