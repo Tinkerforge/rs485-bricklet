@@ -1,4 +1,4 @@
-update=Do 24 Aug 2017 12:25:37 CEST
+update=Mi 06 Dez 2017 15:15:27 CET
 version=1
 last_client=kicad
 [cvpcb]
@@ -44,7 +44,7 @@ BoardOutlineThickness=0.381
 ModuleOutlineThickness=0.01
 [eeschema]
 version=1
-LibDir=../../dmx-bricklet/hardware/kicad-libraries
+LibDir=kicad-libraries.pretty
 [eeschema/libraries]
 LibName1=tinkerforge
 LibName2=power
