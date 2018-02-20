@@ -1,4 +1,12 @@
+*.swp
+*.pyc
+__pycache__
+software/.cproject
+software/.project
+software/.pydevproject
+software/.settings
 software/build
-software/src/bootstrapper
-software/src/brickletboot
+software/src/brickletlib
+software/src/bricklib
 software/src/bricklib2
+hardware/kicad-libraries
