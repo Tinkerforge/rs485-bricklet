@@ -61,7 +61,7 @@ begin
   rs485.EnableReadCallback;
 
   { Write "test" string }
-  rs485.Write(('t', 'e', 's', 't'));
+  rs485.Write(['t', 'e', 's', 't']);
 
   WriteLn('Press key to exit');
   ReadLn;
