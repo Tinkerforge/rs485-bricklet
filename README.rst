@@ -1,6 +1,8 @@
 RS485 Bricklet
 ==============
 
+ *This Bricklet is currently in development*
+
 This repository contains the firmware source code and the hardware design
 files. The documentation generator configs can be found at
 https://github.com/Tinkerforge/generators
@@ -36,17 +38,21 @@ modify the schematics and the PCB layout.
 Software
 --------
 
-To compile the c code we recommend you to install the newest CodeSourcery arm
-eabi gcc compiler
-(http://www.codesourcery.com/sgpp/lite/arm/portal/subscription?@template=lite).
-You also need to install bricklib (https://github.com/Tinkerforge/bricklib)
-and brickletlib (https://github.com/Tinkerforge/brickletlib).
-You can either clone them directly in software/src/ or clone them in a
-separate folder and symlink them into software/src/
-(ln -s bricklib_path/bricklib project_path/software/src/).
+ If you want to do your own Brick/Bricklet firmware development we highly
+ recommend that you use our build environment setup script and read the
+ tutorial: https://www.tinkerforge.com/en/doc/Tutorials/Tutorial_Build_Environment/Tutorial.html
+
+To compile the C code we recommend you to install the newest GNU Arm Embedded 
+Toolchain (https://launchpad.net/gcc-arm-embedded/+download).
+You also need to install bricklib2 (https://github.com/Tinkerforge/bricklib2).
+
+You can either clone it directly in software/src/ or clone it in a
+separate folder and symlink it into software/src/
+(ln -s bricklib_path/bricklib2 project_path/software/src/). Finally make sure to
+have CMake installed (http://www.cmake.org/cmake/resources/software.html).
 
 After that you can generate a Makefile from the cmake script with the
 generate_makefile shell script (in software/) and build the firmware
-by invoking make in software/build/. The firmware (.bin) can then be found
+by invoking make in software/build/. The firmware (.zbin) can then be found
 in software/build/ and uploaded with brickv (click button "Flashing"
 on start screen).
