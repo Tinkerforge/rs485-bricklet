@@ -3,6 +3,7 @@
 # For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
 # and configure the DIP switch on the Bricklet to full-duplex mode
 
+use strict;
 use Tinkerforge::IPConnection;
 use Tinkerforge::BrickletRS485;
 
