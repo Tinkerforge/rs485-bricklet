@@ -33,7 +33,7 @@ end
 rs485.enable_read_callback
 
 # Write "test" string
-rs485.write('test'.split(''))
+rs485.write 'test'.split ''
 
 puts 'Press key to exit'
 $stdin.gets
