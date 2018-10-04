@@ -3,3 +3,6 @@
 
 2017-08-30: 2.0.1 (1f1759d)
 - Adjust starting address correctly for multi-chunk streams
+
+2018-10-04: 2.0.2 (TBD)
+- Fix race condition with potential buffer overflow (through bricklib2)
