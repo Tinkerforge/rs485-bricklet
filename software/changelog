@@ -6,3 +6,6 @@
 
 2018-10-04: 2.0.2 (af9e1d1)
 - Fix race condition with potential buffer overflow (through bricklib2)
+
+<unknown>: 2.0.3 <unknown>
+- Fixed size of response for modbus master write single register function

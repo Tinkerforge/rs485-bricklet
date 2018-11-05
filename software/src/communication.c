@@ -1269,7 +1269,7 @@ modbus_master_write_single_register(const ModbusMasterWriteSingleRegister *data,
 	uint16_t register_value;
 
 	response->request_id = 0;
-	response->header.length = sizeof(ModbusMasterWriteSingleRegister);
+	response->header.length = sizeof(ModbusMasterWriteSingleRegister_Response);
 
 	if(rs485.mode != MODE_MODBUS_MASTER_RTU ||
 	   rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_READY ||
