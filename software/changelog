@@ -7,6 +7,6 @@
 2018-10-04: 2.0.2 (af9e1d1)
 - Fix race condition with potential buffer overflow (through bricklib2)
 
-<unknown>: 2.0.3 <unknown>
+2018-11-06: 2.0.3 <unknown>
 - Fix response length for modbus_master_write_single_register and
   modbus_master_write_single_coil functions
