@@ -8,4 +8,5 @@
 - Fix race condition with potential buffer overflow (through bricklib2)
 
 <unknown>: 2.0.3 <unknown>
-- Fixed size of response for modbus master write single register function
+- Fix response length for modbus_master_write_single_register and
+  modbus_master_write_single_coil functions

@@ -1181,7 +1181,7 @@ modbus_master_write_single_coil(const ModbusMasterWriteSingleCoil *data,
 	uint16_t coil_value;
 
 	response->request_id = 0;
-	response->header.length = sizeof(ModbusMasterWriteSingleCoil);
+	response->header.length = sizeof(ModbusMasterWriteSingleCoil_Response);
 
 	if(rs485.mode != MODE_MODBUS_MASTER_RTU ||
 	   rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_READY ||
