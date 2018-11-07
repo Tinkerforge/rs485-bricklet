@@ -20,13 +20,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     // - master request timeout = 1000ms
     rs485.set_modbus_configuration(1, 1000);
 
-    //Create receiver for Modbus master write single register response events.
-    let modbus_master_write_single_register_response_receiver = rs485.get_modbus_master_write_single_register_response_receiver();
+    let modbus_master_write_single_register_response_receiver = rs485.get_modbus_master_write_single_register_response_callback_receiver();
 
     //Create channel to send expected request id to the event handling thread.
     let (tx, rx) = channel();
 
-    // Spawn thread to handle received events. This thread ends when the rs485
+    // Spawn thread to handle received events.
+    // This thread ends when the `rs485` object
     // is dropped, so there is no need for manual cleanup.
     thread::spawn(move || {
         for response in modbus_master_write_single_register_response_receiver {

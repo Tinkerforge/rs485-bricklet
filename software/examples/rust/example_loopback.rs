@@ -24,9 +24,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         RS485_BRICKLET_DUPLEX_FULL,
     );
 
-    //Create receiver for read events.
-    let read_receiver = rs485.get_read_receiver();
-    // Spawn thread to handle received events. This thread ends when the rs485
+    let read_receiver = rs485.get_read_callback_receiver();
+    
+    // Spawn thread to handle received events.
+    // This thread ends when the `rs485` object
     // is dropped, so there is no need for manual cleanup.
     thread::spawn(move || {
         for read in read_receiver {
