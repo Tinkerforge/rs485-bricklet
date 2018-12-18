@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/tinkerforge/go-api-bindings/ipconnection"
-    "github.com/tinkerforge/go-api-bindings/rs485_bricklet"
+	"github.com/Tinkerforge/go-api-bindings/ipconnection"
+    "github.com/Tinkerforge/go-api-bindings/rs485_bricklet"
 )
 
 // For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
