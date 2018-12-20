@@ -20,8 +20,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // - master request timeout = 1000ms
     rs485.set_modbus_configuration(1, 1000);
 
-    let modbus_master_write_single_register_response_receiver =
-        rs485.get_modbus_master_write_single_register_response_callback_receiver();
+    let modbus_master_write_single_register_response_receiver = rs485.get_modbus_master_write_single_register_response_callback_receiver();
 
     //Create channel to send expected request id to the event handling thread.
     let (tx, rx) = channel();
@@ -41,9 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     });
 
     // Write 65535 to register 42 of slave 17
-    let expected_request_id = rs485
-        .modbus_master_write_single_register(17, 42, 65535)
-        .recv()?;
+    let expected_request_id = rs485.modbus_master_write_single_register(17, 42, 65535).recv()?;
     tx.send(expected_request_id)?;
 
     println!("Press enter to exit.");
