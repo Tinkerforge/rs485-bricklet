@@ -20,8 +20,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     // - master request timeout = 0ms (unused in slave mode)
     rs485.set_modbus_configuration(17, 0);
 
-    let modbus_slave_write_single_register_request_receiver = rs485.get_modbus_slave_write_single_register_request_callback_receiver();
-    
+    let modbus_slave_write_single_register_request_receiver =
+        rs485.get_modbus_slave_write_single_register_request_callback_receiver();
+
     // Spawn thread to handle received callback messages.
     // This thread ends when the `rs485` object
     // is dropped, so there is no need for manual cleanup.
@@ -33,7 +34,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             println!("Register Value: {}", request.register_value);
             if request.register_address != 42 {
                 println!("Error: Invalid register address");
-                rs485_copy.modbus_slave_report_exception(request.request_id, RS485_BRICKLET_EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS);
+                rs485_copy.modbus_slave_report_exception(
+                    request.request_id,
+                    RS485_BRICKLET_EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS,
+                );
             } else {
                 rs485_copy.modbus_slave_answer_write_single_register_request(request.request_id);
             }

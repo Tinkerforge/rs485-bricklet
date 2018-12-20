@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     let read_receiver = rs485.get_read_callback_receiver();
-    
+
     // Spawn thread to handle received events.
     // This thread ends when the `rs485` object
     // is dropped, so there is no need for manual cleanup.
