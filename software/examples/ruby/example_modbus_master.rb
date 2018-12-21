@@ -31,6 +31,8 @@ rs485.register_callback(BrickletRS485::CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGIS
                                                                                                   exception_code|
   puts "Request ID: #{request_id}"
   puts "Exception Code: #{exception_code}"
+  if request_id != expected_request_id
+    puts "Unexpected request ID"
   puts ''
 end
 
