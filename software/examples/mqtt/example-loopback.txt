@@ -1,0 +1,18 @@
+# For this example connect the RX+/- pins to TX+/- pins on the same Bricklet
+# and configure the DIP switch on the Bricklet to full-duplex mode
+
+# Change XYZ to the UID of your RS485 Bricklet
+
+setup:
+	# Enable full-duplex mode
+	publish '{"baudrate": 115200, "parity": "none", "stopbits": "1", "wordlength": "8", "duplex": "full"}' to tinkerforge/request/rs485_bricklet/XYZ/set_rs485_configuration 
+	
+	# Handle incoming read callbacks
+	subscribe to tinkerforge/callback/rs485_bricklet/XYZ/read # Received messages contain the message as string
+	publish '{"register": true}' to tinkerforge/register/rs485_bricklet/XYZ/read # Register read callback
+	
+	# Enable read callback
+	publish '' to tinkerforge/request/rs485_bricklet/XYZ/enable_read_callback 
+	
+	# Send test message
+	publish '{"message": "test"}' to tinkerforge/request/rs485_bricklet/XYZ/write

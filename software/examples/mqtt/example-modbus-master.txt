@@ -1,0 +1,17 @@
+
+
+# FIXME: This example is incomplete
+
+# Change XYZ to the UID of your RS485 Bricklet
+
+setup:
+	# Set operating mode to Modbus RTU master
+	publish '{"mode": "modbus_master_rtu"}' to tinkerforge/request/rs485_bricklet/XYZ/set_mode 
+	# Modbus specific configuration:
+	# - slave address = 1 (unused in master mode)
+	# - master request timeout = 1000ms
+	publish '{"slave_address": 1, "master_request_timeout": 1000}' to tinkerforge/request/rs485_bricklet/XYZ/set_modbus_configuration 
+	# Handle incoming Modbus master write single register response callbacks
+	subscribe to tinkerforge/callback/rs485_bricklet/XYZ/modbus_master_write_single_register_response
+	# Write 65535 to register 42 of slave 17
+	publish '{"slave_address": 17, "register_address": 42, "register_value": 65535}' to tinkerforge/request/rs485_bricklet/XYZ/modbus_master_write_single_register 
