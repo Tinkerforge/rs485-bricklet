@@ -1,15 +1,26 @@
-
-
-# FIXME: This example is incomplete
-
 # Change XYZ to the UID of your RS485 Bricklet
 
 setup:
 	# Set operating mode to Modbus RTU slave
 	publish '{"mode": "modbus_slave_rtu"}' to tinkerforge/request/rs485_bricklet/XYZ/set_mode 
+	
 	# Modbus specific configuration:
 	# - slave address = 17
 	# - master request timeout = 0ms (unused in slave mode)
 	publish '{"slave_address": 17, "master_request_timeout": 0}' to tinkerforge/request/rs485_bricklet/XYZ/set_modbus_configuration 
+	
 	# Handle incoming Modbus slave write single register request callbacks
 	subscribe to tinkerforge/callback/rs485_bricklet/XYZ/modbus_slave_write_single_register_request
+        if a message arrives            
+            # message contains request_id as int, register_address as ant and register_value as int
+            
+            if registerAddress != 42
+                print "Error: Invalid register address"
+                publish '{"request_id": request_id, "exception_code": "IllegalDataAddress"}' to tinkerforge/request/rs485_bricklet/XYZ/modbus_slave_report_exception
+            elseif
+                publish '{"request_id": request_id}' to tinkerforge/request/rs485_bricklet/XYZ/modbus_slave_answer_write_single_register_request
+            endif
+		endif
+    endsubscribe
+    
+    publish '{"register": true}' to tinkerforge/register/rs485_bricklet/XYZ/modbus_slave_write_single_register_request
