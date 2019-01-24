@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/Tinkerforge/go-api-bindings/ipconnection"
-    "github.com/Tinkerforge/go-api-bindings/rs485_bricklet"
+	"github.com/Tinkerforge/go-api-bindings/rs485_bricklet"
 )
 
 const ADDR string = "localhost:4223"
@@ -11,11 +11,11 @@ const UID string = "XYZ" // Change XYZ to the UID of your RS485 Bricklet.
 
 func main() {
 	ipcon := ipconnection.New()
-    defer ipcon.Close()
+	defer ipcon.Close()
 	rs485, _ := rs485_bricklet.New(UID, &ipcon) // Create device object.
 
 	ipcon.Connect(ADDR) // Connect to brickd.
-    defer ipcon.Disconnect()
+	defer ipcon.Disconnect()
 	// Don't use device before ipcon is connected.
 
 	// Set operating mode to Modbus RTU slave
@@ -31,15 +31,13 @@ func main() {
 		fmt.Println("Register Address: ", registerAddress)
 		fmt.Println("Register Value: ", registerValue)
 		if registerAddress != 42 {
-            fmt.Println("Error: Invalid register address");
-            rs485.ModbusSlaveReportException(requestID, rs485_bricklet.ExceptionCodeIllegalDataAddress);
-        } else {
-            rs485.ModbusSlaveAnswerWriteSingleRegisterRequest(requestID);
-        }
+			fmt.Println("Error: Invalid register address")
+			rs485.ModbusSlaveReportException(requestID, rs485_bricklet.ExceptionCodeIllegalDataAddress)
+		} else {
+			rs485.ModbusSlaveAnswerWriteSingleRegisterRequest(requestID)
+		}
 	})
 
 	fmt.Print("Press enter to exit.")
 	fmt.Scanln()
-
-	ipcon.Disconnect()
 }

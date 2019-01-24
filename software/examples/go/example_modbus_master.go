@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/Tinkerforge/go-api-bindings/ipconnection"
-    "github.com/Tinkerforge/go-api-bindings/rs485_bricklet"
+	"github.com/Tinkerforge/go-api-bindings/rs485_bricklet"
 )
 
 const ADDR string = "localhost:4223"
@@ -11,11 +11,11 @@ const UID string = "XYZ" // Change XYZ to the UID of your RS485 Bricklet.
 
 func main() {
 	ipcon := ipconnection.New()
-    defer ipcon.Close()
+	defer ipcon.Close()
 	rs485, _ := rs485_bricklet.New(UID, &ipcon) // Create device object.
 
 	ipcon.Connect(ADDR) // Connect to brickd.
-    defer ipcon.Disconnect()
+	defer ipcon.Disconnect()
 	// Don't use device before ipcon is connected.
 
 	// Set operating mode to Modbus RTU master
@@ -26,11 +26,11 @@ func main() {
 	// - master request timeout = 1000ms
 	rs485.SetModbusConfiguration(1, 1000)
 
-    expectedRequestID := uint8(0)
-    
+	expectedRequestID := uint8(0)
+
 	rs485.RegisterModbusMasterWriteSingleRegisterResponseCallback(func(requestID uint8, exceptionCode rs485_bricklet.ExceptionCode) {
-		fmt.Printf("Request ID: %d", requestID);
-        if exceptionCode == rs485_bricklet.ExceptionCodeTimeout {
+		fmt.Printf("Request ID: %d", requestID)
+		if exceptionCode == rs485_bricklet.ExceptionCodeTimeout {
 			fmt.Println("Exception Code: Timeout")
 		} else if exceptionCode == rs485_bricklet.ExceptionCodeSuccess {
 			fmt.Println("Exception Code: Success")
@@ -53,9 +53,9 @@ func main() {
 		} else if exceptionCode == rs485_bricklet.ExceptionCodeGatewayTargetDeviceFailedToRespond {
 			fmt.Println("Exception Code: Gateway Target Device Failed To Respond")
 		}
-        if requestID != expectedRequestID {
-            fmt.Println("Error: Unexpected request ID");
-        }
+		if requestID != expectedRequestID {
+			fmt.Println("Error: Unexpected request ID")
+		}
 	})
 
 	// Write 65535 to register 42 of slave 17
@@ -63,6 +63,4 @@ func main() {
 
 	fmt.Print("Press enter to exit.")
 	fmt.Scanln()
-
-	ipcon.Disconnect()
 }
