@@ -11,5 +11,5 @@
 - Fix response length for modbus_master_write_single_register and
   modbus_master_write_single_coil functions
 
-2019-05-29: 2.0.4 (TBD)
+2019-05-29: 2.0.4 (62099b1)
 - Fix SPITFP IRQ race condition with other higher prio IRQs (through bricklib2)
