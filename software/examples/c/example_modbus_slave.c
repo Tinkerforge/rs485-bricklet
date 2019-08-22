@@ -54,7 +54,7 @@ int main(void) {
 	// cb_modbus_slave_write_single_register_request
 	rs485_register_callback(&rs485,
 	                        RS485_CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST,
-	                        (void *)cb_modbus_slave_write_single_register_request,
+	                        (void (*)(void))cb_modbus_slave_write_single_register_request,
 	                        (void *)&rs485);
 
 	printf("Press key to exit\n");

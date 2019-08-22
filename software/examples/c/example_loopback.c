@@ -50,7 +50,7 @@ int main(void) {
 	// Register read callback to function cb_read
 	rs485_register_callback(&rs485,
 	                        RS485_CALLBACK_READ,
-	                        (void *)cb_read,
+	                        (void (*)(void))cb_read,
 	                        NULL);
 
 	// Enable read callback

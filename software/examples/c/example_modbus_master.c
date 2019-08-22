@@ -50,7 +50,7 @@ int main(void) {
 	uint8_t expected_request_id = 0;
 	rs485_register_callback(&rs485,
 	                        RS485_CALLBACK_MODBUS_MASTER_WRITE_SINGLE_REGISTER_RESPONSE,
-	                        (void *)cb_modbus_master_write_single_register_response,
+	                        (void (*)(void))cb_modbus_master_write_single_register_response,
 	                        (void *)&expected_request_id);
 
 	// Write 65535 to register 42 of slave 17
