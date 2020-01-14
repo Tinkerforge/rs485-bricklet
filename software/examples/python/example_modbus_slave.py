@@ -41,5 +41,5 @@ if __name__ == "__main__":
     rs485.register_callback(rs485.CALLBACK_MODBUS_SLAVE_WRITE_SINGLE_REGISTER_REQUEST,
                             cb_modbus_slave_write_single_register_request)
 
-    raw_input("Press key to exit\n") # Use input() in Python 3
+    input("Press key to exit\n") # Use raw_input() in Python 2
     ipcon.disconnect()
