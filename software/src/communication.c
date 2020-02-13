@@ -470,8 +470,6 @@ BootloaderHandleMessageResponse read_low_level(const ReadLowLevel *data,
 
 	// This function operates only in raw RS485 mode when read callback is disabled.
 	if(rs485.mode != MODE_RS485 || rs485.read_callback_enabled) {
-		reset_rs485_read_stream();
-
 		return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 	}
 
@@ -2012,8 +2010,6 @@ bool handle_read_low_level_callback(void) {
 
 	// This function operates only in raw RS485 mode.
 	if(rs485.mode != MODE_RS485 || !rs485.read_callback_enabled) {
-		reset_rs485_read_cb_stream();
-
 		return false;
 	}
 
