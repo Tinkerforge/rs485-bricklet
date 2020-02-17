@@ -145,6 +145,8 @@ typedef struct {
 	Ringbuffer ringbuffer_tx;
 	Ringbuffer ringbuffer_rx;
 	bool read_callback_enabled;
+	uint16_t frame_readable_cb_frame_size;
+	bool frame_readable_cb_already_sent;
 	RS485Wordlength wordlength;
 	uint32_t error_count_parity;
 	uint32_t error_count_overrun;

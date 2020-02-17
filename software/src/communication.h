@@ -79,6 +79,7 @@ void communication_init(void);
 #define FID_MODBUS_MASTER_READ_DISCRETE_INPUTS 38
 #define FID_MODBUS_SLAVE_ANSWER_READ_INPUT_REGISTERS_REQUEST_LOW_LEVEL 39
 #define FID_MODBUS_MASTER_READ_INPUT_REGISTERS 40
+#define FID_SET_FRAME_READABLE_CALLBACK_CONFIGURATION 59
 
 // Callbacks.
 #define FID_CALLBACK_READ_LOW_LEVEL 41
@@ -101,6 +102,7 @@ void communication_init(void);
 #define FID_CALLBACK_MODBUS_MASTER_READ_DISCRETE_INPUTS_RESPONSE_LOW_LEVEL 56
 #define FID_CALLBACK_MODBUS_SLAVE_READ_INPUT_REGISTERS_REQUEST 57
 #define FID_CALLBACK_MODBUS_MASTER_READ_INPUT_REGISTERS_RESPONSE_LOW_LEVEL 58
+#define FID_CALLBACK_FRAME_READABLE 60
 
 // enums
 typedef enum {
@@ -599,6 +601,16 @@ typedef struct {
 	uint16_t stream_chunk_data[29];
 } __attribute__((__packed__)) ModbusMasterReadInputRegistersResponseLowLevel_Callback;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t frame_size;
+} __attribute__((__packed__)) SetFrameReadableCallbackConfiguration;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t frame_count;
+} __attribute__((__packed__)) FrameReadable_Callback;
+
 // Function prototypes
 BootloaderHandleMessageResponse write_low_level(const WriteLowLevel *data, WriteLowLevel_Response *response);
 BootloaderHandleMessageResponse read_low_level(const ReadLowLevel *data, ReadLowLevel_Response *response);
@@ -698,10 +710,12 @@ modbus_slave_answer_read_input_registers_request_low_level(const ModbusSlaveAnsw
 BootloaderHandleMessageResponse
 modbus_master_read_input_registers(const ModbusMasterReadInputRegisters *data,
                                    ModbusMasterReadInputRegisters_Response *response);
+BootloaderHandleMessageResponse set_frame_readable_callback_configuration(const SetFrameReadableCallbackConfiguration *data);
 
 // Callbacks
 bool handle_read_low_level_callback(void);
 bool handle_error_count_callback(void);
+bool handle_frame_readable_callback(void);
 
 // Modbus specific.
 bool handle_modbus_slave_read_coils_request_callback(void);
@@ -723,7 +737,7 @@ bool handle_modbus_master_read_input_registers_response_low_level_callback(void)
 
 #define CALLBACK_ERROR_COUNT_DEBOUNCE_MS 100
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
-#define COMMUNICATION_CALLBACK_HANDLER_NUM 18
+#define COMMUNICATION_CALLBACK_HANDLER_NUM 19
 #define COMMUNICATION_CALLBACK_LIST_INIT \
 	handle_read_low_level_callback, \
 	handle_error_count_callback, \
@@ -743,5 +757,6 @@ bool handle_modbus_master_read_input_registers_response_low_level_callback(void)
 	handle_modbus_master_read_discrete_inputs_response_low_level_callback, \
 	handle_modbus_slave_read_input_registers_request_callback, \
 	handle_modbus_master_read_input_registers_response_low_level_callback, \
+	handle_frame_readable_callback, \
 
 #endif

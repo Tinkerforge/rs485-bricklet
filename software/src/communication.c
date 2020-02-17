@@ -59,6 +59,7 @@ static void reset_rs485_read_stream(void) {
 	rs485_read_stream_chunking.stream_sent = 0;
 	rs485_read_stream_chunking.stream_chunk_offset = 0;
 	rs485_read_stream_chunking.stream_total_length = 0;
+	rs485.frame_readable_cb_already_sent = false;
 }
 
 static void reset_rs485_read_cb_stream(void) {
@@ -66,6 +67,7 @@ static void reset_rs485_read_cb_stream(void) {
 	rs485_read_cb_stream_chunking.stream_sent = 0;
 	rs485_read_cb_stream_chunking.stream_chunk_offset = 0;
 	rs485_read_cb_stream_chunking.stream_total_length = 0;
+	rs485.frame_readable_cb_already_sent = false;
 }
 
 static bool modbus_slave_check_current_request(const uint8_t request_id) {
@@ -420,6 +422,7 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_MODBUS_MASTER_READ_DISCRETE_INPUTS: return modbus_master_read_discrete_inputs(message, response);
 		case FID_MODBUS_SLAVE_ANSWER_READ_INPUT_REGISTERS_REQUEST_LOW_LEVEL: return modbus_slave_answer_read_input_registers_request_low_level(message);
 		case FID_MODBUS_MASTER_READ_INPUT_REGISTERS: return modbus_master_read_input_registers(message, response);
+		case FID_SET_FRAME_READABLE_CALLBACK_CONFIGURATION: return set_frame_readable_callback_configuration(message);
 
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
@@ -2001,6 +2004,12 @@ modbus_master_read_input_registers(const ModbusMasterReadInputRegisters *data,
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+BootloaderHandleMessageResponse set_frame_readable_callback_configuration(const SetFrameReadableCallbackConfiguration *data) {
+	rs485.frame_readable_cb_frame_size = data->frame_size;
+	rs485.frame_readable_cb_already_sent = false;
+	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
 bool handle_read_low_level_callback(void) {
 	static uint16_t used = 0;
 	static ReadLowLevel_Callback cb;
@@ -3451,6 +3460,41 @@ bool handle_modbus_master_read_input_registers_response_low_level_callback(void)
 		}
 
 		return send_stream_chunks(FID_CALLBACK_MODBUS_MASTER_READ_INPUT_REGISTERS_RESPONSE_LOW_LEVEL, &cb);
+	}
+
+	return false;
+}
+
+bool handle_frame_readable_callback(void) {
+	static bool is_buffered = false;
+	static FrameReadable_Callback cb;
+	static uint16_t used = 0;
+
+	if(!is_buffered) {
+		if(rs485.frame_readable_cb_frame_size == 0) {
+			return false;
+		}
+
+		if(rs485.frame_readable_cb_already_sent) {
+			return false;
+		}
+
+		used = ringbuffer_get_used(&rs485.ringbuffer_rx);
+		if (used < rs485.frame_readable_cb_frame_size) {
+			return false;
+		}
+		rs485.frame_readable_cb_already_sent = true;
+
+		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(FrameReadable_Callback), FID_CALLBACK_FRAME_READABLE);
+		cb.frame_count = used / rs485.frame_readable_cb_frame_size;
+	}
+
+	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
+		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(FrameReadable_Callback));
+		is_buffered = false;
+		return true;
+	} else {
+		is_buffered = true;
 	}
 
 	return false;

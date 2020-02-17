@@ -256,6 +256,7 @@ void rs485_init(RS485 *rs485) {
 	rs485->error_count_parity           = 0;
 	rs485->read_callback_enabled        = false;
 	rs485->error_count_callback_enabled = false;
+	rs485->frame_readable_cb_frame_size = 0;
 
 	// Modbus specific.
 	rs485->modbus_slave_address          = MODBUS_DEFAULT_SLAVE_ADDRESS;
