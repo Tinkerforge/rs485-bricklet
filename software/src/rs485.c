@@ -159,7 +159,7 @@ void rs485_init_hardware(RS485 *rs485) {
 	// USIC channel configuration
 	XMC_UART_CH_CONFIG_t config;
 	config.oversampling = RS485_OVERSAMPLING;
-	config.frame_length = 8; //rs485->wordlength + (rs485->parity == PARITY_NONE ? 0 : 1); // TODO: Should this be wordlength?
+	config.frame_length = rs485->wordlength;
 	config.baudrate     = rs485->baudrate;
 	config.stop_bits    = rs485->stopbits;
 	config.data_bits    = rs485->wordlength;
