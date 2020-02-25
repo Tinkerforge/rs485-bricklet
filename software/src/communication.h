@@ -80,6 +80,7 @@ void communication_init(void);
 #define FID_MODBUS_SLAVE_ANSWER_READ_INPUT_REGISTERS_REQUEST_LOW_LEVEL 39
 #define FID_MODBUS_MASTER_READ_INPUT_REGISTERS 40
 #define FID_SET_FRAME_READABLE_CALLBACK_CONFIGURATION 59
+#define FID_GET_FRAME_READABLE_CALLBACK_CONFIGURATION 60
 
 // Callbacks.
 #define FID_CALLBACK_READ_LOW_LEVEL 41
@@ -102,7 +103,7 @@ void communication_init(void);
 #define FID_CALLBACK_MODBUS_MASTER_READ_DISCRETE_INPUTS_RESPONSE_LOW_LEVEL 56
 #define FID_CALLBACK_MODBUS_SLAVE_READ_INPUT_REGISTERS_REQUEST 57
 #define FID_CALLBACK_MODBUS_MASTER_READ_INPUT_REGISTERS_RESPONSE_LOW_LEVEL 58
-#define FID_CALLBACK_FRAME_READABLE 60
+#define FID_CALLBACK_FRAME_READABLE 61
 
 // enums
 typedef enum {
@@ -608,6 +609,16 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+	uint16_t frame_size;
+} __attribute__((__packed__)) GetFrameReadableCallbackConfiguration;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t frame_size;
+} __attribute__((__packed__)) GetFrameReadableCallbackConfiguration_Response;
+
+typedef struct {
+	TFPMessageHeader header;
 	uint16_t frame_count;
 } __attribute__((__packed__)) FrameReadable_Callback;
 
@@ -621,6 +632,9 @@ BootloaderHandleMessageResponse is_read_callback_enabled(const IsReadCallbackEna
 BootloaderHandleMessageResponse set_rs485_configuration(const SetRS485Configuration *data);
 BootloaderHandleMessageResponse get_rs485_configuration(const GetRS485Configuration *data,
                                                         GetRS485Configuration_Response *response);
+
+BootloaderHandleMessageResponse set_frame_readable_callback_configuration(const SetFrameReadableCallbackConfiguration *data);
+BootloaderHandleMessageResponse get_frame_readable_callback_configuration(const GetFrameReadableCallbackConfiguration *data, GetFrameReadableCallbackConfiguration_Response *response);
 
 // Modbus specific.
 BootloaderHandleMessageResponse set_modbus_configuration(const SetModbusConfiguration *data);
@@ -710,7 +724,7 @@ modbus_slave_answer_read_input_registers_request_low_level(const ModbusSlaveAnsw
 BootloaderHandleMessageResponse
 modbus_master_read_input_registers(const ModbusMasterReadInputRegisters *data,
                                    ModbusMasterReadInputRegisters_Response *response);
-BootloaderHandleMessageResponse set_frame_readable_callback_configuration(const SetFrameReadableCallbackConfiguration *data);
+
 
 // Callbacks
 bool handle_read_low_level_callback(void);
