@@ -556,6 +556,7 @@ BootloaderHandleMessageResponse read_low_level(const ReadLowLevel *data,
 
 BootloaderHandleMessageResponse enable_read_callback(const EnableReadCallback *data) {
 	rs485.read_callback_enabled = true;
+	rs485.frame_readable_cb_frame_size = 0;
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
@@ -2006,6 +2007,9 @@ modbus_master_read_input_registers(const ModbusMasterReadInputRegisters *data,
 }
 
 BootloaderHandleMessageResponse set_frame_readable_callback_configuration(const SetFrameReadableCallbackConfiguration *data) {
+	if(data->frame_size > 0) {
+		rs485.read_callback_enabled = false;
+	}
 	rs485.frame_readable_cb_frame_size = data->frame_size;
 	rs485.frame_readable_cb_already_sent = false;
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
