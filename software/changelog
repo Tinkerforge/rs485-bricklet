@@ -14,7 +14,7 @@
 2019-05-29: 2.0.4 (62099b1)
 - Fix SPITFP IRQ race condition with other higher prio IRQs (through bricklib2)
 
-2020-02-28: 2.0.5 (<unknown>)
+2020-02-28: 2.0.5 (7bee9df)
 - Don't reset stream in getter if callback is enabled and vice versa
 - Add frame readable callback
 - Fix word length != 8
