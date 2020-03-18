@@ -14,8 +14,10 @@ rs485=NETNew["Tinkerforge.BrickletRS485",uid,ipcon]
 ipcon@Connect[host,port]
 
 (*Enable full-duplex mode*)
-rs485@SetRS485Configuration[115200,BrickletRS485`PARITYUNONE,BrickletRS485`STOPBITSU1,
-                            BrickletRS485`WORDLENGTHU8,BrickletRS485`DUPLEXUFULL]
+rs485@SetRS485Configuration[115200,Tinkerforge`BrickletRS485`PARITYUNONE,
+                            Tinkerforge`BrickletRS485`STOPBITSU1,
+                            Tinkerforge`BrickletRS485`WORDLENGTHU8,
+                            Tinkerforge`BrickletRS485`DUPLEXUFULL]
 
 (*Callback function for read callback*)
 ReadCB[sender_,message_]:=

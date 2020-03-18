@@ -11,7 +11,7 @@ rs485=NETNew["Tinkerforge.BrickletRS485",uid,ipcon]
 ipcon@Connect[host,port]
 
 (*Set operating mode to Modbus RTU slave*)
-rs485@SetMode[BrickletRS485`MODEUMODBUSUSLAVEURTU]
+rs485@SetMode[Tinkerforge`BrickletRS485`MODEUMODBUSUSLAVEURTU]
 
 (*Modbus specific configuration:*)
 (*- slave address = 17*)
@@ -28,7 +28,7 @@ ModbusSlaveWriteSingleRegisterRequestCB[sender_,requestID_,registerAddress_,
   
   If[registerAddress!=42,
    Print["Error: Invalid register address"];
-   sender@ModbusSlaveReportException[requestID,BrickletRS485`EXCEPTIONUCODEUILLEGALUDATAUADDRESS],
+   sender@ModbusSlaveReportException[requestID,Tinkerforge`BrickletRS485`EXCEPTIONUCODEUILLEGALUDATAUADDRESS],
    sender@ModbusSlaveAnswerWriteSingleRegisterRequest[requestID]
   ]
  ]

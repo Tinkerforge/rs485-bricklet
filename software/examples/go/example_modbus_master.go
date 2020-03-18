@@ -29,7 +29,8 @@ func main() {
 	expectedRequestID := uint8(0)
 
 	rs485.RegisterModbusMasterWriteSingleRegisterResponseCallback(func(requestID uint8, exceptionCode rs485_bricklet.ExceptionCode) {
-		fmt.Printf("Request ID: %d", requestID)
+		fmt.Printf("Request ID: %d\n", requestID)
+
 		if exceptionCode == rs485_bricklet.ExceptionCodeTimeout {
 			fmt.Println("Exception Code: Timeout")
 		} else if exceptionCode == rs485_bricklet.ExceptionCodeSuccess {

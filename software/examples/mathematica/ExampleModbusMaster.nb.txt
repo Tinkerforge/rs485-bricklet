@@ -11,7 +11,7 @@ rs485=NETNew["Tinkerforge.BrickletRS485",uid,ipcon]
 ipcon@Connect[host,port]
 
 (*Set operating mode to Modbus RTU master*)
-rs485@SetMode[BrickletRS485`MODEUMODBUSUMASTERURTU]
+rs485@SetMode[Tinkerforge`BrickletRS485`MODEUMODBUSUMASTERURTU]
 
 (*Modbus specific configuration:*)
 (*- slave address = 1 (unused in master mode)*)

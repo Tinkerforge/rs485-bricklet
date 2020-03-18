@@ -13,7 +13,7 @@ void cb_modbus_master_write_single_register_response(uint8_t request_id,
                                                      void *user_data) {
 	uint8_t expected_request_id = *(uint8_t *)user_data;
 
-	printf("Request ID: %d\n", request_id);
+	printf("Request ID: %u\n", request_id);
 	printf("Exception Code: %d\n", exception_code);
 
 	if (request_id != expected_request_id) {

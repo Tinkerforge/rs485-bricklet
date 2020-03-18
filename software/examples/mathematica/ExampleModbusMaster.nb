@@ -19,7 +19,7 @@ Notebook[{
    RowBox[{"
 "}],
    RowBox[{"(*", "Set operating mode to Modbus RTU master", "*)"}],
-   RowBox[{"rs485", "@", RowBox[{"SetMode", "[", "BrickletRS485`MODEUMODBUSUMASTERURTU", "]"}]}],
+   RowBox[{"rs485", "@", RowBox[{"SetMode", "[", "Tinkerforge`BrickletRS485`MODEUMODBUSUMASTERURTU", "]"}]}],
    RowBox[{"
 "}],
    RowBox[{"(*", "Modbus specific configuration:", "*)"}],

@@ -2,24 +2,25 @@
 
 setup:
 	# Set operating mode to Modbus RTU master
-	publish '{"mode": "modbus_master_rtu"}' to tinkerforge/request/rs485_bricklet/XYZ/set_mode 
-	
+	publish '{"mode": "modbus_master_rtu"}' to tinkerforge/request/rs485_bricklet/XYZ/set_mode
+
 	# Modbus specific configuration:
 	# - slave address = 1 (unused in master mode)
 	# - master request timeout = 1000ms
-	publish '{"slave_address": 1, "master_request_timeout": 1000}' to tinkerforge/request/rs485_bricklet/XYZ/set_modbus_configuration 
-	
+	publish '{"slave_address": 1, "master_request_timeout": 1000}' to tinkerforge/request/rs485_bricklet/XYZ/set_modbus_configuration
+
 	# Handle incoming Modbus master write single register response callbacks
 	subscribe to tinkerforge/callback/rs485_bricklet/XYZ/modbus_master_write_single_register_response
-        if a message arrives
-            # message contains request_id as int and exception_code as int with symbols
-            print request_id
-            if exception_code != "Timeout
-                print exception_code
-            endif
-        endif
+		if a message arrives
+			# message contains request_id as int and exception_code as int with symbols
+			print request_id
+			if exception_code != "Timeout
+				print exception_code
+			endif
+		endif
 	endsubscribe
-	publish '{"register": true}' to tinkerforge/register/rs485_bricklet/XYZ/modbus_master_write_single_register_response
-	
+
+	publish '{"register": true}' to tinkerforge/register/rs485_bricklet/XYZ/modbus_master_write_single_register_response # Register modbus_master_write_single_register_response callback
+
 	# Write 65535 to register 42 of slave 17
-	publish '{"slave_address": 17, "register_address": 42, "register_value": 65535}' to tinkerforge/request/rs485_bricklet/XYZ/modbus_master_write_single_register 
+	publish '{"slave_address": 17, "register_address": 42, "register_value": 65535}' to tinkerforge/request/rs485_bricklet/XYZ/modbus_master_write_single_register

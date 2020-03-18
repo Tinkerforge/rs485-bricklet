@@ -23,8 +23,7 @@ func main() {
 
 	// Enable full-duplex mode
 	rs485.SetRS485Configuration(115200, rs485_bricklet.ParityNone,
-		rs485_bricklet.Stopbits1,
-		rs485_bricklet.Wordlength8,
+		rs485_bricklet.Stopbits1, rs485_bricklet.Wordlength8,
 		rs485_bricklet.DuplexFull)
 
 	rs485.RegisterReadCallback(func(message []rune) {

@@ -19,7 +19,7 @@ Notebook[{
    RowBox[{"
 "}],
    RowBox[{"(*", "Set operating mode to Modbus RTU slave", "*)"}],
-   RowBox[{"rs485", "@", RowBox[{"SetMode", "[", "BrickletRS485`MODEUMODBUSUSLAVEURTU", "]"}]}],
+   RowBox[{"rs485", "@", RowBox[{"SetMode", "[", "Tinkerforge`BrickletRS485`MODEUMODBUSUSLAVEURTU", "]"}]}],
    RowBox[{"
 "}],
    RowBox[{"(*", "Modbus specific configuration:", "*)"}],
@@ -29,7 +29,7 @@ Notebook[{
    RowBox[{"
 "}],
    RowBox[{"(*", "Callback function for Modbus slave write single register request callback", "*)"}],
-   RowBox[{RowBox[{"ModbusSlaveWriteSingleRegisterRequestCB", "[", RowBox[{"sender_", ",", "requestID_", ",", "registerAddress_", ",", RowBox[{"\[IndentingNewLine]", "registerValue_"}]}], "]"}], ":=", "\[IndentingNewLine]", RowBox[{"Module", "[", RowBox[{RowBox[{"{", "}"}], ",", RowBox[{"\[IndentingNewLine]", RowBox[{"Print", "[", RowBox[{"\"\<Request ID: \>\"", "<>", RowBox[{"ToString", "[", "requestID", "]"}]}], "]"}], ";", "\[IndentingNewLine]", RowBox[{"Print", "[", RowBox[{"\"\<Register Address: \>\"", "<>", RowBox[{"ToString", "[", "registerAddress", "]"}]}], "]"}], ";", "\[IndentingNewLine]", RowBox[{"Print", "[", RowBox[{"\"\<Register Value: \>\"", "<>", RowBox[{"ToString", "[", "registerValue", "]"}]}], "]"}], ";", "\n", "\[IndentingNewLine]", RowBox[{"If", "[", RowBox[{RowBox[{"registerAddress", "!=", "42"}], ",", RowBox[{"\[IndentingNewLine]", RowBox[{"Print", "[", "\"\<Error: Invalid register address\>\"", "]"}], ";", "\[IndentingNewLine]", "sender", "@", RowBox[{"ModbusSlaveReportException", "[", RowBox[{"requestID", ",", "BrickletRS485`EXCEPTIONUCODEUILLEGALUDATAUADDRESS"}], "]"}]}], ",", RowBox[{"\[IndentingNewLine]", "sender", "@", RowBox[{"ModbusSlaveAnswerWriteSingleRegisterRequest", "[", "requestID", "]"}], "\[IndentingNewLine]"}]}], "]"}], "\[IndentingNewLine]"}]}], "]"}]}],
+   RowBox[{RowBox[{"ModbusSlaveWriteSingleRegisterRequestCB", "[", RowBox[{"sender_", ",", "requestID_", ",", "registerAddress_", ",", RowBox[{"\[IndentingNewLine]", "registerValue_"}]}], "]"}], ":=", "\[IndentingNewLine]", RowBox[{"Module", "[", RowBox[{RowBox[{"{", "}"}], ",", RowBox[{"\[IndentingNewLine]", RowBox[{"Print", "[", RowBox[{"\"\<Request ID: \>\"", "<>", RowBox[{"ToString", "[", "requestID", "]"}]}], "]"}], ";", "\[IndentingNewLine]", RowBox[{"Print", "[", RowBox[{"\"\<Register Address: \>\"", "<>", RowBox[{"ToString", "[", "registerAddress", "]"}]}], "]"}], ";", "\[IndentingNewLine]", RowBox[{"Print", "[", RowBox[{"\"\<Register Value: \>\"", "<>", RowBox[{"ToString", "[", "registerValue", "]"}]}], "]"}], ";", "\n", "\[IndentingNewLine]", RowBox[{"If", "[", RowBox[{RowBox[{"registerAddress", "!=", "42"}], ",", RowBox[{"\[IndentingNewLine]", RowBox[{"Print", "[", "\"\<Error: Invalid register address\>\"", "]"}], ";", "\[IndentingNewLine]", "sender", "@", RowBox[{"ModbusSlaveReportException", "[", RowBox[{"requestID", ",", "Tinkerforge`BrickletRS485`EXCEPTIONUCODEUILLEGALUDATAUADDRESS"}], "]"}]}], ",", RowBox[{"\[IndentingNewLine]", "sender", "@", RowBox[{"ModbusSlaveAnswerWriteSingleRegisterRequest", "[", "requestID", "]"}], "\[IndentingNewLine]"}]}], "]"}], "\[IndentingNewLine]"}]}], "]"}]}],
    RowBox[{"
 "}],
    RowBox[{"AddEventHandler", "[", RowBox[{RowBox[{"rs485", "@", "ModbusSlaveWriteSingleRegisterRequestCallback"}], ",", "ModbusSlaveWriteSingleRegisterRequestCB"}], "]"}],

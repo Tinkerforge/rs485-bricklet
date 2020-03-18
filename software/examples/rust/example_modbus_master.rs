@@ -1,16 +1,16 @@
 use std::{error::Error, io, sync::mpsc::channel, thread};
 use tinkerforge::{ip_connection::IpConnection, rs485_bricklet::*};
 
-const HOST: &str = "127.0.0.1";
+const HOST: &str = "localhost";
 const PORT: u16 = 4223;
-const UID: &str = "XYZ"; // Change XYZ to the UID of your RS485 Bricklet
+const UID: &str = "XYZ"; // Change XYZ to the UID of your RS485 Bricklet.
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let ipcon = IpConnection::new(); // Create IP connection
-    let rs485 = Rs485Bricklet::new(UID, &ipcon); // Create device object
+    let ipcon = IpConnection::new(); // Create IP connection.
+    let rs485 = Rs485Bricklet::new(UID, &ipcon); // Create device object.
 
-    ipcon.connect((HOST, PORT)).recv()??; // Connect to brickd
-                                          // Don't use device before ipcon is connected
+    ipcon.connect((HOST, PORT)).recv()??; // Connect to brickd.
+                                          // Don't use device before ipcon is connected.
 
     // Set operating mode to Modbus RTU master
     rs485.set_mode(RS485_BRICKLET_MODE_MODBUS_MASTER_RTU);
@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     //Create channel to send expected request id to the event handling thread.
     let (tx, rx) = channel();
 
-    // Spawn thread to handle received events.
+    // Spawn thread to handle received callback messages.
     // This thread ends when the `rs485` object
     // is dropped, so there is no need for manual cleanup.
     thread::spawn(move || {
