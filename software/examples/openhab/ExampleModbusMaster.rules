@@ -1,0 +1,28 @@
+// For this example configure your RS485 Bricklet to Modbus Master Mode in Paper UI.
+
+rule "Read Modbus Registers"
+when
+    System started // Replace with trigger of your choice
+then
+    // Change XYZ to the UID of your NFC RFID Bricklet
+    val rs = getActions("tinkerforge", "tinkerforge:brickletrs485:XYZ")
+    
+    // Read register 1281 and 1282 from slave 1.
+    val result = rs.brickletRS485ModbusMasterReadInputRegisters(1, 1281, 2)
+    
+    if (!result.containsKey("exceptionCode")) {
+        logInfo("Example", "Failed sending modbus request.")
+        return
+    }
+    
+    val exceptionCode = result.get("exceptionCode") as int
+    if (exceptionCode != 0) {
+        logInfo("Example", "Modbus device returned exception code " + exceptionCode)
+        return
+    }
+    
+    val inputRegisters = result.get("inputRegisters") as int[]
+    
+    logInfo("Example", "Register 1281: " + inputRegisters.get(0))
+    logInfo("Example", "Register 1282: " + inputRegisters.get(1))
+end
