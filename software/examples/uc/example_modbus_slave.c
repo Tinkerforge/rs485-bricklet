@@ -28,13 +28,11 @@ void modbus_slave_write_single_register_request_handler(TF_RS485 *device, uint8_
 	}
 }
 
-
 TF_RS485 rs485;
 
 void example_setup(TF_HalContext *hal) {
 	// Create device object
 	check(tf_rs485_create(&rs485, UID, hal), "create device object");
-
 
 	// Set operating mode to Modbus RTU slave
 	check(tf_rs485_set_mode(&rs485, TF_RS485_MODE_MODBUS_SLAVE_RTU), "call set_mode");
@@ -46,11 +44,10 @@ void example_setup(TF_HalContext *hal) {
 	                                        0), "call set_modbus_configuration");
 
 	// Register Modbus slave write single register request callback to function
-	// cb_modbus_slave_write_single_register_request
+	// modbus_slave_write_single_register_request_handler
 	tf_rs485_register_modbus_slave_write_single_register_request_callback(&rs485,
-	                                                                     modbus_slave_write_single_register_request_handler,
-	                                                                     NULL);
-
+	                                                                      modbus_slave_write_single_register_request_handler,
+	                                                                      NULL);
 }
 
 void example_loop(TF_HalContext *hal) {
@@ -68,6 +65,7 @@ void example_loop(TF_HalContext *hal) {
 	} else {
 		tf_rs485_modbus_slave_answer_write_single_register_request(&rs485, received_request_id);
 	}
+
 	// Make sure we respond to the request only once.
 	received_request_id = -1;
 }

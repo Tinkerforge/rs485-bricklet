@@ -48,9 +48,9 @@ void modbus_master_write_single_register_response_handler(TF_RS485 *device, uint
 	if (request_id != expected_request_id) {
 		tf_hal_printf("Error: Unexpected request ID\n");
 	}
+
 	tf_hal_printf("\n");
 }
-
 
 TF_RS485 rs485;
 uint8_t expected_request_id = 0;
@@ -58,7 +58,6 @@ uint8_t expected_request_id = 0;
 void example_setup(TF_HalContext *hal) {
 	// Create device object
 	check(tf_rs485_create(&rs485, UID, hal), "create device object");
-
 
 	// Set operating mode to Modbus RTU master
 	check(tf_rs485_set_mode(&rs485, TF_RS485_MODE_MODBUS_MASTER_RTU), "call set_mode");
@@ -70,7 +69,7 @@ void example_setup(TF_HalContext *hal) {
 	                                        1000), "call set_modbus_configuration");
 
 	// Register Modbus master write single register response callback to function
-	// cb_modbus_master_write_single_register_response
+	// modbus_master_write_single_register_response_handler
 	tf_rs485_register_modbus_master_write_single_register_response_callback(&rs485,
 	                                                                        modbus_master_write_single_register_response_handler,
 	                                                                        &expected_request_id);
@@ -78,7 +77,6 @@ void example_setup(TF_HalContext *hal) {
 	// Write 65535 to register 42 of slave 17
 	check(tf_rs485_modbus_master_write_single_register(&rs485, 17, 42,
 	                                                   65535, &expected_request_id), "call modbus_master_write_single_register");
-
 }
 
 void example_loop(TF_HalContext *hal) {
