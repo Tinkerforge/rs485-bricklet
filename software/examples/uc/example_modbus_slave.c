@@ -3,13 +3,16 @@
 
 #define UID "XYZ" // Change XYZ to the UID of your RS485 Bricklet
 
+void example_setup(TF_HalContext *hal);
+void example_loop(TF_HalContext *hal);
+
 void check(int rc, const char* msg);
 
-int received_request_id = -1;
-bool register_address_valid = false;
+static uint8_t received_request_id = 0;
+static bool register_address_valid = false;
 
 // Callback function for Modbus slave write single register request callback
-void modbus_slave_write_single_register_request_handler(TF_RS485 *device, uint8_t request_id,
+static void modbus_slave_write_single_register_request_handler(TF_RS485 *device, uint8_t request_id,
                                                         uint32_t register_address,
                                                         uint16_t register_value,
                                                         void *user_data) {
@@ -28,7 +31,7 @@ void modbus_slave_write_single_register_request_handler(TF_RS485 *device, uint8_
 	}
 }
 
-TF_RS485 rs485;
+static TF_RS485 rs485;
 
 void example_setup(TF_HalContext *hal) {
 	// Create device object
@@ -54,7 +57,7 @@ void example_loop(TF_HalContext *hal) {
 	// Poll for callbacks
 	// Polling with 0 will process one packet at most, so we can't miss a request.
 	tf_hal_callback_tick(hal, 0);
-    
+
 	if(received_request_id == 0) {
 		// We didn't receive a request.
 		return;
@@ -67,5 +70,5 @@ void example_loop(TF_HalContext *hal) {
 	}
 
 	// Make sure we respond to the request only once.
-	received_request_id = -1;
+	received_request_id = 0;
 }

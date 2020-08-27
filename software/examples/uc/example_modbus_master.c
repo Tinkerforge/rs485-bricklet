@@ -3,9 +3,12 @@
 
 #define UID "XYZ" // Change XYZ to the UID of your RS485 Bricklet
 
+void example_setup(TF_HalContext *hal);
+void example_loop(TF_HalContext *hal);
+
 void check(int rc, const char* msg);
 
-void log_exception(int8_t exception_code) {
+static void log_exception(int8_t exception_code) {
 	if(exception_code == TF_RS485_EXCEPTION_CODE_TIMEOUT) {
 		tf_hal_printf("Exception Code: Timeout\n");
 	} else if(exception_code == TF_RS485_EXCEPTION_CODE_SUCCESS) {
@@ -32,7 +35,7 @@ void log_exception(int8_t exception_code) {
 }
 
 // Callback function for Modbus master write single register response callback
-void modbus_master_write_single_register_response_handler(TF_RS485 *device, uint8_t request_id,
+static void modbus_master_write_single_register_response_handler(TF_RS485 *device, uint8_t request_id,
                                                           int8_t exception_code,
                                                           void *user_data) {
 	(void)device; // avoid unused parameter warning
@@ -52,8 +55,8 @@ void modbus_master_write_single_register_response_handler(TF_RS485 *device, uint
 	tf_hal_printf("\n");
 }
 
-TF_RS485 rs485;
-uint8_t expected_request_id = 0;
+static TF_RS485 rs485;
+static uint8_t expected_request_id = 0;
 
 void example_setup(TF_HalContext *hal) {
 	// Create device object

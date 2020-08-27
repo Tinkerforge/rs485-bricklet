@@ -8,12 +8,15 @@
 
 #define UID "XYZ" // Change XYZ to the UID of your RS485 Bricklet
 
+void example_setup(TF_HalContext *hal);
+void example_loop(TF_HalContext *hal);
+
 void check(int rc, const char* msg);
 
-char buffer[61]; // + 1 for the null terminator.
+static char buffer[61] = {0}; // + 1 for the null terminator.
 
 // Callback function for read callback
-void read_low_level_handler(TF_RS485 *device, uint16_t message_length, uint16_t message_chunk_offset, char message_chunk_data[60], void *user_data) {
+static void read_low_level_handler(TF_RS485 *device, uint16_t message_length, uint16_t message_chunk_offset, char message_chunk_data[60], void *user_data) {
 	(void)device; (void)user_data; // avoid unused parameter warning
 
 	bool last_chunk = message_chunk_offset + 60 > message_length;
@@ -38,7 +41,7 @@ void read_low_level_handler(TF_RS485 *device, uint16_t message_length, uint16_t 
 	}
 }
 
-TF_RS485 rs485;
+static TF_RS485 rs485;
 
 void example_setup(TF_HalContext *hal) {
 	// Create device object
