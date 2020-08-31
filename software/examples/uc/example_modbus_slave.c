@@ -18,9 +18,9 @@ static void modbus_slave_write_single_register_request_handler(TF_RS485 *device,
                                                         void *user_data) {
 	(void)device; (void)user_data; // avoid unused parameter warning
 
-	tf_hal_printf("Request ID: %u\n", request_id);
-	tf_hal_printf("Register Address: %u\n", register_address);
-	tf_hal_printf("Register Value: %u\n", register_value);
+	tf_hal_printf("Request ID: %I8u\n", request_id);
+	tf_hal_printf("Register Address: %I32u\n", register_address);
+	tf_hal_printf("Register Value: %I16u\n", register_value);
 	tf_hal_printf("\n");
 
 	received_request_id = request_id;

@@ -42,7 +42,7 @@ static void modbus_master_write_single_register_response_handler(TF_RS485 *devic
 
 	uint8_t expected_request_id = *(uint8_t *)user_data;
 
-	tf_hal_printf("Request ID: %u\n", request_id);
+	tf_hal_printf("Request ID: %I8u\n", request_id);
 
 	if(exception_code != TF_RS485_EXCEPTION_CODE_SUCCESS) {
 		log_exception(exception_code);
