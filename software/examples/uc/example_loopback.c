@@ -1,3 +1,7 @@
+// This example is not self-contained.
+// It requres usage of the example driver specific to your platform.
+// See the HAL documentation.
+
 #include <string.h>
 
 #include "bindings/hal_common.h"
