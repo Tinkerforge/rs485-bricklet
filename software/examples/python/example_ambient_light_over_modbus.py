@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # Register Modbus slave write single register request callback to function
     # cb_modbus_slave_read_input_registers_request
     rs485.register_callback(rs485.CALLBACK_MODBUS_SLAVE_READ_INPUT_REGISTERS_REQUEST,
-                            lambda *args: cb_modbus_slave_read_input_registers_request(al, *args))
+                            lambda request_id, starting_address, count: cb_modbus_slave_read_input_registers_request(al, request_id, starting_address, count))
 
     input("Press key to exit\n") # Use raw_input() in Python 2
     ipcon.disconnect()
