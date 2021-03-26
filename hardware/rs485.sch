@@ -5,11 +5,11 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title "RS485 Bricklet"
-Date "2016-11-07"
-Rev "1.0"
+Date "2021-03-26"
+Rev "1.1"
 Comp "Tinkerforge GmbH"
 Comment1 "Licensed under CERN OHL v.1.1"
-Comment2 "Copyright (©) 2016, B.Nordmeyer <bastian@tinkerforge.com>"
+Comment2 "Copyright (©) 2021, B.Nordmeyer <bastian@tinkerforge.com>"
 Comment3 ""
 Comment4 ""
 $EndDescr
@@ -104,12 +104,12 @@ F 3 "" H 10650 4350 60  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L tinkerforge:FILTER FB1
+L tinkerforge:INDUCTOR FB1
 U 1 1 54F7633D
 P 1950 1150
 F 0 "FB1" H 1950 1300 60  0000 C CNN
 F 1 "FILTER" H 1950 1050 60  0000 C CNN
-F 2 "C0603F" H 1950 1150 60  0001 C CNN
+F 2 "kicad-libraries:R0603F" H 1950 1150 60  0001 C CNN
 F 3 "" H 1950 1150 60  0000 C CNN
 	1    1950 1150
 	1    0    0    -1  
@@ -299,25 +299,14 @@ S-MOSI
 Text GLabel 2150 2300 2    60   Input ~ 0
 S-MISO
 $Comp
-L tinkerforge:Filter-4x FILTER1
-U 1 1 58232844
-P 1750 2350
-F 0 "FILTER1" H 1750 2800 60  0000 C CNN
-F 1 "Filter-4x" V 1750 2600 39  0000 C CNN
-F 2 "kicad-libraries:DFN8-17x135" H 1750 2350 60  0001 C CNN
-F 3 "" H 1750 2350 60  0000 C CNN
-	1    1750 2350
-	-1   0    0    -1  
-$EndComp
-$Comp
 L tinkerforge:GND #PWR09
 U 1 1 582328E4
-P 1750 2550
-F 0 "#PWR09" H 1750 2550 30  0001 C CNN
-F 1 "GND" H 1750 2480 30  0001 C CNN
-F 2 "" H 1750 2550 60  0001 C CNN
-F 3 "" H 1750 2550 60  0001 C CNN
-	1    1750 2550
+P 1500 2750
+F 0 "#PWR09" H 1500 2750 30  0001 C CNN
+F 1 "GND" H 1500 2680 30  0001 C CNN
+F 2 "" H 1500 2750 60  0001 C CNN
+F 3 "" H 1500 2750 60  0001 C CNN
+	1    1500 2750
 	1    0    0    -1  
 $EndComp
 Text GLabel 5450 4550 0    60   Input ~ 0
@@ -736,8 +725,6 @@ Wire Wire Line
 Wire Wire Line
 	1450 1150 1600 1150
 Wire Wire Line
-	2300 1150 2350 1150
-Wire Wire Line
 	1450 1900 1450 1150
 Wire Wire Line
 	2350 1600 2350 1800
@@ -791,23 +778,9 @@ Connection ~ 3550 2600
 Connection ~ 3550 1650
 Connection ~ 2350 1800
 Wire Wire Line
-	1750 2550 1750 2500
-Wire Wire Line
-	1350 2000 1500 2000
-Wire Wire Line
-	1350 2100 1500 2100
-Wire Wire Line
-	1500 2200 1350 2200
+	1500 2750 1500 2700
 Wire Wire Line
 	1350 2300 1500 2300
-Wire Wire Line
-	2000 2300 2150 2300
-Wire Wire Line
-	2150 2200 2000 2200
-Wire Wire Line
-	2000 2100 2150 2100
-Wire Wire Line
-	2150 2000 2000 2000
 Wire Wire Line
 	7000 3200 6950 3200
 Wire Wire Line
@@ -1403,4 +1376,48 @@ Wire Wire Line
 	5600 4650 5800 4650
 Wire Wire Line
 	5500 4750 5800 4750
+$Comp
+L tinkerforge:R_PACK4 RP101
+U 1 1 6060195C
+P 1750 2350
+F 0 "RP101" H 1750 2915 50  0000 C CNN
+F 1 "82" H 1750 2824 50  0000 C CNN
+F 2 "kicad-libraries:4X0402" H 1750 2350 50  0001 C CNN
+F 3 "" H 1750 2350 50  0000 C CNN
+	1    1750 2350
+	-1   0    0    -1  
+$EndComp
+$Comp
+L tinkerforge:C C101
+U 1 1 60603D2C
+P 1500 2500
+F 0 "C101" V 1550 2250 50  0000 L CNN
+F 1 "220pF" V 1350 2400 50  0000 L CNN
+F 2 "kicad-libraries:C0402F" H 1500 2500 60  0001 C CNN
+F 3 "" H 1500 2500 60  0001 C CNN
+	1    1500 2500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1550 2300 1500 2300
+Connection ~ 1500 2300
+Wire Wire Line
+	1350 2200 1550 2200
+Wire Wire Line
+	1350 2100 1550 2100
+Wire Wire Line
+	1350 2000 1550 2000
+Wire Wire Line
+	1950 2000 2150 2000
+Wire Wire Line
+	1950 2100 2150 2100
+Wire Wire Line
+	1950 2200 2150 2200
+Wire Wire Line
+	1950 2300 2150 2300
+Wire Wire Line
+	1650 1150 1600 1150
+Connection ~ 1600 1150
+Wire Wire Line
+	2250 1150 2350 1150
 $EndSCHEMATC
