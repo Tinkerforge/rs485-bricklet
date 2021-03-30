@@ -664,21 +664,21 @@ $EndComp
 $Comp
 L tinkerforge:R_PACK4 RP2
 U 1 1 5825121A
-P 6500 2700
-F 0 "RP2" H 6500 3150 50  0000 C CNN
-F 1 "10k" H 6500 2650 50  0000 C CNN
-F 2 "kicad-libraries:0603X4" H 6500 2700 50  0001 C CNN
-F 3 "" H 6500 2700 50  0000 C CNN
-	1    6500 2700
+P 6350 2700
+F 0 "RP2" H 6350 3150 50  0000 C CNN
+F 1 "10k" H 6350 2650 50  0000 C CNN
+F 2 "kicad-libraries:0603X4" H 6350 2700 50  0001 C CNN
+F 3 "" H 6350 2700 50  0000 C CNN
+	1    6350 2700
 	1    0    0    -1  
 $EndComp
-Text GLabel 6100 2350 0    60   Output ~ 0
+Text GLabel 5750 2350 0    60   Output ~ 0
 485-R
-Text GLabel 6100 2450 0    60   Input ~ 0
+Text GLabel 5750 2450 0    60   Input ~ 0
 485-~REB
-Text GLabel 6100 2550 0    60   Input ~ 0
+Text GLabel 5750 2550 0    60   Input ~ 0
 485-DE
-Text GLabel 6100 2650 0    60   Input ~ 0
+Text GLabel 5750 2650 0    60   Input ~ 0
 485-D
 $Comp
 L tinkerforge:PTC PTC1
@@ -859,33 +859,17 @@ Connection ~ 8650 3250
 Connection ~ 8400 1750
 Connection ~ 8650 1250
 Wire Wire Line
-	7000 2350 6700 2350
-Wire Wire Line
 	7000 2500 6900 2500
 Wire Wire Line
 	6900 2500 6900 2450
-Wire Wire Line
-	6900 2450 6700 2450
 Wire Wire Line
 	7000 2600 6850 2600
 Wire Wire Line
 	6850 2600 6850 2550
 Wire Wire Line
-	6850 2550 6700 2550
-Wire Wire Line
 	7000 2750 6800 2750
 Wire Wire Line
 	6800 2750 6800 2650
-Wire Wire Line
-	6800 2650 6700 2650
-Wire Wire Line
-	6100 2350 6300 2350
-Wire Wire Line
-	6300 2450 6100 2450
-Wire Wire Line
-	6100 2550 6300 2550
-Wire Wire Line
-	6300 2650 6100 2650
 Wire Wire Line
 	10650 2750 10650 3500
 Wire Wire Line
@@ -1420,4 +1404,49 @@ Wire Wire Line
 Connection ~ 1600 1150
 Wire Wire Line
 	2250 1150 2350 1150
+$Comp
+L tinkerforge:R R101
+U 1 1 60683F6E
+P 6050 3050
+F 0 "R101" V 6130 3050 50  0000 C CNN
+F 1 "10k" V 6050 3050 50  0000 C CNN
+F 2 "R0603F" H 6050 3050 60  0001 C CNN
+F 3 "" H 6050 3050 60  0000 C CNN
+	1    6050 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L tinkerforge:GND #PWR0101
+U 1 1 60684E67
+P 6050 3350
+F 0 "#PWR0101" H 6050 3350 30  0001 C CNN
+F 1 "GND" H 6050 3280 30  0001 C CNN
+F 2 "" H 6050 3350 60  0001 C CNN
+F 3 "" H 6050 3350 60  0001 C CNN
+	1    6050 3350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6050 2800 6050 2550
+Wire Wire Line
+	6050 3350 6050 3300
+Wire Wire Line
+	6550 2350 7000 2350
+Wire Wire Line
+	6900 2450 6550 2450
+Wire Wire Line
+	6550 2550 6850 2550
+Wire Wire Line
+	6800 2650 6550 2650
+Wire Wire Line
+	5750 2650 6150 2650
+Wire Wire Line
+	5750 2550 6050 2550
+Wire Wire Line
+	5750 2450 6150 2450
+Wire Wire Line
+	5750 2350 6150 2350
+Connection ~ 6050 2550
+Wire Wire Line
+	6050 2550 6150 2550
 $EndSCHEMATC
