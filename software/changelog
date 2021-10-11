@@ -19,6 +19,6 @@
 - Add frame readable callback
 - Fix word length != 8
 
-2021-10-11: 2.0.6 (TBD)
+2021-10-11: 2.0.6 (ae24f26)
 - Fix (theoretical) buffer overflow in modbus checksum calculation
 - Fix uint16 alignment problem
