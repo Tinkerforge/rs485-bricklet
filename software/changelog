@@ -18,3 +18,7 @@
 - Don't reset stream in getter if callback is enabled and vice versa
 - Add frame readable callback
 - Fix word length != 8
+
+2021-10-11: 2.0.6 (TBD)
+- Fix (theoretical) buffer overflow in modbus checksum calculation
+- Fix uint16 alignment problem

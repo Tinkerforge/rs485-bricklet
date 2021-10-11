@@ -89,14 +89,9 @@ static void modbus_store_tx_frame_data_bytes(const uint8_t *data,
 
 static void modbus_store_tx_frame_data_shorts(const uint16_t *data,
                                               const uint16_t length) {
-	uint16_t u16_network_order = 0;
-	uint8_t *_data = (uint8_t *)&u16_network_order;
-
 	for(uint16_t i = 0; i < length; i++) {
-		u16_network_order = HTONS(data[i]);
-
-		ringbuffer_add(&rs485.ringbuffer_tx, _data[0]);
-		ringbuffer_add(&rs485.ringbuffer_tx, _data[1]);
+		ringbuffer_add(&rs485.ringbuffer_tx, *(((uint8_t*)data) + i*2 + 1));
+		ringbuffer_add(&rs485.ringbuffer_tx, *(((uint8_t*)data) + i*2 + 0));
 	}
 }
 
@@ -970,7 +965,6 @@ modbus_slave_answer_read_holding_registers_request_low_level(const ModbusSlaveAn
 	// This function can be invoked only in slave mode.
 
 	uint16_t count = 0;
-	uint16_t stream_chunk_data[29];
 
 	if(rs485.mode != MODE_MODBUS_SLAVE_RTU) {
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
@@ -1004,19 +998,6 @@ modbus_slave_answer_read_holding_registers_request_low_level(const ModbusSlaveAn
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
-	/*
-	 * FIXME: Strange memcpy() problem.
-	 *
-	 * For undetermined reason calling modbus_store_tx_frame_data_shorts()
-	 * with data->stream_chunk_data as argument doesn't work and shows unspecified
-	 * behaviour.
-	 *
-	 * Copying the data to a stack local variable and then calling the function
-	 * seems to work.
-	 */
-
-	memcpy(stream_chunk_data, data->stream_chunk_data, sizeof(data->stream_chunk_data));
-
 	// The first chunk.
 	if(data->stream_chunk_offset == 0) {
 		ringbuffer_add(&rs485.ringbuffer_tx, rs485.modbus_slave_address);
@@ -1025,7 +1006,7 @@ modbus_slave_answer_read_holding_registers_request_low_level(const ModbusSlaveAn
 
 		if(data->stream_total_length <= sizeof(data->stream_chunk_data) / 2) {
 			// All data fits in the first chunk there will not be other chunks.
-			modbus_store_tx_frame_data_shorts(stream_chunk_data, count);
+			modbus_store_tx_frame_data_shorts(data->stream_chunk_data, count);
 
 			modbus_add_tx_frame_checksum();
 
@@ -1041,7 +1022,7 @@ modbus_slave_answer_read_holding_registers_request_low_level(const ModbusSlaveAn
 
 	if((data->stream_chunk_offset + (sizeof(data->stream_chunk_data) / 2)) <= data->stream_total_length) {
 		// We can copy all the data available in this chunk.
-		modbus_store_tx_frame_data_shorts(stream_chunk_data, (sizeof(data->stream_chunk_data) / 2));
+		modbus_store_tx_frame_data_shorts(data->stream_chunk_data, (sizeof(data->stream_chunk_data) / 2));
 
 		if((data->stream_chunk_offset + (sizeof(data->stream_chunk_data) / 2)) == data->stream_total_length) {
 			/*
@@ -1062,7 +1043,7 @@ modbus_slave_answer_read_holding_registers_request_low_level(const ModbusSlaveAn
 		 * This is the last chunk of the stream but we have to calculate how much
 		 * to copy from the chunk.
 		 */
-		modbus_store_tx_frame_data_shorts(stream_chunk_data, data->stream_total_length - data->stream_chunk_offset);
+		modbus_store_tx_frame_data_shorts(data->stream_chunk_data, data->stream_total_length - data->stream_chunk_offset);
 
 		// All data of the frame is in the buffer except checksum.
 		modbus_add_tx_frame_checksum();
@@ -1513,8 +1494,6 @@ modbus_master_write_multiple_registers_low_level(const ModbusMasterWriteMultiple
                                                  ModbusMasterWriteMultipleRegistersLowLevel_Response *response) {
 	// This function can be invoked only in master mode.
 
-	uint16_t stream_chunk_data[27];
-
 	response->request_id = 0;
 	response->header.length = sizeof(ModbusMasterWriteMultipleRegistersLowLevel_Response);
 
@@ -1562,19 +1541,7 @@ modbus_master_write_multiple_registers_low_level(const ModbusMasterWriteMultiple
 		if((data->stream_total_length * 2) <= sizeof(data->stream_chunk_data)) {
 			// All data fits in the first chunk there will not be other chunks.
 
-			/*
-			 * FIXME: Strange memcpy() problem.
-			 *
-			 * For undetermined reason calling modbus_store_tx_frame_data_shorts()
-			 * with data->stream_chunk_data as argument doesn't work and shows unspecified
-			 * behaviour.
-			 *
-			 * Copying the data to a stack local variable and then calling the function
-			 * seems to work.
-			 */
-			memcpy(&stream_chunk_data, &data->stream_chunk_data, sizeof(data->stream_chunk_data));
-
-			modbus_store_tx_frame_data_shorts(stream_chunk_data, data->stream_total_length);
+			modbus_store_tx_frame_data_shorts(data->stream_chunk_data, data->stream_total_length);
 
 			modbus_add_tx_frame_checksum();
 
@@ -1598,19 +1565,7 @@ modbus_master_write_multiple_registers_low_level(const ModbusMasterWriteMultiple
 	}
 
 	if((data->stream_chunk_offset + (sizeof(data->stream_chunk_data) / 2)) <= data->stream_total_length) {
-		/*
-		 * FIXME: Strange memcpy() problem.
-		 *
-		 * For undetermined reason calling modbus_store_tx_frame_data_shorts()
-		 * with data->stream_chunk_data as argument doesn't work and shows unspecified
-		 * behaviour.
-		 *
-		 * Copying the data to a stack local variable and then calling the function
-		 * seems to work.
-		 */
-		memcpy(&stream_chunk_data, &data->stream_chunk_data, sizeof(data->stream_chunk_data));
-
-		modbus_store_tx_frame_data_shorts(stream_chunk_data, (sizeof(data->stream_chunk_data) / 2));
+		modbus_store_tx_frame_data_shorts(data->stream_chunk_data, (sizeof(data->stream_chunk_data) / 2));
 
 		if((data->stream_chunk_offset + (sizeof(data->stream_chunk_data) / 2)) == data->stream_total_length) {
 			// All data of the frame is in the buffer except checksum.
@@ -1633,19 +1588,7 @@ modbus_master_write_multiple_registers_low_level(const ModbusMasterWriteMultiple
 		}
 	}
 	else {
-		/*
-		 * FIXME: Strange memcpy() problem.
-		 *
-		 * For undetermined reason calling modbus_store_tx_frame_data_shorts()
-		 * with data->stream_chunk_data as argument doesn't work and shows unspecified
-		 * behaviour.
-		 *
-		 * Copying the data to a stack local variable and then calling the function
-		 * seems to work.
-		 */
-		memcpy(&stream_chunk_data, &data->stream_chunk_data, sizeof(data->stream_chunk_data));
-
-		modbus_store_tx_frame_data_shorts(stream_chunk_data, (data->stream_total_length - data->stream_chunk_offset));
+		modbus_store_tx_frame_data_shorts(data->stream_chunk_data, (data->stream_total_length - data->stream_chunk_offset));
 
 		// All data of the frame is in the buffer except checksum.
 		modbus_add_tx_frame_checksum();
@@ -1837,7 +1780,6 @@ modbus_slave_answer_read_input_registers_request_low_level(const ModbusSlaveAnsw
 	// This function can be invoked only in slave mode.
 
 	uint16_t count = 0;
-	uint16_t stream_chunk_data[29];
 
 	if(rs485.mode != MODE_MODBUS_SLAVE_RTU) {
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
@@ -1871,19 +1813,6 @@ modbus_slave_answer_read_input_registers_request_low_level(const ModbusSlaveAnsw
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
-	/*
-	 * FIXME: Strange memcpy() problem.
-	 *
-	 * For undetermined reason calling modbus_store_tx_frame_data_shorts()
-	 * with data->stream_chunk_data as argument doesn't work and shows unspecified
-	 * behaviour.
-	 *
-	 * Copying the data to a stack local variable and then calling the function
-	 * seems to work.
-	 */
-
-	memcpy(stream_chunk_data, data->stream_chunk_data, sizeof(data->stream_chunk_data));
-
 	// The first chunk.
 	if(data->stream_chunk_offset == 0) {
 		ringbuffer_add(&rs485.ringbuffer_tx, rs485.modbus_slave_address);
@@ -1892,7 +1821,7 @@ modbus_slave_answer_read_input_registers_request_low_level(const ModbusSlaveAnsw
 
 		if(data->stream_total_length <= sizeof(data->stream_chunk_data) / 2) {
 			// All data fits in the first chunk there will not be other chunks.
-			modbus_store_tx_frame_data_shorts(stream_chunk_data, count);
+			modbus_store_tx_frame_data_shorts(data->stream_chunk_data, count);
 
 			modbus_add_tx_frame_checksum();
 
@@ -1908,7 +1837,7 @@ modbus_slave_answer_read_input_registers_request_low_level(const ModbusSlaveAnsw
 
 	if((data->stream_chunk_offset + (sizeof(data->stream_chunk_data) / 2)) <= data->stream_total_length) {
 		// We can copy all the data available in this chunk.
-		modbus_store_tx_frame_data_shorts(stream_chunk_data, (sizeof(data->stream_chunk_data) / 2));
+		modbus_store_tx_frame_data_shorts(data->stream_chunk_data, (sizeof(data->stream_chunk_data) / 2));
 
 		if((data->stream_chunk_offset + (sizeof(data->stream_chunk_data) / 2)) == data->stream_total_length) {
 			/*
@@ -1929,7 +1858,7 @@ modbus_slave_answer_read_input_registers_request_low_level(const ModbusSlaveAnsw
 		 * This is the last chunk of the stream but we have to calculate how much
 		 * to copy from the chunk.
 		 */
-		modbus_store_tx_frame_data_shorts(stream_chunk_data, data->stream_total_length - data->stream_chunk_offset);
+		modbus_store_tx_frame_data_shorts(data->stream_chunk_data, data->stream_total_length - data->stream_chunk_offset);
 
 		// All data of the frame is in the buffer except checksum.
 		modbus_add_tx_frame_checksum();
