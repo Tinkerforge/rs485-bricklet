@@ -7,8 +7,8 @@
 
 #define UID "XYZ" // Change XYZ to the UID of your RS485 Bricklet
 
-void example_setup(TF_HalContext *hal);
-void example_loop(TF_HalContext *hal);
+void example_setup(TF_HAL *hal);
+void example_loop(TF_HAL *hal);
 
 void check(int rc, const char* msg);
 
@@ -62,7 +62,7 @@ static void modbus_master_write_single_register_response_handler(TF_RS485 *devic
 static TF_RS485 rs485;
 static uint8_t expected_request_id = 0;
 
-void example_setup(TF_HalContext *hal) {
+void example_setup(TF_HAL *hal) {
 	// Create device object
 	check(tf_rs485_create(&rs485, UID, hal), "create device object");
 
@@ -86,7 +86,7 @@ void example_setup(TF_HalContext *hal) {
 	                                                   65535, &expected_request_id), "call modbus_master_write_single_register");
 }
 
-void example_loop(TF_HalContext *hal) {
+void example_loop(TF_HAL *hal) {
 	// Poll for callbacks
 	tf_hal_callback_tick(hal, 0);
 }
