@@ -1,25 +1,22 @@
 // This example is not self-contained.
-// It requres usage of the example driver specific to your platform.
+// It requires usage of the example driver specific to your platform.
 // See the HAL documentation.
 
-#include "bindings/hal_common.h"
-#include "bindings/bricklet_rs485.h"
+#include "src/bindings/hal_common.h"
+#include "src/bindings/bricklet_rs485.h"
 
-#define UID "XYZ" // Change XYZ to the UID of your RS485 Bricklet
-
+void check(int rc, const char *msg);
 void example_setup(TF_HAL *hal);
 void example_loop(TF_HAL *hal);
-
-void check(int rc, const char* msg);
 
 static uint8_t received_request_id = 0;
 static bool register_address_valid = false;
 
 // Callback function for Modbus slave write single register request callback
 static void modbus_slave_write_single_register_request_handler(TF_RS485 *device, uint8_t request_id,
-                                                        uint32_t register_address,
-                                                        uint16_t register_value,
-                                                        void *user_data) {
+                                                               uint32_t register_address,
+                                                               uint16_t register_value,
+                                                               void *user_data) {
 	(void)device; (void)user_data; // avoid unused parameter warning
 
 	tf_hal_printf("Request ID: %I8u\n", request_id);
@@ -39,7 +36,7 @@ static TF_RS485 rs485;
 
 void example_setup(TF_HAL *hal) {
 	// Create device object
-	check(tf_rs485_create(&rs485, UID, hal), "create device object");
+	check(tf_rs485_create(&rs485, NULL, hal), "create device object");
 
 	// Set operating mode to Modbus RTU slave
 	check(tf_rs485_set_mode(&rs485, TF_RS485_MODE_MODBUS_SLAVE_RTU), "call set_mode");

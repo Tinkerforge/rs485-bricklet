@@ -1,47 +1,44 @@
 // This example is not self-contained.
-// It requres usage of the example driver specific to your platform.
+// It requires usage of the example driver specific to your platform.
 // See the HAL documentation.
 
-#include "bindings/hal_common.h"
-#include "bindings/bricklet_rs485.h"
+#include "src/bindings/hal_common.h"
+#include "src/bindings/bricklet_rs485.h"
 
-#define UID "XYZ" // Change XYZ to the UID of your RS485 Bricklet
-
+void check(int rc, const char *msg);
 void example_setup(TF_HAL *hal);
 void example_loop(TF_HAL *hal);
 
-void check(int rc, const char* msg);
-
 static void log_exception(int8_t exception_code) {
-	if(exception_code == TF_RS485_EXCEPTION_CODE_TIMEOUT) {
+	if (exception_code == TF_RS485_EXCEPTION_CODE_TIMEOUT) {
 		tf_hal_printf("Exception Code: Timeout\n");
-	} else if(exception_code == TF_RS485_EXCEPTION_CODE_SUCCESS) {
+	} else if (exception_code == TF_RS485_EXCEPTION_CODE_SUCCESS) {
 		tf_hal_printf("Exception Code: Success\n");
-	} else if(exception_code == TF_RS485_EXCEPTION_CODE_ILLEGAL_FUNCTION) {
+	} else if (exception_code == TF_RS485_EXCEPTION_CODE_ILLEGAL_FUNCTION) {
 		tf_hal_printf("Exception Code: Illegal Function\n");
-	} else if(exception_code == TF_RS485_EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS) {
+	} else if (exception_code == TF_RS485_EXCEPTION_CODE_ILLEGAL_DATA_ADDRESS) {
 		tf_hal_printf("Exception Code: Illegal Data Address\n");
-	} else if(exception_code == TF_RS485_EXCEPTION_CODE_ILLEGAL_DATA_VALUE) {
+	} else if (exception_code == TF_RS485_EXCEPTION_CODE_ILLEGAL_DATA_VALUE) {
 		tf_hal_printf("Exception Code: Illegal Data Value\n");
-	} else if(exception_code == TF_RS485_EXCEPTION_CODE_SLAVE_DEVICE_FAILURE) {
+	} else if (exception_code == TF_RS485_EXCEPTION_CODE_SLAVE_DEVICE_FAILURE) {
 		tf_hal_printf("Exception Code: Slave Device Failure\n");
-	} else if(exception_code == TF_RS485_EXCEPTION_CODE_ACKNOWLEDGE) {
+	} else if (exception_code == TF_RS485_EXCEPTION_CODE_ACKNOWLEDGE) {
 		tf_hal_printf("Exception Code: Acknowledge\n");
-	} else if(exception_code == TF_RS485_EXCEPTION_CODE_SLAVE_DEVICE_BUSY) {
+	} else if (exception_code == TF_RS485_EXCEPTION_CODE_SLAVE_DEVICE_BUSY) {
 		tf_hal_printf("Exception Code: Slave Device Busy\n");
-	} else if(exception_code == TF_RS485_EXCEPTION_CODE_MEMORY_PARITY_ERROR) {
+	} else if (exception_code == TF_RS485_EXCEPTION_CODE_MEMORY_PARITY_ERROR) {
 		tf_hal_printf("Exception Code: Memory Parity Error\n");
-	} else if(exception_code == TF_RS485_EXCEPTION_CODE_GATEWAY_PATH_UNAVAILABLE) {
+	} else if (exception_code == TF_RS485_EXCEPTION_CODE_GATEWAY_PATH_UNAVAILABLE) {
 		tf_hal_printf("Exception Code: Gateway Path Unavailable\n");
-	} else if(exception_code == TF_RS485_EXCEPTION_CODE_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND) {
+	} else if (exception_code == TF_RS485_EXCEPTION_CODE_GATEWAY_TARGET_DEVICE_FAILED_TO_RESPOND) {
 		tf_hal_printf("Exception Code: Gateway Target Device Failed To Respond\n");
 	}
 }
 
 // Callback function for Modbus master write single register response callback
 static void modbus_master_write_single_register_response_handler(TF_RS485 *device, uint8_t request_id,
-                                                          int8_t exception_code,
-                                                          void *user_data) {
+                                                                 int8_t exception_code,
+                                                                 void *user_data) {
 	(void)device; // avoid unused parameter warning
 
 	uint8_t expected_request_id = *(uint8_t *)user_data;
@@ -64,7 +61,7 @@ static uint8_t expected_request_id = 0;
 
 void example_setup(TF_HAL *hal) {
 	// Create device object
-	check(tf_rs485_create(&rs485, UID, hal), "create device object");
+	check(tf_rs485_create(&rs485, NULL, hal), "create device object");
 
 	// Set operating mode to Modbus RTU master
 	check(tf_rs485_set_mode(&rs485, TF_RS485_MODE_MODBUS_MASTER_RTU), "call set_mode");
